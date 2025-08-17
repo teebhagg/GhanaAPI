@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Region {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  code      String     @unique
+  districts District[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("regions")
+}
+
+model District {
+  id        Int              @id @default(autoincrement())
+  regionId  Int
+  name      String
+  code      String           @unique
+  region    Region           @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  addresses DigitalAddress[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([regionId])
+  @@map("districts")
+}
+
+model DigitalAddress {
+  id           Int      @id @default(autoincrement())
+  districtId   Int
+  digitalCode  String   @unique
+  addressLine1 String
+  addressLine2 String?
+  latitude     Float
+  longitude    Float
+  postalCode   String?
+  district     District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([latitude, longitude])
+  @@map("digital_addresses")
+}
+
+model ExchangeRate {
+  id             Int      @id @default(autoincrement())
+  baseCurrency   String
+  targetCurrency String
+  rate           Decimal  @db.Decimal(18, 8)
+  provider       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([baseCurrency, targetCurrency])
+  @@map("exchange_rates")
+}
+
+model RateHistory {
+  id             Int      @id @default(autoincrement())
+  baseCurrency   String
+  targetCurrency String
+  rate           Decimal  @db.Decimal(18, 8)
+  date           DateTime
+  provider       String
+  createdAt      DateTime @default(now())
+
+  @@index([baseCurrency, targetCurrency, date])
+  @@map("rate_history")
+}

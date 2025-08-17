@@ -1,0 +1,12 @@
+/backend/node_modules
+/backend/.env
+/backend/.env.development
+/backend/.env.production
+/backend/.env.test
+/backend/.env.test.development
+/backend/.env.test.production
+/backend/.env.test.test
+/backend/.env.test.test.development
+/backend/.env.test.test.production
+
+/backend/.git

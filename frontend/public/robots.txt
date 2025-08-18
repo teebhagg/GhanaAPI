@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ghana-api.dev/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1 

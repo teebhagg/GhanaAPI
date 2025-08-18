@@ -1,0 +1,21 @@
+{
+  "name": "GhanaAPI Explorer",
+  "short_name": "GhanaAPI",
+  "description": "Explore Ghana's comprehensive API services for addresses, locations, and real-time exchange rates",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer", "utilities", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

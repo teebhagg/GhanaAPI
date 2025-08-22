@@ -63,7 +63,7 @@ export function Navbar() {
 
         <div className="flex items-center space-x-3">
           <Button variant="outline" size="sm" asChild>
-            <a href="/docs">
+            <a href="https://docs.ghana-api.dev">
               <FileText className="w-4 h-4" />
               Docs
             </a>

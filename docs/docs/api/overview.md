@@ -292,9 +292,9 @@ if (!validateDigitalCode(digitalCode)) {
 
 ### Documentation
 
-- [API Reference](./reference)
-- [Code Examples](./examples)
-- [SDK Documentation](./sdks)
+- [API Reference](https://api.ghana-api.dev/docs)
+- [API Documentation](./overview)
+- [GitHub Repository](https://github.com/teebhagg/GhanaAPI)
 
 ### Community
 

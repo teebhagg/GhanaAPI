@@ -84,10 +84,6 @@ const config: Config = {
               label: "API Reference",
               href: "https://api.ghana-api.dev/docs",
             },
-            {
-              label: "Examples",
-              to: "/docs/examples",
-            },
           ],
         },
         {

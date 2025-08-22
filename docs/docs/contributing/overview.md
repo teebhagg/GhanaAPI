@@ -23,23 +23,26 @@ Thank you for your interest in contributing to GhanaAPI! We welcome contribution
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/GhanaAPI.git
    cd GhanaAPI
    ```
 
 2. **Install Dependencies**
+
    ```bash
    # Backend dependencies
    cd backend
    npm install
-   
+
    # Documentation dependencies (optional)
    cd ../docs
    npm install
    ```
 
 3. **Environment Setup**
+
    ```bash
    cd backend
    cp .env.example .env
@@ -47,6 +50,7 @@ Thank you for your interest in contributing to GhanaAPI! We welcome contribution
    ```
 
 4. **Start Development Server**
+
    ```bash
    npm run start:dev
    ```
@@ -82,28 +86,26 @@ GhanaAPI/
 GhanaAPI is organized into distinct feature areas. Choose the area you'd like to contribute to:
 
 ### 📍 [Address Services](./addresses)
+
 - Digital address validation
 - Address lookup and geocoding
 - Address search functionality
 - **Skills needed**: Geographic data, validation algorithms, API design
 
 ### 💱 [Exchange Rates](./exchange-rates)
+
 - Live currency exchange rates
 - Historical rate data
 - Rate trends and analytics
 - **Skills needed**: Financial APIs, data aggregation, caching
 
 ### 🏛️ [Location Data](./locations)
+
 - Regional information
 - District and constituency data
 - Administrative boundaries
 - **Skills needed**: Geographic data, government data, data modeling
 
-### 🔧 [Infrastructure & DevOps](./infrastructure)
-- Performance optimization
-- Monitoring and logging
-- Deployment and CI/CD
-- **Skills needed**: DevOps, monitoring, cloud platforms
 
 ## 📝 Contribution Workflow
 
@@ -126,7 +128,7 @@ git checkout -b feature/descriptive-feature-name
 
 ### 3. Development Process
 
-1. **Write Code** following our [coding standards](./code-style)
+1. **Write Code** following our coding standards
 2. **Add Tests** for new functionality
 3. **Update Documentation** if needed
 4. **Run Tests** to ensure everything works
@@ -141,6 +143,7 @@ git push origin feature/descriptive-feature-name
 ```
 
 Create a pull request with:
+
 - Clear title describing the change
 - Detailed description of what was added/changed
 - Screenshots or examples if applicable
@@ -167,17 +170,18 @@ npm test -- --testNamePattern="Address"
 ### Writing Tests
 
 #### Unit Tests
+
 ```javascript
 // src/tests/services/addressService.test.js
-describe('AddressService', () => {
-  describe('validateDigitalCode', () => {
-    it('should validate correct digital address format', () => {
-      const result = addressService.validateDigitalCode('GA-123-4567');
+describe("AddressService", () => {
+  describe("validateDigitalCode", () => {
+    it("should validate correct digital address format", () => {
+      const result = addressService.validateDigitalCode("GA-123-4567");
       expect(result.isValid).toBe(true);
     });
 
-    it('should reject invalid digital address format', () => {
-      const result = addressService.validateDigitalCode('INVALID');
+    it("should reject invalid digital address format", () => {
+      const result = addressService.validateDigitalCode("INVALID");
       expect(result.isValid).toBe(false);
     });
   });
@@ -185,16 +189,17 @@ describe('AddressService', () => {
 ```
 
 #### Integration Tests
+
 ```javascript
 // src/tests/routes/addresses.test.js
-describe('GET /v1/addresses/validate/:digitalCode', () => {
-  it('should return validation result for valid address', async () => {
+describe("GET /v1/addresses/validate/:digitalCode", () => {
+  it("should return validation result for valid address", async () => {
     const response = await request(app)
-      .get('/v1/addresses/validate/GA-123-4567')
+      .get("/v1/addresses/validate/GA-123-4567")
       .expect(200);
 
     expect(response.body.isValid).toBe(true);
-    expect(response.body.digitalCode).toBe('GA-123-4567');
+    expect(response.body.digitalCode).toBe("GA-123-4567");
   });
 });
 ```
@@ -202,18 +207,21 @@ describe('GET /v1/addresses/validate/:digitalCode', () => {
 ## 📊 Code Quality Standards
 
 ### Code Style
+
 - Use ESLint and Prettier (configured in the project)
 - Follow consistent naming conventions
 - Write meaningful variable and function names
 - Add JSDoc comments for public functions
 
 ### API Design Principles
+
 - RESTful endpoint design
 - Consistent response formats
 - Proper HTTP status codes
 - Comprehensive error handling
 
 ### Performance
+
 - Implement caching where appropriate
 - Optimize database queries
 - Handle rate limiting gracefully
@@ -264,6 +272,7 @@ Contributors are recognized in several ways:
 ### Mentorship
 
 New contributors can get mentorship from experienced contributors:
+
 - Pair programming sessions
 - Code review guidance
 - Architecture discussions
@@ -271,7 +280,7 @@ New contributors can get mentorship from experienced contributors:
 
 ## 📜 Code of Conduct
 
-We are committed to providing a welcoming and inclusive environment for all contributors. Please read our [Code of Conduct](./code-of-conduct) before participating.
+We are committed to providing a welcoming and inclusive environment for all contributors.
 
 ## 📅 Next Steps
 

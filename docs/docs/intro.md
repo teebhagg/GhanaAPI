@@ -5,7 +5,7 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 ## 🌟 Features
 
 - **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
-- **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends  
+- **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching
 - **🔒 Enterprise Ready** - Rate limiting, authentication, comprehensive error handling
@@ -27,7 +27,7 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
 
 - **[Quick Start Guide](./getting-started/quick-start)** - Get up and running in minutes
 - **[API Reference](https://api.ghana-api.dev/docs)** - Complete interactive API documentation
-- **[Examples](./examples/javascript)** - Code examples in multiple languages
+- **[API Documentation](./api/overview)** - Complete API reference and examples
 
 ## 🇬🇭 Made in Ghana
 

@@ -27,7 +27,7 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current"
   "rates": {
     "USD": {
       "rate": 0.082,
-      "inverseRate": 12.20,
+      "inverseRate": 12.2,
       "change24h": -0.15,
       "trend": "down"
     },
@@ -49,13 +49,17 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current"
 
 ```javascript
 // Using fetch (modern browsers/Node.js 18+)
-const response = await fetch('https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD');
+const response = await fetch(
+  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+);
 const data = await response.json();
 console.log(`1 USD = ${data.rates.USD.rate} GHS`);
 
 // Using axios
-const axios = require('axios');
-const response = await axios.get('https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD');
+const axios = require("axios");
+const response = await axios.get(
+  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+);
 console.log(response.data);
 ```
 
@@ -96,7 +100,7 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
   "formattedAddress": "123 Liberation Road, Accra, Greater Accra Region",
   "coordinates": {
     "latitude": 5.6037,
-    "longitude": -0.1870
+    "longitude": -0.187
   },
   "region": "Greater Accra Region",
   "district": "Accra Metropolitan"
@@ -126,9 +130,9 @@ All API endpoints return consistent error responses:
 
 Now that you've made your first API calls:
 
-1. **[Explore all endpoints](../api/addresses/validate)** in our API reference
-2. **[Check out more examples](../examples/javascript)** in your preferred language
-3. **[Learn about best practices](./error-handling)** for production usage
+1. **[Explore all endpoints](../api/addresses)** in our API reference
+2. **[Check out the API documentation](../api/overview)** for complete examples and reference
+3. **[Learn about best practices](../api/overview)** for production usage
 
 ## Need Help?
 

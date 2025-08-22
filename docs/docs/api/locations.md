@@ -842,4 +842,4 @@ if (!validateRegionCode(regionId)) {
 
 ---
 
-For more information, see the [API Reference](../reference) or [Code Examples](../examples).
+For more information, see the [API Overview](./overview) for complete documentation and examples.

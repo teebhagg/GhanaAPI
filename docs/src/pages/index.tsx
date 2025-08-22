@@ -81,6 +81,16 @@ const addresses = await fetch(
 // Get regions
 const regions = await fetch(
   'https://api.ghana-api.dev/v1/locations/regions'
+);
+
+// Reverse geocoding
+const location = await fetch(
+  'https://api.ghana-api.dev/v1/addresses/reverse?lat=5.6037&lng=-0.1870'
+);
+
+// Currency conversion
+const conversion = await fetch(
+  'https://api.ghana-api.dev/v1/exchange-rates/convert?from=USD&to=GHS&amount=100'
 );`}</code>
               </pre>
             </div>

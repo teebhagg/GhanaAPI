@@ -1,13 +1,13 @@
 # 🇬🇭 GhanaAPI
 
 [![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://api.ghana-api.dev)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
+[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
 
 > **The definitive REST API for Ghanaian services** - Addresses, Exchange Rates, Locations, and more. Built for developers who need reliable access to essential Ghanaian data and services.
 
-🌐 **[API Documentation](https://api.ghana-api.dev/docs)** | 🚀 **[Getting Started](#getting-started)** | 💻 **[Examples](#examples)** | 📖 **[Contributing](#contributing)**
+🌐 **[API Documentation](https://api.ghana-api.dev/docs)** | 🚀 **[Getting Started](https://docs.ghana-api.dev)** | 💻 **[Examples](#examples)** | 📖 **[Contributing](#contributing)**
 
 ---
 
@@ -21,7 +21,6 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 - **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **🔒 Enterprise Ready** - Rate limiting, authentication, comprehensive error handling
 - **📊 Developer Friendly** - Interactive Swagger docs, SDKs, and detailed examples
 
 ---
@@ -29,24 +28,31 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 ## 🚀 **Getting Started**
 
 ### **Quick Example**
+
 ```javascript
 // Get current USD to GHS exchange rate
-const response = await fetch('https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD');
+const response = await fetch(
+  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+);
 const data = await response.json();
 console.log(`1 USD = ${data.rates.USD.rate} GHS`);
 
 // Validate Ghana Post Digital Address
-const address = await fetch('https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567');
+const address = await fetch(
+  "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+);
 const validation = await address.json();
-console.log(`Address is ${validation.isValid ? 'valid' : 'invalid'}`);
+console.log(`Address is ${validation.isValid ? "valid" : "invalid"}`);
 ```
 
 ### **Base URL**
+
 ```
 https://api.ghana-api.dev/v1
 ```
 
 ### **Authentication**
+
 ```bash
 # Free tier - no authentication required
 curl "https://api.ghana-api.dev/v1/exchange-rates/current"
@@ -63,16 +69,19 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 ### **🏠 Address & Location Services**
 
 #### **Validate Digital Address**
+
 ```http
 GET /v1/addresses/validate/{digitalCode}
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
 ```
 
 **Response:**
+
 ```json
 {
   "isValid": true,
@@ -80,7 +89,7 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
   "formattedAddress": "123 Liberation Road, Accra, Greater Accra Region",
   "coordinates": {
     "latitude": 5.6037,
-    "longitude": -0.1870
+    "longitude": -0.187
   },
   "region": "Greater Accra Region",
   "district": "Accra Metropolitan"
@@ -88,21 +97,25 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
 ```
 
 #### **Reverse Geocoding**
+
 ```http
 GET /v1/addresses/lookup?lat={latitude}&lng={longitude}
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/addresses/lookup?lat=5.6037&lng=-0.1870"
 ```
 
 #### **Address Search**
+
 ```http
 GET /v1/addresses/search?q={query}&limit={limit}
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/addresses/search?q=University%20of%20Ghana&limit=5"
 ```
@@ -110,16 +123,19 @@ curl "https://api.ghana-api.dev/v1/addresses/search?q=University%20of%20Ghana&li
 ### **💱 Exchange Rate Services**
 
 #### **Current Exchange Rates**
+
 ```http
 GET /v1/exchange-rates/current?currencies={currencies}
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR,GBP"
 ```
 
 **Response:**
+
 ```json
 {
   "baseCurrency": "GHS",
@@ -127,7 +143,7 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR,GBP
   "rates": {
     "USD": {
       "rate": 0.082,
-      "inverseRate": 12.20,
+      "inverseRate": 12.2,
       "change24h": -0.15,
       "trend": "down"
     },
@@ -144,11 +160,13 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR,GBP
 ```
 
 #### **Historical Exchange Rates**
+
 ```http
 GET /v1/exchange-rates/historical?currency={currency}&from={date}&to={date}
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-15"
 ```
@@ -156,26 +174,31 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/historical?currency=USD&from=2
 ### **🌍 Location Data**
 
 #### **Get All Regions**
+
 ```http
 GET /v1/locations/regions
 ```
 
 #### **Get Districts by Region**
+
 ```http
 GET /v1/locations/regions/{regionId}/districts
 ```
 
 **Example:**
+
 ```bash
 curl "https://api.ghana-api.dev/v1/locations/regions/1/districts"
 ```
 
 ---
+
 ## 🤝 **Contributing**
 
 We welcome contributions from the developer community! Here's how you can help:
 
 ### **Getting Started**
+
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
 3. **Make** your changes
@@ -186,6 +209,7 @@ We welcome contributions from the developer community! Here's how you can help:
 8. **Open** a Pull Request
 
 ### **Development Setup**
+
 ```bash
 # Fork and clone
 git clone https://github.com/teebhagg/GhanaAPI.git
@@ -205,6 +229,7 @@ npm run test:watch
 ```
 
 ### **Contribution Guidelines**
+
 - **Code Style:** We use Prettier and ESLint
 - **Tests:** All new features must include tests
 - **Documentation:** Update README and API docs for new features
@@ -212,6 +237,7 @@ npm run test:watch
 - **Issues:** Use our issue templates for bugs and feature requests
 
 ### **Areas We Need Help**
+
 - 🐛 **Bug fixes** and performance improvements
 - 📚 **Documentation** improvements and translations
 - 🧪 **Test coverage** expansion
@@ -226,6 +252,7 @@ npm run test:watch
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ### **What this means:**
+
 - ✅ **Commercial use** allowed
 - ✅ **Modification** allowed
 - ✅ **Distribution** allowed
@@ -238,6 +265,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 🙏 **Acknowledgments**
 
 Special thanks to:
+
 - **Bank of Ghana** for providing official exchange rate data
 - **Ghana Statistical Service** for regional and demographic data
 - **OpenStreetMap Ghana community** for mapping data
@@ -255,7 +283,7 @@ Special thanks to:
 
 **Built with ❤️ for the Ghanaian developer community**
 
-[Website](https://ghana-api.dev) • [Documentation](https://docs.ghana-api.dev) • [Status](https://status.ghana-api.dev) • [Twitter](https://twitter.com/ghanaapi)
+[Website](https://ghana-api.dev) • [Documentation](https://docs.ghana-api.dev) • [Status](https://status.ghana-api.dev) • [LinkedIn](https://twitter.com/ghanaapi)
 
 **Made in Ghana 🇬🇭**
 

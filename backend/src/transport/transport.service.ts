@@ -38,10 +38,6 @@ export class TransportService {
 
   async getTransportStops(
     city: string = 'accra',
-    pickup?: string,
-    destination?: string,
-    pickupCoordinates?: [number, number],
-    destinationCoordinates?: [number, number],
     type?: string,
   ): Promise<TransportStop[]> {
     return this.transportStopsService.getTransportStops(

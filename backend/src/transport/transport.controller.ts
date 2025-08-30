@@ -48,6 +48,11 @@ enum TransportMode {
   PUBLIC_TRANSPORT = 'publicTransport',
 }
 
+const TAXI_BASE_FARE = 5;
+const TAXI_PER_KM_RATE = 2.5;
+const TROTRO_RATE = 1.5;
+const BUS_RATE = 1.0;
+
 @ApiTags('Transport & Logistics')
 @Controller('transport')
 export class TransportController {
@@ -529,8 +534,8 @@ export class TransportController {
 
         case 'taxi': {
           // Rough taxi fare estimation for Ghana
-          const baseFare = 5; // GHS
-          const perKmRate = 2.5; // GHS per km
+          const baseFare = TAXI_BASE_FARE; // GHS
+          const perKmRate = TAXI_PER_KM_RATE; // GHS per km
           cost = baseFare + distance * perKmRate;
           breakdown = {
             baseFare: `${baseFare} ${fuelPrices.currency}`,
@@ -541,7 +546,7 @@ export class TransportController {
 
         case 'trotro': {
           // Trotro fare estimation
-          const trotroRate = 1.5; // GHS per km (rough estimate)
+          const trotroRate = TROTRO_RATE; // GHS per km (rough estimate)
           cost = distance * trotroRate;
           breakdown = {
             rate: `${trotroRate} ${fuelPrices.currency}/km`,
@@ -551,7 +556,7 @@ export class TransportController {
 
         case 'bus': {
           // Bus fare estimation
-          const busRate = 1.0; // GHS per km
+          const busRate = BUS_RATE; // GHS per km
           cost = distance * busRate;
           breakdown = {
             rate: `${busRate} ${fuelPrices.currency}/km`,

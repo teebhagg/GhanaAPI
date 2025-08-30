@@ -114,8 +114,9 @@ export class FuelPriceService {
     try {
       const $ = cheerio.load(html);
 
-      // Target companies: Shell, Goil, Total, Star Oil
+      // Target companies: Shell, Goil, Total, Star Oil (preprocessed to lowercase)
       const targetCompanies = ['Shell', 'Goil', 'Total', 'Star Oil'];
+      const targetCompaniesLower = targetCompanies.map(company => company.toLowerCase());
       const petrolPrices: number[] = [];
       const dieselPrices: number[] = [];
 
@@ -127,12 +128,13 @@ export class FuelPriceService {
         // Need at least 4 cells (company name, petrol, diesel, premium)
         if (cells.length >= 4) {
           const companyName = cells.eq(1).text().trim().replace(/Get$/, ''); // Remove "Get" suffix
+          const companyNameLower = companyName.toLowerCase();
           const petrolText = cells.eq(2).text().trim();
           const dieselText = cells.eq(3).text().trim();
 
-          // Check if this company is one of our targets
-          const isTargetCompany = targetCompanies.some(target =>
-            companyName.toLowerCase().includes(target.toLowerCase())
+          // Check if this company is one of our targets (using preprocessed lowercase array)
+          const isTargetCompany = targetCompaniesLower.some(target =>
+            companyNameLower.includes(target)
           );
 
           if (isTargetCompany) {

@@ -1,11 +1,15 @@
 # 🇬🇭 GhanaAPI
 
+<div align="center">
+  <img src="./ghana-api-banner.png" alt="GhanaAPI Banner" width="600" />
+</div>
+
 [![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://api.ghana-api.dev)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
 
-> **The definitive REST API for Ghanaian services** - Addresses, Exchange Rates, Locations, and more. Built for developers who need reliable access to essential Ghanaian data and services.
+> **The definitive REST API for Ghanaian services** - Addresses, Exchange Rates, Locations, Transport & Logistics, and more. Built for developers who need reliable access to essential Ghanaian data and services.
 
 🌐 **[API Documentation](https://api.ghana-api.dev/docs)** | 🚀 **[Getting Started](https://docs.ghana-api.dev)** | 💻 **[Examples](#examples)** | 📖 **[Contributing](#contributing)**
 
@@ -20,8 +24,9 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 - **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
 - **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
+- **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **📊 Developer Friendly** - Interactive Swagger docs, SDKs, and detailed examples
+- **📊 Developer Friendly** - Interactive Swagger docs
 
 ---
 
@@ -43,23 +48,19 @@ const address = await fetch(
 );
 const validation = await address.json();
 console.log(`Address is ${validation.isValid ? "valid" : "invalid"}`);
+
+// Calculate route between two locations
+const route = await fetch(
+  "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
+);
+const routeData = await route.json();
+console.log(`Distance: ${routeData.data.distance}km, Duration: ${routeData.data.duration/60}min`);
 ```
 
 ### **Base URL**
 
 ```
 https://api.ghana-api.dev/v1
-```
-
-### **Authentication**
-
-```bash
-# Free tier - no authentication required
-curl "https://api.ghana-api.dev/v1/exchange-rates/current"
-
-# Premium tier - API key required
-curl -H "Authorization: Bearer YOUR_API_KEY" \
-     "https://api.ghana-api.dev/v1/addresses/search?q=Accra"
 ```
 
 ---
@@ -191,6 +192,77 @@ GET /v1/locations/regions/{regionId}/districts
 curl "https://api.ghana-api.dev/v1/locations/regions/1/districts"
 ```
 
+### **🚗 Transport & Logistics**
+
+#### **Calculate Route**
+
+```http
+GET /v1/transport/route-calculation?start_lat={lat}&start_lng={lng}&end_lat={lat}&end_lng={lng}&mode={mode}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "distance": 247.8,
+    "duration": 10800,
+    "coordinates": [[5.6037, -0.187], [6.6885, -1.6244]],
+    "instructions": ["Head north on Liberation Road", "Continue for 247 km to Kumasi"]
+  },
+  "start": [5.6037, -0.187],
+  "end": [6.6885, -1.6244],
+  "mode": "driving"
+}
+```
+
+#### **Get Transport Stops**
+
+```http
+GET /v1/transport/stops?city={city}&type={type}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/transport/stops?city=accra&type=bus_stop"
+```
+
+#### **Get Current Fuel Prices**
+
+```http
+GET /v1/transport/fuel-prices
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/transport/fuel-prices"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "petrol": 6.50,
+    "diesel": 6.85,
+    "lpg": 4.20,
+    "currency": "GHS",
+    "lastUpdated": "2024-01-15T08:00:00Z",
+    "source": "National Petroleum Authority"
+  }
+}
+```
+
 ---
 
 ## 🤝 **Contributing**
@@ -283,7 +355,7 @@ Special thanks to:
 
 **Built with ❤️ for the Ghanaian developer community**
 
-[Website](https://ghana-api.dev) • [Documentation](https://docs.ghana-api.dev) • [Status](https://status.ghana-api.dev) • [LinkedIn](https://twitter.com/ghanaapi)
+[Website](https://ghana-api.dev) • [Documentation](https://docs.ghana-api.dev) • [Status](https://status.ghana-api.dev) • [LinkedIn](https://www.linkedin.com/in/joshua-ansah-b0a15a230/)
 
 **Made in Ghana 🇬🇭**
 

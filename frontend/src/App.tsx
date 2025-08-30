@@ -1,5 +1,6 @@
 import { AddressesPanel } from "@/components/addresses-panel";
 import { DocsPage } from "@/components/docs-page";
+import { EnhancedTransportExplorer } from "@/components/enhanced-transport-explorer";
 import { ExchangeRatesPanel } from "@/components/exchange-rates-panel";
 import { Footer } from "@/components/footer";
 import { LocationsPanel } from "@/components/locations-panel";
@@ -31,7 +32,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}>
               Explore Ghana's comprehensive API services for addresses,
-              locations, and real-time exchange rates
+              locations, transport directions, and real-time exchange rates
             </motion.p>
           </header>
 
@@ -89,6 +90,25 @@ function HomePage() {
                 </p>
               </div>
               <ExchangeRatesPanel />
+            </motion.section>
+
+            <motion.section
+              id="transport"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="scroll-mt-24">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-2">
+                  Transport & Logistics Services
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Get route directions, check fuel prices, and find nearby
+                  transport stops
+                </p>
+              </div>
+              <EnhancedTransportExplorer />
             </motion.section>
           </div>
         </div>

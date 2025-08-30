@@ -18,11 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api, type NearbyStop, type NearbyStopsQuery } from "@/lib/api";
+import { calculateCircleRadius } from "@/lib/map-utils";
 import { Bus, Locate, MapPin, Navigation } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -33,8 +33,7 @@ export interface NearbyStopsCardRef {
   getCurrentLocationAndSearch: () => void;
 }
 
-const RADIUS_SCALE_FACTOR = 50;
-const MAX_CIRCLE_RADIUS = 50;
+// Circle radius calculation is now handled by MapUtils.calculateCircleRadius()
 
 export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
   const [stops, setStops] = useState<NearbyStop[]>([]);
@@ -159,7 +158,9 @@ export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
     }
   };
 
-  // Don't auto-load on mount, let the parent component trigger it when the tab becomes active
+  // Auto-loading of nearby stops is intentionally disabled on mount to avoid unnecessary location requests and API calls
+  // when the tab is not active. Instead, the parent component is expected to trigger loading by calling the
+  // getCurrentLocationAndSearch method exposed via the ref (using useImperativeHandle) when the tab becomes active.
   
   return (
     <Card className="w-full rounded-3xl shadow-none">
@@ -386,7 +387,10 @@ export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
                         id="search-radius-circle"
                         type="circle"
                         paint={{
-                          "circle-radius": Math.min(searchRadius / RADIUS_SCALE_FACTOR, MAX_CIRCLE_RADIUS),
+                          // Calculate circle radius for map visualization
+                          // This scales the search radius (in meters) to appropriate map pixels
+                          // while ensuring the circle doesn't become too large visually
+                          "circle-radius": calculateCircleRadius(searchRadius),
                           "circle-color": "#3b82f6",
                           "circle-opacity": 0.1,
                           "circle-stroke-color": "#3b82f6",

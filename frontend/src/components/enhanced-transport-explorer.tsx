@@ -18,7 +18,7 @@ export function EnhancedTransportExplorer() {
     if (activeTab === "stops" && nearbyStopsRef.current) {
       nearbyStopsRef.current.getCurrentLocationAndSearch();
     }
-  }, [activeTab, nearbyStopsRef]);
+  }, [activeTab]);
 
   return (
     <div className="w-full">

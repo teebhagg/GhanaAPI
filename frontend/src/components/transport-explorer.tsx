@@ -230,10 +230,10 @@ export function TransportExplorer() {
               maxLng: Math.max(acc.maxLng, lng),
             }),
             {
-              minLat: result.data.geometry[0][0],
-              maxLat: result.data.geometry[0][0],
-              minLng: result.data.geometry[0][1],
-              maxLng: result.data.geometry[0][1],
+              minLat: Array.isArray(result.data.geometry[0]) && result.data.geometry[0].length === 2 ? result.data.geometry[0][0] : 0,
+              maxLat: Array.isArray(result.data.geometry[0]) && result.data.geometry[0].length === 2 ? result.data.geometry[0][0] : 0,
+              minLng: Array.isArray(result.data.geometry[0]) && result.data.geometry[0].length === 2 ? result.data.geometry[0][1] : 0,
+              maxLng: Array.isArray(result.data.geometry[0]) && result.data.geometry[0].length === 2 ? result.data.geometry[0][1] : 0,
             } as Bounds
           );
 

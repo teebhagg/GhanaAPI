@@ -1,7 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { firstValueFrom } from 'rxjs';
+import * as cheerio from 'cheerio';
 
 export interface FuelPrice {
   petrol: number;
@@ -16,31 +18,68 @@ export interface FuelPrice {
 export class FuelPriceService {
   private readonly logger = new Logger(FuelPriceService.name);
   private readonly fuelPriceApis = [
-    'globalpetrolprices',
-    'fuel-prices-api',
-    'local-scraper',
+    'cedirates-scraper',
   ];
+  private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
+    private readonly cacheManager: Cache,
   ) {}
 
+  /**
+   * Calculate TTL (time-to-live) in seconds until 11:59 PM today
+   * If it's already past 11:59 PM, calculate until 11:59 PM tomorrow
+   */
+  private getCacheTTL(): number {
+    const now = new Date();
+    const targetTime = new Date();
+
+    // Set target time to 11:59:59 PM today
+    targetTime.setHours(23, 59, 59, 999);
+
+    // If we're already past 11:59 PM, set target to tomorrow
+    if (now > targetTime) {
+      targetTime.setDate(targetTime.getDate() + 1);
+    }
+
+    const timeDiff = targetTime.getTime() - now.getTime();
+    const ttlSeconds = Math.ceil(timeDiff / 1000);
+
+    this.logger.debug(`Cache TTL calculated: ${ttlSeconds} seconds until ${targetTime.toISOString()}`);
+    return ttlSeconds;
+  }
+
   async getFuelPrices(): Promise<FuelPrice> {
+    // Check cache first
+    const cachedPrices = await this.cacheManager.get<FuelPrice>(this.FUEL_PRICE_CACHE_KEY);
+    if (cachedPrices) {
+      this.logger.debug('Returning cached fuel prices');
+      return cachedPrices;
+    }
+
+    this.logger.debug('No cached fuel prices found, fetching from API');
+
+    // Fetch fresh data
     for (const api of this.fuelPriceApis) {
       try {
-        this.logger.log(`Trying to get fuel prices from ${api}`);
+        let fuelPrices: FuelPrice;
 
         switch (api) {
-          case 'globalpetrolprices':
-            return await this.getFuelPricesGlobal();
-          case 'fuel-prices-api':
-            return await this.getFuelPricesAPI();
-          case 'local-scraper':
-            return await this.getFuelPricesLocal();
+          case 'cedirates-scraper':
+            fuelPrices = await this.getFuelPricesFromCediRates();
+            break;
           default:
             continue;
         }
+
+        // Cache the result with TTL until 11:59 PM
+        const ttl = this.getCacheTTL();
+        await this.cacheManager.set(this.FUEL_PRICE_CACHE_KEY, fuelPrices, ttl * 1000); // TTL in milliseconds
+
+        this.logger.log(`Cached fuel prices for ${ttl} seconds until 11:59 PM`);
+        return fuelPrices;
+
       } catch (error) {
         this.logger.warn(`Fuel prices from ${api} failed: ${error.message}`);
         continue;
@@ -53,61 +92,86 @@ export class FuelPriceService {
     );
   }
 
-  private async getFuelPricesGlobal(): Promise<FuelPrice> {
-    const url = 'https://www.globalpetrolprices.com/api/ghana/petrol';
+  private async getFuelPricesFromCediRates(): Promise<FuelPrice> {
+    const url = 'https://cedirates.com/fuel-prices/gh/';
     const response = await firstValueFrom(
-      this.httpService.get(url, { timeout: 15000 }),
+      this.httpService.get(url, {
+        timeout: 15000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; GhanaAPI/1.0)',
+        },
+      }),
     );
 
-    return this.parseGlobalFuelPrices(response.data);
+    return this.parseCediRatesFuelPrices(response.data);
   }
 
-  private async getFuelPricesAPI(): Promise<FuelPrice> {
-    // Alternative fuel price API
-    const apiKey = this.configService.get<string>('FUEL_API_KEY');
-    const url = `https://api.fuelprice.io/v1/ghana?key=${apiKey}`;
 
-    const response = await firstValueFrom(
-      this.httpService.get(url, { timeout: 15000 }),
-    );
 
-    return this.parseFuelPricesAPI(response.data);
-  }
 
-  private getFuelPricesLocal(): Promise<FuelPrice> {
-    // Local web scraping or cached data
-    // This could scrape NPA (National Petroleum Authority) Ghana website
-    // const url = 'https://npa.gov.gh/web/page.php?id=4'; // NPA price list
 
-    // For now, return mock data - implement web scraping as needed
-    return Promise.resolve({
-      petrol: 15.2, // GHS per litre
-      diesel: 15.99,
-      lpg: 8.5,
-      currency: 'GHS',
-      lastUpdated: new Date().toISOString(),
-      source: 'NPA Ghana',
-    });
-  }
+  private parseCediRatesFuelPrices(html: string): FuelPrice {
+    try {
+      const $ = cheerio.load(html);
 
-  private parseGlobalFuelPrices(data: any): FuelPrice {
-    return {
-      petrol: data.petrol_price || 0,
-      diesel: data.diesel_price || 0,
-      currency: data.currency || 'GHS',
-      lastUpdated: data.last_updated || new Date().toISOString(),
-      source: 'GlobalPetrolPrices',
-    };
-  }
+      // Target companies: Shell, Goil, Total, Star Oil
+      const targetCompanies = ['Shell', 'Goil', 'Total', 'Star Oil'];
+      const petrolPrices: number[] = [];
+      const dieselPrices: number[] = [];
 
-  private parseFuelPricesAPI(data: any): FuelPrice {
-    return {
-      petrol: data.prices.petrol || 0,
-      diesel: data.prices.diesel || 0,
-      lpg: data.prices.lpg || 0,
-      currency: data.currency || 'GHS',
-      lastUpdated: data.timestamp || new Date().toISOString(),
-      source: 'FuelPriceAPI',
-    };
+      // Parse fuel prices from CediRates table
+      $('table tr').each((index, element) => {
+        const row = $(element);
+        const cells = row.find('td');
+
+        // Need at least 4 cells (company name, petrol, diesel, premium)
+        if (cells.length >= 4) {
+          const companyName = cells.eq(1).text().trim().replace(/Get$/, ''); // Remove "Get" suffix
+          const petrolText = cells.eq(2).text().trim();
+          const dieselText = cells.eq(3).text().trim();
+
+          // Check if this company is one of our targets
+          const isTargetCompany = targetCompanies.some(target =>
+            companyName.toLowerCase().includes(target.toLowerCase())
+          );
+
+          if (isTargetCompany) {
+            // Extract petrol price
+            const petrolPrice = parseFloat(petrolText.replace(/[^\d.]/g, ''));
+
+            // Extract diesel price
+            const dieselPrice = parseFloat(dieselText.replace(/[^\d.]/g, ''));
+
+            if (!isNaN(petrolPrice) && petrolPrice > 0) {
+              petrolPrices.push(petrolPrice);
+            }
+
+            if (!isNaN(dieselPrice) && dieselPrice > 0) {
+              dieselPrices.push(dieselPrice);
+            }
+          }
+        }
+      });
+
+      // Calculate averages
+      const avgPetrol = petrolPrices.length > 0
+        ? petrolPrices.reduce((sum, price) => sum + price, 0) / petrolPrices.length
+        : 0;
+
+      const avgDiesel = dieselPrices.length > 0
+        ? dieselPrices.reduce((sum, price) => sum + price, 0) / dieselPrices.length
+        : 0;
+
+      return {
+        petrol: Math.round(avgPetrol * 100) / 100, // Round to 2 decimal places
+        diesel: Math.round(avgDiesel * 100) / 100,
+        currency: 'GHS',
+        lastUpdated: new Date().toISOString(),
+        source: 'CediRates.com (Shell, Goil, Total, Star Oil Average)',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to parse CediRates HTML: ${error.message}`);
+      throw error;
+    }
   }
 }

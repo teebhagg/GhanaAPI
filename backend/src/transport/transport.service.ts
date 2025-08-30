@@ -46,10 +46,6 @@ export class TransportService {
   ): Promise<TransportStop[]> {
     return this.transportStopsService.getTransportStops(
       city,
-      pickup,
-      destination,
-      pickupCoordinates,
-      destinationCoordinates,
       type,
     );
   }

@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Route calculation (`GET /transport/route-calculation`) - Optimal routing between locations with multiple transport modes
   - Route directions (`GET /transport/directions`) - Detailed turn-by-turn navigation with geocoding support
   - Travel cost estimation (`GET /transport/travel-cost`) - Fuel costs and fare calculations for different transport modes
-  - Fuel prices (`GET /transport/fuel-prices`) - Current petrol, diesel, and LPG prices from official Ghana sources
+  - Fuel prices (`GET /transport/fuel-prices`) - Current petrol and diesel prices averaged from major Ghanaian companies (Shell, Goil, Total, Star Oil)
 
 - **Enhanced Geographic Coverage**
 
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   - Multiple provider support with automatic failover (OpenRouteService, HERE Maps, GraphHopper)
   - Geocoding services integration (Nominatim, Overpass API)
-  - Real-time fuel price integration from National Petroleum Authority
+  - Real-time fuel price integration from CediRates.com with major company averaging
   - Intelligent caching for performance optimization
 
 - **Comprehensive Documentation**
@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data Sources Integration**
   - OpenStreetMap and Overpass API for transport stops
   - GTFS feeds for public transport data
-  - National Petroleum Authority for fuel prices
+  - CediRates.com for real-time fuel price aggregation from major companies
   - Multiple routing engines for reliability
 
 ### Documentation Enhancements

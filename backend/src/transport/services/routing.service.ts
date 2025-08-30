@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import * as polyline from '@mapbox/polyline';
 import { RouteProfile, RouteStep } from '../dto/route-directions.dto';
 
 export interface RouteCalculation {
@@ -450,43 +451,30 @@ export class RoutingService {
     }
   }
 
-  private decodePolyline(polyline: string): [number, number][] {
-    // Decode polyline algorithm (simplified)
-    // You might want to use a proper polyline decoding library
-    const coords: [number, number][] = [];
-    let index = 0;
-    let lat = 0;
-    let lng = 0;
-
-    while (index < polyline.length) {
-      let shift = 0;
-      let result = 0;
-      let byte;
-
-      do {
-        byte = polyline.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      const deltaLat = result & 1 ? ~(result >> 1) : result >> 1;
-      lat += deltaLat;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        byte = polyline.charCodeAt(index++) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      } while (byte >= 0x20);
-
-      const deltaLng = result & 1 ? ~(result >> 1) : result >> 1;
-      lng += deltaLng;
-
-      coords.push([lat / 1e5, lng / 1e5]);
+  private decodePolyline(encodedPolyline: string): [number, number][] {
+    try {
+      // Use the @mapbox/polyline library for reliable polyline decoding
+      const decoded = polyline.decode(encodedPolyline);
+      // Convert from [lat, lng] to [lat, lng] format (already correct)
+      return decoded as [number, number][];
+    } catch (error) {
+      this.logger.warn(`Failed to decode polyline: ${error.message}`);
+      // Return empty array if decoding fails
+      return [];
     }
+  }
 
-    return coords;
+  /**
+   * Encode coordinates into a polyline string
+   * @param coordinates Array of [lat, lng] coordinate pairs
+   * @returns Encoded polyline string
+   */
+  encodePolyline(coordinates: [number, number][]): string {
+    try {
+      return polyline.encode(coordinates);
+    } catch (error) {
+      this.logger.warn(`Failed to encode polyline: ${error.message}`);
+      return '';
+    }
   }
 }

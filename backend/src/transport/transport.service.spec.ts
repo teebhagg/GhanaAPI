@@ -8,8 +8,8 @@ import { TransportService } from './transport.service';
 
 describe('TransportService', () => {
   let service: TransportService;
-  // Variables for test setup
-  // httpService and configService are mocked in beforeEach
+  let httpService: jest.Mocked<HttpService>;
+  let configService: jest.Mocked<ConfigService>;
 
   const mockHttpService = {
     get: jest.fn(),

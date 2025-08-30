@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 import { FuelPriceService } from './services/fuel-price.service';
 import { GeocodingService } from './services/geocoding.service';
 import { RoutingService } from './services/routing.service';
@@ -16,6 +17,10 @@ import { TransportService } from './transport.service';
       maxRedirects: 5,
     }),
     ConfigModule,
+    CacheModule.register({
+      ttl: 3600, // 1 hour default TTL
+      max: 100, // maximum number of items in cache
+    }),
   ],
   controllers: [TransportController],
   providers: [

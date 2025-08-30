@@ -39,6 +39,89 @@ export type ConversionResult = {
   timestamp: string | Date;
 };
 
+export type RouteStep = {
+  instruction: string;
+  distance: number;
+  duration: number;
+  coordinates?: [number, number];
+  maneuver?: string;
+};
+
+export type RouteDirectionsResponse = {
+  distance: number;
+  duration: number;
+  geometry?: [number, number][];
+  steps?: RouteStep[];
+  start: {
+    coordinates: [number, number];
+    name?: string;
+    resolved_from: "coordinates" | "geocoding";
+  };
+  end: {
+    coordinates: [number, number];
+    name?: string;
+    resolved_from: "coordinates" | "geocoding";
+  };
+  profile: string;
+  estimated_cost?: number;
+  provider: string;
+};
+
+export const RouteProfile = {
+  DRIVING_CAR: "driving-car",
+  DRIVING_HGV: "driving-hgv",
+  CYCLING_REGULAR: "cycling-regular",
+  FOOT_WALKING: "foot-walking",
+  WHEELCHAIR: "wheelchair",
+} as const;
+
+export type RouteProfile = (typeof RouteProfile)[keyof typeof RouteProfile];
+
+export type RouteQuery = {
+  start_lat?: number;
+  start_lng?: number;
+  start_name?: string;
+  end_lat?: number;
+  end_lng?: number;
+  end_name?: string;
+  profile?: RouteProfile;
+  instructions?: boolean;
+  geometry?: boolean;
+};
+
+export type FuelPrice = {
+  petrol: number;
+  diesel: number;
+  lpg?: number;
+  currency: string;
+  lastUpdated: string;
+  source: string;
+};
+
+export type NearbyStop = {
+  id?: string;
+  name: string;
+  coordinates: [number, number];
+  type: string;
+  distance: number;
+  routes?: string[];
+};
+
+export type NearbyStopsQuery = {
+  lat: number;
+  lng: number;
+  radius?: number;
+  type?: string;
+};
+
+export type NearbyStopsResponse = {
+  success: boolean;
+  data: NearbyStop[];
+  count: number;
+  center: [number, number];
+  radius: number;
+};
+
 const API_BASE = "https://api.ghana-api.dev/api/v1";
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -91,5 +174,39 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     });
+  },
+
+  // Transport
+  getRouteDirections(query: RouteQuery) {
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined) {
+        params.append(key, value.toString());
+      }
+    });
+    return http<{
+      success: boolean;
+      data: RouteDirectionsResponse;
+    }>(`/transport/directions?${params}`);
+  },
+
+  getFuelPrices() {
+    return http<{
+      success: boolean;
+      data: FuelPrice;
+    }>(`/transport/fuel-prices`);
+  },
+
+  getNearbyStops(query: NearbyStopsQuery) {
+    const params = new URLSearchParams();
+    params.append("lat", query.lat.toString());
+    params.append("lng", query.lng.toString());
+    if (query.radius !== undefined) {
+      params.append("radius", query.radius.toString());
+    }
+    if (query.type) {
+      params.append("type", query.type);
+    }
+    return http<NearbyStopsResponse>(`/transport/nearby-stops?${params}`);
   },
 };

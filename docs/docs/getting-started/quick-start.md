@@ -107,6 +107,39 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
 }
 ```
 
+## Route Planning Example
+
+Calculate a route between two locations in Ghana:
+
+```bash
+curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "distance": 247.8,
+    "duration": 10800,
+    "coordinates": [
+      [5.6037, -0.187],
+      [5.6125, -0.215],
+      [6.6885, -1.6244]
+    ],
+    "instructions": [
+      "Head north on Liberation Road",
+      "Turn right onto George Walker Bush Highway",
+      "Continue for 247 km to Kumasi"
+    ]
+  },
+  "start": [5.6037, -0.187],
+  "end": [6.6885, -1.6244],
+  "mode": "driving"
+}
+```
+
 ## Error Handling
 
 All API endpoints return consistent error responses:

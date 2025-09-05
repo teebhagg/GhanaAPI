@@ -15,20 +15,20 @@ function HomepageHeader() {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <div className={styles.badge}>
-              <span>🚀 Version 0.1.0</span>
+              <span>🚀 Version 0.2.0</span>
             </div>
             <Heading as="h1" className={styles.heroTitle}>
               Ghana API
             </Heading>
             <p className={styles.heroSubtitle}>
               The definitive REST API for Ghanaian services. Access
-              comprehensive data for addresses, exchange rates, and
-              administrative information with our reliable, developer-friendly
-              platform.
+              comprehensive data for addresses, exchange rates, transport &
+              logistics, and administrative information with our reliable,
+              developer-friendly platform.
             </p>
             <div className={styles.heroStats}>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>6</span>
+                <span className={styles.statNumber}>12</span>
                 <span className={styles.statLabel}>API Endpoints</span>
               </div>
               <div className={styles.stat}>
@@ -76,6 +76,16 @@ const rates = await fetch(
 // Search addresses
 const addresses = await fetch(
   'https://api.ghana-api.dev/v1/addresses/search?q=Accra'
+);
+
+// Calculate route
+const route = await fetch(
+  'https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244'
+);
+
+// Get fuel prices
+const fuel = await fetch(
+  'https://api.ghana-api.dev/v1/transport/fuel-prices'
 );
 
 // Get regions
@@ -136,7 +146,18 @@ function FeaturesSection() {
             </Link>
           </div>
           <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🗺️</div>
+            <div className={styles.featureIcon}>�</div>
+            <h3>Transport & Logistics</h3>
+            <p>
+              Route planning, transport stops, fuel prices, and travel cost
+              estimation for major Ghanaian cities
+            </p>
+            <Link to="/docs/api/transport" className={styles.featureLink}>
+              Learn More →
+            </Link>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>�🗺️</div>
             <h3>Location Data</h3>
             <p>
               Comprehensive administrative and geographic information for all
@@ -190,8 +211,8 @@ export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title="Ghana API - Address Services, Exchange Rates & Location Data"
-      description="Comprehensive APIs for Ghana including address validation, real-time exchange rates, and administrative location data. Free to use with reliable data from Bank of Ghana and official sources.">
+      title="Ghana API - Address Services, Exchange Rates, Transport & Location Data"
+      description="Comprehensive APIs for Ghana including address validation, real-time exchange rates, transport & logistics, and administrative location data. Free to use with reliable data from Bank of Ghana and official sources.">
       <HomepageHeader />
       <main className={styles.main}>
         <FeaturesSection />

@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
         "api/addresses",
         "api/exchange-rates",
         "api/locations",
+        "api/transport",
       ],
     },
     {
@@ -26,6 +27,7 @@ const sidebars: SidebarsConfig = {
         "contributing/addresses",
         "contributing/exchange-rates",
         "contributing/locations",
+        "contributing/transport",
       ],
     },
     {

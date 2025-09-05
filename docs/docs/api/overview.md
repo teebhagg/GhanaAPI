@@ -42,6 +42,17 @@ Administrative and geographic information
 - ✅ District information
 - ✅ Administrative hierarchy
 
+### 🚗 [Transport & Logistics](./transport)
+
+Transportation services and route planning
+
+- ✅ Transport stops (bus stops, stations)
+- ✅ Route calculation and optimization
+- ✅ Route directions with turn-by-turn navigation
+- ✅ Travel cost estimation
+- ✅ Current fuel prices
+- ✅ Nearby transport services
+
 ## 📊 Implementation Status
 
 | Service              | Feature                 | Status         | Notes                                           |
@@ -56,6 +67,12 @@ Administrative and geographic information
 |                      | Rate Trends             | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
 | **Location Data**    | Regions                 | ✅ Live        | Fully implemented                               |
 |                      | Districts               | ✅ Live        | Fully implemented                               |
+| **Transport & Logistics** | Transport Stops    | ✅ Live        | Bus stops, stations, and public transport hubs |
+|                      | Route Calculation       | ✅ Live        | Optimal routing between locations               |
+|                      | Route Directions        | ✅ Live        | Turn-by-turn navigation instructions            |
+|                      | Travel Cost Estimation  | ✅ Live        | Fuel costs and fare calculations                |
+|                      | Fuel Prices             | ✅ Live        | Current petrol, diesel, and LPG prices         |
+|                      | Nearby Services         | ✅ Live        | Find transport stops within radius             |
 
 ### Status Legend
 
@@ -139,6 +156,20 @@ curl -X GET "https://ghana-api.dev/v1/locations/regions" \
   -H "Accept: application/json"
 ```
 
+#### Calculate Route
+
+```bash
+curl -X GET "https://ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving" \
+  -H "Accept: application/json"
+```
+
+#### Get Fuel Prices
+
+```bash
+curl -X GET "https://ghana-api.dev/v1/transport/fuel-prices" \
+  -H "Accept: application/json"
+```
+
 ### JavaScript Examples
 
 #### Address Search
@@ -178,6 +209,31 @@ const convertCurrency = async (from, to, amount) => {
 // Usage
 const conversion = await convertCurrency("GHS", "USD", 1000);
 console.log(conversion.data.result); // Converted amount
+```
+
+#### Route Planning
+
+```javascript
+const calculateRoute = async (startLat, startLng, endLat, endLng, mode = 'driving') => {
+  const params = new URLSearchParams({
+    start_lat: startLat,
+    start_lng: startLng,
+    end_lat: endLat,
+    end_lng: endLng,
+    mode: mode
+  });
+
+  const response = await fetch(
+    `https://ghana-api.dev/v1/transport/route-calculation?${params}`
+  );
+  const result = await response.json();
+  return result;
+};
+
+// Usage
+const route = await calculateRoute(5.6037, -0.187, 6.6885, -1.6244, 'driving');
+console.log(route.data.distance); // Distance in kilometers
+console.log(route.data.duration); // Duration in seconds
 ```
 
 ## 🔍 Best Practices

@@ -8,8 +8,8 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 - **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **🔒 Enterprise Ready** - Rate limiting, authentication, comprehensive error handling
-- **📊 Developer Friendly** - Interactive Swagger docs, SDKs, and detailed examples
+- **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
+- **📊 Developer Friendly** - Interactive Swagger docs
 
 ## 🚀 Quick Start
 
@@ -21,6 +21,12 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
 
 # Validate Ghana Post Digital Address
 curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+
+# Calculate route between two locations
+curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
+
+# Get current fuel prices
+curl "https://api.ghana-api.dev/v1/transport/fuel-prices"
 ```
 
 ## 📖 What's Next?

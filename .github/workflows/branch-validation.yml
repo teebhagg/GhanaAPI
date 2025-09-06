@@ -20,6 +20,7 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  statuses: write
 
 jobs:
   validate-branch-name:

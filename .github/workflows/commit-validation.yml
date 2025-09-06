@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
   checks: write
+  pull-requests: write
+  statuses: write
 
 jobs:
   validate-commits:
@@ -110,67 +112,9 @@ jobs:
             echo "summary=${#INVALID_COMMITS[@]} out of $TOTAL_COMMITS commit(s) don't follow conventional commits format" >> $GITHUB_OUTPUT
           fi
 
-          # Save invalid commits for later use
-          printf '%s\n' "${INVALID_COMMITS[@]}" > invalid_commits.txt
-          printf '%s\n' "${VALID_COMMITS[@]}" > valid_commits.txt
-
-      - name: Create detailed report
-        if: always()
-        run: |
-          echo "## 📝 Commit Message Validation Report" > validation_report.md
-          echo "" >> validation_report.md
-          echo "**Branch:** ${{ github.ref_name }}" >> validation_report.md
-          echo "**Validation Result:** ${{ steps.commit-validation.outputs.validation_result }}" >> validation_report.md
-          echo "**Summary:** ${{ steps.commit-validation.outputs.summary }}" >> validation_report.md
-          echo "" >> validation_report.md
-
-          if [ -s invalid_commits.txt ]; then
-            echo "### ❌ Invalid Commits" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "The following commits don't follow the conventional commits format:" >> validation_report.md
-            echo "" >> validation_report.md
-            while IFS= read -r line; do
-              echo "- \`$line\`" >> validation_report.md
-            done < invalid_commits.txt
-            echo "" >> validation_report.md
-          fi
-
-          if [ -s valid_commits.txt ]; then
-            echo "### ✅ Valid Commits" >> validation_report.md
-            echo "" >> validation_report.md
-            while IFS= read -r line; do
-              echo "- \`$line\`" >> validation_report.md
-            done < valid_commits.txt
-            echo "" >> validation_report.md
-          fi
-
-          echo "### 📋 Conventional Commits Format" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "Your commit messages should follow this format:" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "\`\`\`" >> validation_report.md
-          echo "type(optional scope): description" >> validation_report.md
-          echo "\`\`\`" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "**Types:**" >> validation_report.md
-          echo "- \`feat\`: New features" >> validation_report.md
-          echo "- \`fix\`: Bug fixes" >> validation_report.md
-          echo "- \`docs\`: Documentation changes" >> validation_report.md
-          echo "- \`style\`: Code style changes (formatting, etc.)" >> validation_report.md
-          echo "- \`refactor\`: Code refactoring" >> validation_report.md
-          echo "- \`test\`: Adding or updating tests" >> validation_report.md
-          echo "- \`chore\`: Maintenance tasks" >> validation_report.md
-          echo "- \`ci\`: CI/CD changes" >> validation_report.md
-          echo "- \`perf\`: Performance improvements" >> validation_report.md
-          echo "- \`build\`: Build system changes" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "**Examples:**" >> validation_report.md
-          echo "- \`feat: add user authentication\`" >> validation_report.md
-          echo "- \`fix: resolve login issue\`" >> validation_report.md
-          echo "- \`docs: update README with setup instructions\`" >> validation_report.md
-          echo "- \`feat(api): add new endpoint for user management\`" >> validation_report.md
-
-
+          # Output arrays for debugging
+          echo "Invalid commits: ${INVALID_COMMITS[*]}"
+          echo "Valid commits: ${VALID_COMMITS[*]}"
       - name: Set commit status
         if: always()
         uses: actions/github-script@v7
@@ -190,19 +134,37 @@ jobs:
             });
 
       - name: Comment on commit (if single commit push)
-        if: failure() && github.event.commits && github.event.commits.length == 1
+        if: failure() && github.event_name == 'push' && github.event.commits
         uses: actions/github-script@v7
+        env:
+          SUMMARY: ${{ steps.commit-validation.outputs.summary }}
         with:
           script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('validation_report.md', 'utf8');
+            const summary = process.env.SUMMARY;
+            const comment = [
+              "## ❌ Commit Message Validation Failed",
+              "",
+              summary,
+              "",
+              "**Please update your commit message to follow conventional commits format:**",
+              "- `feat: description` - for new features",
+              "- `fix: description` - for bug fixes",
+              "- `docs: description` - for documentation", 
+              "- `chore: description` - for maintenance",
+              "- `refactor: description` - for code improvements",
+              "",
+              "**To fix your commit message:**",
+              "```bash",
+              "git commit --amend -m \"new conventional message\"",
+              "```"
+            ].join('\n');
 
             // Create a comment on the commit
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: report
+              body: comment
             });
 
       - name: Fail if validation failed

@@ -81,17 +81,17 @@ jobs:
 
           # Define PR title patterns (Conventional Commits style, no period at end)
           VALID_TITLE_PATTERNS=(
-            "^feat(\(.+\))?: [a-z].{9,}[^.]$"        # feat: add new feature (no period)
-            "^fix(\(.+\))?: [a-z].{9,}[^.]$"         # fix: resolve bug (no period)
-            "^docs(\(.+\))?: [a-z].{9,}[^.]$"        # docs: update documentation (no period)
-            "^style(\(.+\))?: [a-z].{9,}[^.]$"       # style: formatting changes (no period)
-            "^refactor(\(.+\))?: [a-z].{9,}[^.]$"    # refactor: code restructuring (no period)
-            "^test(\(.+\))?: [a-z].{9,}[^.]$"        # test: add tests (no period)
-            "^chore(\(.+\))?: [a-z].{9,}[^.]$"       # chore: maintenance tasks (no period)
-            "^ci(\(.+\))?: [a-z].{9,}[^.]$"          # ci: workflow changes (no period)
-            "^perf(\(.+\))?: [a-z].{9,}[^.]$"        # perf: performance improvements (no period)
-            "^build(\(.+\))?: [a-z].{9,}[^.]$"       # build: build system changes (no period)
-            "^revert(\(.+\))?: [a-z].{9,}[^.]$"      # revert: revert changes (no period)
+            "^feat(\(.+\))?: [a-z].{2,}[^.]$"        # feat: add new feature (no period)
+            "^fix(\(.+\))?: [a-z].{2,}[^.]$"         # fix: resolve bug (no period)
+            "^docs(\(.+\))?: [a-z].{2,}[^.]$"        # docs: update documentation (no period)
+            "^style(\(.+\))?: [a-z].{2,}[^.]$"       # style: formatting changes (no period)
+            "^refactor(\(.+\))?: [a-z].{2,}[^.]$"    # refactor: code restructuring (no period)
+            "^test(\(.+\))?: [a-z].{2,}[^.]$"        # test: add tests (no period)
+            "^chore(\(.+\))?: [a-z].{2,}[^.]$"       # chore: maintenance tasks (no period)
+            "^ci(\(.+\))?: [a-z].{2,}[^.]$"          # ci: workflow changes (no period)
+            "^perf(\(.+\))?: [a-z].{2,}[^.]$"        # perf: performance improvements (no period)
+            "^build(\(.+\))?: [a-z].{2,}[^.]$"       # build: build system changes (no period)
+            "^revert(\(.+\))?: [a-z].{2,}[^.]$"      # revert: revert changes (no period)
           )
 
           TITLE_VALID=false

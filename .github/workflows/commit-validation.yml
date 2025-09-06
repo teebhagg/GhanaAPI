@@ -170,13 +170,6 @@ jobs:
           echo "- \`docs: update README with setup instructions\`" >> validation_report.md
           echo "- \`feat(api): add new endpoint for user management\`" >> validation_report.md
 
-      - name: Upload validation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: commit-validation-report-${{ github.run_id }}
-          path: validation_report.md
-          retention-days: 30
 
       - name: Set commit status
         if: always()

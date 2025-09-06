@@ -4,8 +4,10 @@ on:
   push:
     branches-ignore:
       - main
-      - master
-      - develop
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
   create:
   workflow_dispatch:
     inputs:
@@ -185,93 +187,6 @@ jobs:
             # Save suggestions for later use
             printf '%s\n' "${SUGGESTIONS[@]}" > suggestions.txt
           fi
-
-      - name: Create validation report
-        if: always()
-        run: |
-          BRANCH_NAME="${{ steps.branch-info.outputs.branch_name }}"
-          RESULT="${{ steps.validation.outputs.validation_result }}"
-
-          echo "# 🌿 Branch Name Validation Report" > validation_report.md
-          echo "" >> validation_report.md
-          echo "**Branch:** \`$BRANCH_NAME\`" >> validation_report.md
-          echo "**Result:** ${{ steps.validation.outputs.status_message }}" >> validation_report.md
-          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> validation_report.md
-
-          if [ "$RESULT" = "valid" ]; then
-            echo "**Type:** ${{ steps.validation.outputs.branch_type }}" >> validation_report.md
-            echo "**Pattern:** \`${{ steps.validation.outputs.matched_pattern }}\`" >> validation_report.md
-          else
-            echo "" >> validation_report.md
-            echo "## 💡 Suggestions" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "Consider renaming your branch to one of these:" >> validation_report.md
-            echo "" >> validation_report.md
-            
-            if [ -f suggestions.txt ]; then
-              while IFS= read -r suggestion; do
-                echo "- \`$suggestion\`" >> validation_report.md
-              done < suggestions.txt
-            fi
-          fi
-
-          echo "" >> validation_report.md
-          echo "## 📋 Branch Naming Guidelines" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "### Standard Patterns" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "| Type | Pattern | Example |" >> validation_report.md
-          echo "|------|---------|---------|" >> validation_report.md
-          echo "| Feature | \`feature/description\` | \`feature/user-authentication\` |" >> validation_report.md
-          echo "| Bug Fix | \`bugfix/description\` | \`bugfix/login-issue\` |" >> validation_report.md
-          echo "| Hot Fix | \`hotfix/description\` | \`hotfix/critical-security-patch\` |" >> validation_report.md
-          echo "| Chore | \`chore/description\` | \`chore/update-dependencies\` |" >> validation_report.md
-          echo "| Documentation | \`docs/description\` | \`docs/api-documentation\` |" >> validation_report.md
-          echo "| Refactor | \`refactor/description\` | \`refactor/user-service\` |" >> validation_report.md
-          echo "| Tests | \`test/description\` | \`test/unit-tests\` |" >> validation_report.md
-          echo "| CI/CD | \`ci/description\` | \`ci/github-actions\` |" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "### Special Patterns" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "- \`release/v1.2.3\` - Release branches" >> validation_report.md
-          echo "- \`version-bump/v1.2.3\` - Version bump branches" >> validation_report.md
-          echo "- \`feature/PROJ-123-description\` - Jira ticket references" >> validation_report.md
-          echo "- \`dependabot/*\` - Dependabot updates" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "### Rules" >> validation_report.md
-          echo "" >> validation_report.md
-          echo "1. Use lowercase letters, numbers, and hyphens only" >> validation_report.md
-          echo "2. Start and end with alphanumeric characters" >> validation_report.md
-          echo "3. Use hyphens to separate words" >> validation_report.md
-          echo "4. Keep descriptions concise but descriptive" >> validation_report.md
-          echo "5. Avoid special characters except hyphens" >> validation_report.md
-
-      #       - name: Upload validation report
-#         if: always()
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: branch-validation-report-${{ github.run_id }}
-#           path: validation_report.md
-#           retention-days: 30
-
-#       - name: Set branch validation status
-#         if: always()
-#         uses: actions/github-script@v7
-#         with:
-#           script: |
-#             const result = '${{ steps.validation.outputs.validation_result }}';
-#             const message = '${{ steps.validation.outputs.status_message }}';
-
-#             await github.rest.repos.createCommitStatus({
-#               owner: context.repo.owner,
-#               repo: context.repo.repo,
-#               sha: context.sha,
-#               state: result === 'valid' ? 'success' : 'failure',
-#               target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
-#               description: message,
-#               context: 'Branch Name Validation'
-#             });
-
       - name: Fail if validation failed
         if: steps.validation.outputs.validation_result != 'valid'
         run: |

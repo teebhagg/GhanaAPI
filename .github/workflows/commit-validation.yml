@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   checks: write
   pull-requests: write
   statuses: write
@@ -37,20 +37,20 @@ jobs:
 
           # Conventional commit patterns (no period at end, present tense)
           VALID_PATTERNS=(
-            "^feat(\(.+\))?: [a-z][^.]*[^.]$"       # feat: description (no period)
-            "^fix(\(.+\))?: [a-z][^.]*[^.]$"        # fix: description (no period)
-            "^docs(\(.+\))?: [a-z][^.]*[^.]$"       # docs: description (no period)
-            "^style(\(.+\))?: [a-z][^.]*[^.]$"      # style: description (no period)
-            "^refactor(\(.+\))?: [a-z][^.]*[^.]$"   # refactor: description (no period)
-            "^test(\(.+\))?: [a-z][^.]*[^.]$"       # test: description (no period)
-            "^chore(\(.+\))?: [a-z][^.]*[^.]$"      # chore: description (no period)
-            "^ci(\(.+\))?: [a-z][^.]*[^.]$"         # ci: description (no period)
-            "^perf(\(.+\))?: [a-z][^.]*[^.]$"       # perf: description (no period)
-            "^build(\(.+\))?: [a-z][^.]*[^.]$"      # build: description (no period)
-            "^revert(\(.+\))?: [a-z][^.]*[^.]$"     # revert: description (no period)
-            "^Merge .+"                             # Allow merge commits
-            "^Initial commit$"                      # Allow initial commit
-            "^Revert .+"                            # Allow revert commits
+            "^feat(\(.+\))?: [a-z].*[^.]$"       # feat: description (no period)
+            "^fix(\(.+\))?: [a-z].*[^.]$"        # fix: description (no period)
+            "^docs(\(.+\))?: [a-z].*[^.]$"       # docs: description (no period)
+            "^style(\(.+\))?: [a-z].*[^.]$"      # style: description (no period)
+            "^refactor(\(.+\))?: [a-z].*[^.]$"   # refactor: description (no period)
+            "^test(\(.+\))?: [a-z].*[^.]$"       # test: description (no period)
+            "^chore(\(.+\))?: [a-z].*[^.]$"      # chore: description (no period)
+            "^ci(\(.+\))?: [a-z].*[^.]$"         # ci: description (no period)
+            "^perf(\(.+\))?: [a-z].*[^.]$"       # perf: description (no period)
+            "^build(\(.+\))?: [a-z].*[^.]$"      # build: description (no period)
+            "^revert(\(.+\))?: [a-z].*[^.]$"     # revert: description (no period)
+            "^Merge .+"                          # Allow merge commits
+            "^Initial commit$"                   # Allow initial commit
+            "^Revert .+"                         # Allow revert commits
           )
 
           INVALID_COMMITS=()

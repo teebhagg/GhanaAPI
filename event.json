@@ -1,0 +1,9 @@
+{
+  "pull_request": {
+    "head": {
+      "ref": "feature/test-branch"
+    },
+    "title": "feat: add new feature",
+    "body": "This is a test pull request."
+  }
+}

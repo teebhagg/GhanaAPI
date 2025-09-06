@@ -10,3 +10,5 @@
 /backend/.env.test.test.production
 
 /backend/.git
+/.secrets
+.secrets

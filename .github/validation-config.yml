@@ -1,0 +1,116 @@
+# GitHub Actions Validation Configuration
+# This file controls the behavior of PR, commit, and branch validation workflows
+
+# Branch naming configuration
+branch_naming:
+  # Enable/disable branch name validation
+  enabled: true
+
+  # Strict mode - if true, only predefined patterns are allowed
+  strict_mode: true
+
+  # Custom patterns (regex) - these will be added to the default patterns
+  custom_patterns:
+    - "^spike/[a-z0-9][a-z0-9-]*[a-z0-9]$" # Spike branches
+    - "^experiment/[a-z0-9][a-z0-9-]*[a-z0-9]$" # Experimental branches
+    - "^poc/[a-z0-9][a-z0-9-]*[a-z0-9]$" # Proof of concept
+
+  # Excluded branches (these will not be validated)
+  excluded_branches:
+    - main
+    - master
+    - develop
+    - staging
+    - production
+
+  # Case sensitivity
+  case_sensitive: false
+
+# Commit message validation configuration
+commit_validation:
+  # Enable/disable commit message validation
+  enabled: true
+
+  # Minimum commit message length (excluding type and scope)
+  min_description_length: 3
+
+  # Maximum commit message length
+  max_message_length: 100
+
+  # Allow merge commits
+  allow_merge_commits: true
+
+  # Allow automated commits (dependabot, renovate, etc.)
+  allow_automated_commits: true
+
+  # Custom commit types (these will be added to the conventional commit types)
+  custom_types:
+    - "security" # Security-related changes
+    - "deps" # Dependency updates
+    - "config" # Configuration changes
+
+  # Require scope for certain types
+  require_scope:
+    - "feat"
+    - "fix"
+
+  # Allowed scopes (if empty, any scope is allowed)
+  allowed_scopes:
+    - "api"
+    - "frontend"
+    - "backend"
+    - "docs"
+    - "ci"
+    - "test"
+    - "transport"
+    - "exchange-rates"
+    - "locations"
+    - "addresses"
+
+# Pull request validation configuration
+pr_validation:
+  # Enable/disable PR validation
+  enabled: true
+
+  # Require PR description
+  require_description: true
+
+  # Minimum PR description length
+  min_description_length: 20
+
+  # Title validation (follows same rules as commit messages)
+  title_validation:
+    enabled: true
+    min_length: 10
+    max_length: 100
+
+  # Required files check
+  required_files_check:
+    enabled: true
+    files:
+      - "README.md"
+      - "LICENSE"
+      - "backend/package.json"
+
+  # Labels that exempt from validation
+  exempt_labels:
+    - "skip-validation"
+    - "automated"
+    - "dependabot"
+
+# General settings
+general:
+  # Fail the workflow if validation fails
+  fail_on_error: true
+
+  # Create detailed reports
+  create_reports: true
+
+  # Report retention days
+  report_retention_days: 30
+
+  # Update PR comments instead of creating new ones
+  update_comments: true
+
+  # Enable validation status checks
+  enable_status_checks: true

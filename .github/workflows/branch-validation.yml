@@ -1,0 +1,288 @@
+name: Branch Name Validation
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+  create:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: "Branch name to validate (leave empty to validate current branch)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get branch name
+        id: branch-info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.branch_name }}" ]; then
+            BRANCH_NAME="${{ github.event.inputs.branch_name }}"
+            echo "Using provided branch name: $BRANCH_NAME"
+          elif [ "${{ github.event_name }}" = "create" ] && [ "${{ github.event.ref_type }}" = "branch" ]; then
+            BRANCH_NAME="${{ github.event.ref }}"
+            echo "Validating newly created branch: $BRANCH_NAME"
+          elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+            echo "Validating PR source branch: $BRANCH_NAME"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+            echo "Validating current branch: $BRANCH_NAME"
+          fi
+
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Validate branch name
+        id: validation
+        run: |
+          BRANCH_NAME="${{ steps.branch-info.outputs.branch_name }}"
+          echo "🔍 Validating branch name: $BRANCH_NAME"
+
+          # Load validation rules from config file or use defaults
+          if [ -f ".github/branch-naming-rules.json" ]; then
+            echo "📄 Loading custom branch naming rules..."
+            # For now, we'll use built-in rules, but this allows for future customization
+          fi
+
+          # Define comprehensive branch naming patterns
+          # Check for double hyphens first (always invalid)
+          if [[ $BRANCH_NAME =~ -- ]]; then
+            echo "❌ Branch name contains double hyphens which are not allowed"
+            echo "validation_result=invalid" >> $GITHUB_OUTPUT
+            echo "branch_type=invalid" >> $GITHUB_OUTPUT
+            echo "matched_pattern=" >> $GITHUB_OUTPUT
+            echo "status_message=❌ Branch name contains double hyphens" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          declare -A PATTERNS=(
+            ["feature"]="^feature/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["bugfix"]="^bugfix/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["hotfix"]="^hotfix/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["fix"]="^fix/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["chore"]="^chore/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["docs"]="^docs/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["refactor"]="^refactor/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["test"]="^test/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["ci"]="^ci/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["perf"]="^perf/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["style"]="^style/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["build"]="^build/[a-z0-9]+([a-z0-9-]*[a-z0-9]+)*$"
+            ["release"]="^release/v[0-9]+\.[0-9]+\.[0-9]+.*$"
+            ["version-bump"]="^version-bump/v[0-9]+\.[0-9]+\.[0-9]+.*$"
+            ["dependabot"]="^dependabot/.*$"
+            ["renovate"]="^renovate/.*$"
+            ["github-actions"]="^github-actions/.*$"
+          )
+
+          # Additional allowed patterns for specific cases
+          SPECIAL_PATTERNS=(
+            "^[a-z]+/[A-Z]+-[0-9]+.*$"  # Jira-style: feature/PROJ-123-description
+            "^[a-z]+/[0-9]+-.*$"        # Issue-based: feature/123-description
+            "^draft/.*$"                # Draft branches
+            "^experiment/.*$"           # Experimental branches
+            "^poc/.*$"                  # Proof of concept branches
+          )
+
+          VALIDATION_RESULT="invalid"
+          MATCHED_PATTERN=""
+          BRANCH_TYPE=""
+          SUGGESTIONS=()
+
+          # Check against main patterns
+          for type in "${!PATTERNS[@]}"; do
+            pattern="${PATTERNS[$type]}"
+            if [[ $BRANCH_NAME =~ $pattern ]]; then
+              VALIDATION_RESULT="valid"
+              MATCHED_PATTERN=$pattern
+              BRANCH_TYPE=$type
+              break
+            fi
+          done
+
+          # If not matched, check special patterns
+          if [ "$VALIDATION_RESULT" = "invalid" ]; then
+            for pattern in "${SPECIAL_PATTERNS[@]}"; do
+              if [[ $BRANCH_NAME =~ $pattern ]]; then
+                VALIDATION_RESULT="valid"
+                MATCHED_PATTERN=$pattern
+                BRANCH_TYPE="special"
+                break
+              fi
+            done
+          fi
+
+          # Generate suggestions if invalid
+          if [ "$VALIDATION_RESULT" = "invalid" ]; then
+            # Try to extract meaningful parts and suggest corrections
+            if [[ $BRANCH_NAME =~ ^([a-zA-Z]+)[/_-](.*)$ ]]; then
+              prefix="${BASH_REMATCH[1],,}"  # Convert to lowercase
+              suffix="${BASH_REMATCH[2]}"
+              
+              # Normalize suffix
+              normalized_suffix=$(echo "$suffix" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
+              
+              case $prefix in
+                "feat"|"feature")
+                  SUGGESTIONS+=("feature/$normalized_suffix")
+                  ;;
+                "bug"|"bugfix"|"fix")
+                  SUGGESTIONS+=("bugfix/$normalized_suffix")
+                  SUGGESTIONS+=("fix/$normalized_suffix")
+                  ;;
+                "doc"|"docs"|"documentation")
+                  SUGGESTIONS+=("docs/$normalized_suffix")
+                  ;;
+                "test"|"tests")
+                  SUGGESTIONS+=("test/$normalized_suffix")
+                  ;;
+                "refact"|"refactor")
+                  SUGGESTIONS+=("refactor/$normalized_suffix")
+                  ;;
+                *)
+                  SUGGESTIONS+=("feature/$normalized_suffix")
+                  SUGGESTIONS+=("chore/$normalized_suffix")
+                  ;;
+              esac
+            else
+              # Generic suggestions
+              clean_name=$(echo "$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
+              SUGGESTIONS+=("feature/$clean_name")
+              SUGGESTIONS+=("bugfix/$clean_name")
+              SUGGESTIONS+=("chore/$clean_name")
+            fi
+          fi
+
+          # Output results
+          echo "validation_result=$VALIDATION_RESULT" >> $GITHUB_OUTPUT
+          echo "branch_type=$BRANCH_TYPE" >> $GITHUB_OUTPUT
+          echo "matched_pattern=$MATCHED_PATTERN" >> $GITHUB_OUTPUT
+
+          if [ "$VALIDATION_RESULT" = "valid" ]; then
+            echo "✅ Branch name '$BRANCH_NAME' is valid!"
+            echo "✅ Type: $BRANCH_TYPE"
+            echo "✅ Matches pattern: $MATCHED_PATTERN"
+            echo "status_message=✅ Branch name follows naming convention ($BRANCH_TYPE)" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Branch name '$BRANCH_NAME' is invalid!"
+            echo "❌ Does not match any allowed patterns"
+            echo ""
+            echo "💡 Suggestions:"
+            for suggestion in "${SUGGESTIONS[@]}"; do
+              echo "  - $suggestion"
+            done
+            echo "status_message=❌ Branch name does not follow naming convention" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create validation comment
+        id: comment
+        run: |
+          VALIDATION_RESULT="${{ steps.validation.outputs.validation_result }}"
+          BRANCH_TYPE="${{ steps.validation.outputs.branch_type }}"
+          BRANCH_NAME="${{ steps.branch-info.outputs.branch_name }}"
+          STATUS_MESSAGE="${{ steps.validation.outputs.status_message }}"
+
+          if [ "$VALIDATION_RESULT" = "valid" ]; then
+            COMMENT="## ✅ Branch Name Validation Passed
+
+          Branch name \`$BRANCH_NAME\` follows the naming convention!
+
+          **Validation Results:**
+          - $STATUS_MESSAGE
+          - Branch type: \`$BRANCH_TYPE\`
+
+          Your branch is ready for development! 🚀"
+          else
+            COMMENT="## ❌ Branch Name Validation Failed
+
+          Branch name \`$BRANCH_NAME\` does not follow the naming convention.
+
+          **Validation Results:**
+          - $STATUS_MESSAGE
+
+          ### Guidelines:
+
+          **Valid Branch Names:**
+          - \`feature/description\` - for new features
+          - \`bugfix/description\` - for bug fixes
+          - \`hotfix/description\` - for critical fixes
+          - \`chore/description\` - for maintenance tasks
+          - \`docs/description\` - for documentation updates
+          - \`test/description\` - for test additions
+          - \`refactor/description\` - for code improvements
+
+          **To rename your branch:**
+          \`\`\`bash
+          git branch -m new-branch-name
+          \`\`\`"
+          fi
+
+          echo "comment<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR (if triggered by PR)
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        uses: actions/github-script@v7
+        env:
+          COMMENT_BODY: ${{ steps.comment.outputs.comment }}
+        with:
+          script: |
+            const comment = process.env.COMMENT_BODY;
+
+            // Find existing branch validation comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Branch Name Validation')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: comment
+              });
+            }
+
+      - name: Fail if validation failed
+        if: steps.validation.outputs.validation_result != 'valid'
+        run: |
+          echo "❌ Branch name validation failed!"
+          echo ""
+          echo "To rename your current branch, use:"
+          echo "git branch -m new-branch-name"
+          echo ""
+          echo "Please check the validation comment for detailed guidance."
+          exit 1

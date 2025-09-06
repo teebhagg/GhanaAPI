@@ -1,0 +1,168 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Type of version bump"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+      prerelease_identifier:
+        description: "Prerelease identifier (alpha, beta, rc)"
+        required: false
+        default: "alpha"
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+  actions: read
+  checks: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "backend/package-lock.json"
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' backend/package.json)
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        id: version-bump
+        working-directory: ./backend
+        run: |
+          if [ "${{ github.event.inputs.version_type }}" == "prerelease" ]; then
+            # For prerelease, we need to specify the prerelease identifier
+            NEW_VERSION=$(npm version prerelease --preid=${{ github.event.inputs.prerelease_identifier }} --no-git-tag-version)
+          else
+            NEW_VERSION=$(npm version ${{ github.event.inputs.version_type }} --no-git-tag-version)
+          fi
+
+          # Remove the 'v' prefix that npm version adds
+          NEW_VERSION=${NEW_VERSION#v}
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update CHANGELOG
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new }}"
+          CURRENT_DATE=$(date +'%Y-%m-%d')
+
+          # Create or update CHANGELOG.md
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Create a temporary file with the new entry
+          echo "## [${NEW_VERSION}] - ${CURRENT_DATE}" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          echo "### Added" >> temp_changelog.md
+          echo "- Version bump to ${NEW_VERSION}" >> temp_changelog.md
+          echo "" >> temp_changelog.md
+
+          # Prepend the new entry to the existing changelog (after the header)
+          if grep -q "# Changelog" CHANGELOG.md; then
+            # Split the file: header + new entry + rest
+            sed '/^# Changelog/,/^$/!d' CHANGELOG.md > header.md
+            sed '/^# Changelog/,/^$/d' CHANGELOG.md > rest.md
+            cat header.md temp_changelog.md rest.md > CHANGELOG.md
+          else
+            cat temp_changelog.md CHANGELOG.md > temp_full.md
+            mv temp_full.md CHANGELOG.md
+          fi
+
+          # Clean up temp files
+          rm -f temp_changelog.md header.md rest.md
+
+      - name: Commit changes
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new }}"
+          git add backend/package.json backend/package-lock.json CHANGELOG.md
+          git commit -m "chore: bump version to v${NEW_VERSION}
+
+          - Updated backend version to ${NEW_VERSION}
+          - Updated CHANGELOG.md
+
+          Type: ${{ github.event.inputs.version_type }}
+          Previous: ${{ steps.current-version.outputs.current }}
+
+          Triggered by: @${{ github.actor }}"
+
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-bump/v${{ steps.version-bump.outputs.new }}
+          title: "chore: bump version to v${{ steps.version-bump.outputs.new }}"
+          body: |
+            ## Version Bump: v${{ steps.version-bump.outputs.new }}
+
+            **Type:** ${{ github.event.inputs.version_type }}
+            **Previous Version:** ${{ steps.current-version.outputs.current }}
+            **New Version:** ${{ steps.version-bump.outputs.new }}
+
+            ### Changes
+            - ⬆️ Bumped backend version from `${{ steps.current-version.outputs.current }}` to `${{ steps.version-bump.outputs.new }}`
+            - 📝 Updated CHANGELOG.md with version entry
+
+            ### What happens next?
+            When this PR is merged to main, it will automatically trigger the release workflow to:
+            - Create a Git tag `v${{ steps.version-bump.outputs.new }}`
+            - Generate a GitHub release with changelog
+            - Build and attach backend artifacts
+
+            ---
+            *This PR was created automatically by the Version Bump workflow.*
+            *Triggered by: @${{ github.actor }}*
+          draft: false
+          delete-branch: true
+
+      - name: Summary
+        run: |
+          echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version:** ${{ steps.current-version.outputs.current }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version:** ${{ steps.version-bump.outputs.new }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pull Request:** #${{ steps.create-pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`version-bump/v${{ steps.version-bump.outputs.new }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Merge the PR to trigger the automatic release!" >> $GITHUB_STEP_SUMMARY

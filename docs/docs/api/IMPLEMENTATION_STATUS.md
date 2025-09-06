@@ -16,6 +16,12 @@ This document provides a comprehensive overview of the current implementation st
 |                      | Rate Trends             | ⏳ Coming Soon | ❌ Not Implemented | ⏳ Documented | Endpoint exists but throws error |
 | **Location Data**    | Regions                 | ✅ Live        | ✅ Implemented     | ✅ Documented | Fully functional                 |
 |                      | Districts               | ✅ Live        | ✅ Implemented     | ✅ Documented | Fully functional                 |
+| **Transport & Logistics** | Transport Stops    | ✅ Live        | ✅ Implemented     | ✅ Documented | Bus stops, stations, public transport hubs |
+|                      | Route Calculation       | ✅ Live        | ✅ Implemented     | ✅ Documented | Optimal routing between locations |
+|                      | Route Directions        | ✅ Live        | ✅ Implemented     | ✅ Documented | Turn-by-turn navigation instructions |
+|                      | Travel Cost Estimation  | ✅ Live        | ✅ Implemented     | ✅ Documented | Fuel costs and fare calculations |
+|                      | Fuel Prices             | ✅ Live        | ✅ Implemented     | ✅ Documented | Current petrol, diesel, LPG prices |
+|                      | Nearby Services         | ✅ Live        | ✅ Implemented     | ✅ Documented | Find transport stops within radius |
 
 ## 🔧 Backend Implementation Details
 
@@ -56,7 +62,27 @@ This document provides a comprehensive overview of the current implementation st
 #### ✅ Implemented Endpoints
 
 - `GET /locations/regions` - Get all regions
-- `GET /locations/districts/:regionId` - Get districts for a region
+- `GET /locations/districts` - Get districts by region
+
+### Transport & Logistics
+
+#### ✅ Implemented Endpoints
+
+- `GET /transport/stops` - Get transport stops by city and type
+- `GET /transport/nearby-stops` - Find transport stops within radius
+- `GET /transport/route-calculation` - Calculate optimal routes between points
+- `GET /transport/directions` - Get detailed turn-by-turn directions
+- `GET /transport/travel-cost` - Estimate travel costs for different modes
+- `GET /transport/fuel-prices` - Get current fuel prices in Ghana
+
+#### 🔧 Backend Features
+
+- **Multiple Provider Support** - OpenRouteService, HERE Maps, GraphHopper
+- **Fallback Logic** - Automatic failover between routing providers
+- **Geocoding Services** - Nominatim and Overpass API integration
+- **Caching** - Redis caching for performance optimization
+- **Input Validation** - Ghana boundary checking and parameter validation
+- **Error Handling** - Comprehensive error responses with helpful messages
 
 ## 📝 Documentation Status
 

@@ -1,5 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable, Logger, Inject } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { firstValueFrom } from 'rxjs';
@@ -17,9 +25,7 @@ export interface FuelPrice {
 @Injectable()
 export class FuelPriceService {
   private readonly logger = new Logger(FuelPriceService.name);
-  private readonly fuelPriceApis = [
-    'cedirates-scraper',
-  ];
+  private readonly fuelPriceApis = ['cedirates-scraper'];
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
 
   constructor(
@@ -46,13 +52,17 @@ export class FuelPriceService {
     const timeDiff = targetTime.getTime() - now.getTime();
     const ttlSeconds = Math.ceil(timeDiff / 1000);
 
-    this.logger.debug(`Cache TTL calculated: ${ttlSeconds} seconds until ${targetTime.toISOString()}`);
+    this.logger.debug(
+      `Cache TTL calculated: ${ttlSeconds} seconds until ${targetTime.toISOString()}`,
+    );
     return ttlSeconds;
   }
 
   async getFuelPrices(): Promise<FuelPrice> {
     // Check cache first
-    const cachedPrices = await this.cacheManager.get<FuelPrice>(this.FUEL_PRICE_CACHE_KEY);
+    const cachedPrices = await this.cacheManager.get<FuelPrice>(
+      this.FUEL_PRICE_CACHE_KEY,
+    );
     if (cachedPrices) {
       this.logger.debug('Returning cached fuel prices');
       return cachedPrices;
@@ -75,11 +85,14 @@ export class FuelPriceService {
 
         // Cache the result with TTL until 11:59 PM
         const ttl = this.getCacheTTL();
-        await this.cacheManager.set(this.FUEL_PRICE_CACHE_KEY, fuelPrices, ttl * 1000); // TTL in milliseconds
+        await this.cacheManager.set(
+          this.FUEL_PRICE_CACHE_KEY,
+          fuelPrices,
+          ttl * 1000,
+        ); // TTL in milliseconds
 
         this.logger.log(`Cached fuel prices for ${ttl} seconds until 11:59 PM`);
         return fuelPrices;
-
       } catch (error) {
         this.logger.warn(`Fuel prices from ${api} failed: ${error.message}`);
         continue;
@@ -106,17 +119,15 @@ export class FuelPriceService {
     return this.parseCediRatesFuelPrices(response.data);
   }
 
-
-
-
-
   private parseCediRatesFuelPrices(html: string): FuelPrice {
     try {
       const $ = cheerio.load(html);
 
       // Target companies: Shell, Goil, Total, Star Oil (preprocessed to lowercase)
       const targetCompanies = ['Shell', 'Goil', 'Total', 'Star Oil'];
-      const targetCompaniesLower = targetCompanies.map(company => company.toLowerCase());
+      const targetCompaniesLower = targetCompanies.map((company) =>
+        company.toLowerCase(),
+      );
       const petrolPrices: number[] = [];
       const dieselPrices: number[] = [];
 
@@ -133,8 +144,8 @@ export class FuelPriceService {
           const dieselText = cells.eq(3).text().trim();
 
           // Check if this company is one of our targets (using preprocessed lowercase array)
-          const isTargetCompany = targetCompaniesLower.some(target =>
-            companyNameLower.includes(target)
+          const isTargetCompany = targetCompaniesLower.some((target) =>
+            companyNameLower.includes(target),
           );
 
           if (isTargetCompany) {
@@ -156,13 +167,17 @@ export class FuelPriceService {
       });
 
       // Calculate averages
-      const avgPetrol = petrolPrices.length > 0
-        ? petrolPrices.reduce((sum, price) => sum + price, 0) / petrolPrices.length
-        : 0;
+      const avgPetrol =
+        petrolPrices.length > 0
+          ? petrolPrices.reduce((sum, price) => sum + price, 0) /
+            petrolPrices.length
+          : 0;
 
-      const avgDiesel = dieselPrices.length > 0
-        ? dieselPrices.reduce((sum, price) => sum + price, 0) / dieselPrices.length
-        : 0;
+      const avgDiesel =
+        dieselPrices.length > 0
+          ? dieselPrices.reduce((sum, price) => sum + price, 0) /
+            dieselPrices.length
+          : 0;
 
       return {
         petrol: Math.round(avgPetrol * 100) / 100, // Round to 2 decimal places

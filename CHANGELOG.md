@@ -5,7 +5,84 @@ All notable changes to the Ghana API documentation and implementation will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2025-08-28
+<details>
+<summary><strong>📋 [0.2.1] - 2025-09-06</strong> - Validation Workflows & Release Management</summary>
+
+### Added
+
+- **Comprehensive Validation Workflows Documentation**
+
+  - Complete guide to branch naming conventions with valid patterns and examples
+  - Pull request validation requirements including title format, description standards, and commit message validation
+  - Commit message validation using conventional commits format with detailed examples and troubleshooting
+  - Automated validation feedback system documentation with success and failure scenarios
+
+- **Release Management Documentation**
+
+  - Semantic versioning guide with clear examples for patch, minor, major, and prerelease versions
+  - Two-approach release system: automated version bump workflow and manual version updates
+  - Step-by-step GitHub UI and CLI instructions for creating releases
+  - Comprehensive release automation process documentation including build, test, and artifact generation
+
+- **Quick Reference Guide for Contributors**
+
+  - Handy cheat sheet for validation requirements and common commands
+  - Quick fixes for common validation errors
+  - Validation checklist for PR submissions
+  - Essential commands for development, testing, and release management
+
+- **Enhanced Contributing Documentation**
+  - Updated project structure to include GitHub workflows
+  - Added quality standards section highlighting validation workflows
+  - Integrated validation and release management into contribution workflow
+  - Added proper cross-references between documentation sections
+
+### Technical Implementation
+
+- **GitHub Actions Workflow Fixes**
+
+  - Fixed branch name detection for pull request events using `github.head_ref` instead of `github.ref_name`
+  - Added proper permissions (`statuses: write`, `pull-requests: write`) to validation workflows
+  - Enhanced error handling and validation feedback in commit message validation
+  - Improved comment generation using environment variables for safe character handling
+
+- **Documentation Infrastructure**
+  - Updated Docusaurus sidebar configuration to include new documentation pages
+  - Added proper anchor links and cross-references throughout documentation
+  - Implemented consistent documentation structure following existing patterns
+  - Validated documentation build process and fixed broken links
+
+### Fixed
+
+- **Workflow Issues**
+
+  - Resolved branch validation failures for pull request events
+  - Fixed commit validation workflow permissions for status creation
+  - Corrected PR body escaping issues for special characters and markdown
+  - Fixed multiline string handling in GitHub Actions comments
+
+- **Documentation Issues**
+  - Fixed broken anchor links in contributing documentation
+  - Corrected table formatting inconsistencies across documentation pages
+  - Resolved Docusaurus build warnings and validation errors
+
+### Documentation Structure
+
+The documentation now includes a comprehensive contributing section:
+
+```
+Contributing/
+├── Overview                    # Main contributing guide with setup and workflow
+├── Quick Reference            # Handy cheat sheet for validation and releases
+├── Validation Workflows       # Detailed guide for branch, PR, and commit validation
+├── Release Management         # Complete release and version management guide
+└── Feature-specific guides... # Existing feature contribution documentation
+```
+
+</details>
+
+<details>
+<summary><strong>🚀 [0.2.0] - 2025-08-28</strong> - Transport & Logistics API</summary>
 
 ### Added
 
@@ -32,7 +109,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Intelligent caching for performance optimization
 
 - **Comprehensive Documentation**
-
   - Complete transport API documentation with examples
   - Contributing guide for transport features
   - Technical architecture documentation
@@ -60,7 +136,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated implementation status tracking
 - Comprehensive contributing guidelines for transport module
 
-## [0.1.0] - 2025-08-18
+</details>
+
+<details>
+<summary><strong>🎉 [0.1.0] - 2025-08-18</strong> - Initial Release - Core API Services</summary>
 
 ### Added
 
@@ -134,18 +213,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fast loading times
   - Accessibility considerations
 
+</details>
+
 ---
 
-## Version Information
+<details>
+<summary><strong>📊 Version Information</strong></summary>
 
-### Current Version: 0.2.0
+### Current Version: 0.2.1
 
 - **Status**: Production Ready
-- **Release Date**: 2025-08-28
-- **Features**: Core API functionality plus comprehensive transport & logistics services
+- **Release Date**: 2025-09-06
+- **Features**: Core API functionality plus comprehensive transport & logistics services + validation workflows
 - **Stability**: High - All documented features are fully implemented and tested
 
-### Available Features in 0.2.0
+### Available Features in 0.2.1
 
 #### Address Services
 
@@ -162,7 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Regional data for all Ghanaian regions
 - ✅ District information for each region
 
-#### Transport & Logistics (NEW)
+#### Transport & Logistics
 
 - ✅ Transport stops lookup for major cities
 - ✅ Route planning with multiple transport modes
@@ -171,15 +253,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Nearby transport services search
 - ✅ Multi-provider routing with automatic failover
 
-#### Documentation
+#### Documentation & Development
 
 - ✅ Complete API documentation with examples
 - ✅ Implementation status tracking
 - ✅ Professional Ghanaian-themed design
 - ✅ Responsive and accessible interface
 - ✅ Comprehensive contributing guidelines
+- ✅ **NEW**: Validation workflows documentation
+- ✅ **NEW**: Release management documentation
+- ✅ **NEW**: Quick reference guide for contributors
 
-## Contributing
+#### Quality Assurance (NEW)
+
+- ✅ Automated branch name validation
+- ✅ Pull request validation workflows
+- ✅ Commit message validation (conventional commits)
+- ✅ Automated release management
+- ✅ Version bump workflows
+
+</details>
+
+<details>
+<summary><strong>🤝 Contributing</strong></summary>
 
 When contributing to this project, please:
 
@@ -189,10 +285,15 @@ When contributing to this project, please:
 4. Add appropriate version numbers for releases
 5. Document breaking changes clearly
 
-## Support
+</details>
+
+<details>
+<summary><strong>🆘 Support</strong></summary>
 
 For questions about changes or to report issues:
 
 - Check this changelog for recent updates
 - Review the implementation status documentation
 - Contact the development team for clarification
+
+</details>

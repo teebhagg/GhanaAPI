@@ -77,9 +77,27 @@ GhanaAPI/
 │   ├── package.json
 │   └── .env.example
 ├── docs/                     # Documentation (Docusaurus)
+├── .github/
+│   └── workflows/            # CI/CD and validation workflows
 ├── scripts/                  # Automation scripts
 └── README.md
 ```
+
+## 🛡️ Quality Standards
+
+GhanaAPI maintains high quality standards through automated validation workflows:
+
+### [Validation Workflows](./validation-workflows)
+
+- **Branch Name Validation** - Enforces consistent branch naming
+- **Pull Request Validation** - Validates PR titles, descriptions, and content
+- **Commit Message Validation** - Ensures conventional commit format
+
+### [Release Management](./release-management)
+
+- **Automated Versioning** - Semantic version bumping
+- **Release Automation** - Automated builds, testing, and GitHub releases
+- **Multiple Release Types** - Support for patch, minor, major, and prerelease versions
 
 ## 🎯 Feature Areas
 
@@ -105,7 +123,6 @@ GhanaAPI is organized into distinct feature areas. Choose the area you'd like to
 - District and constituency data
 - Administrative boundaries
 - **Skills needed**: Geographic data, government data, data modeling
-
 
 ## 📝 Contribution Workflow
 
@@ -144,10 +161,14 @@ git push origin feature/descriptive-feature-name
 
 Create a pull request with:
 
-- Clear title describing the change
-- Detailed description of what was added/changed
-- Screenshots or examples if applicable
-- Reference to related issues
+- **Clear title** following [conventional commits format](./validation-workflows#1-pr-title-validation)
+- **Detailed description** of what was added/changed (minimum 20 characters)
+- **Screenshots or examples** if applicable
+- **Reference to related issues**
+
+:::info Validation
+All PRs are automatically validated for branch naming, commit messages, title format, and description. See [Validation Workflows](./validation-workflows) for details.
+:::
 
 ## 🧪 Testing Guidelines
 
@@ -287,10 +308,13 @@ We are committed to providing a welcoming and inclusive environment for all cont
 Ready to contribute? Here's what to do:
 
 1. **🔍 [Browse open issues](https://github.com/teebhagg/GhanaAPI/issues)**
-2. **📖 Read feature-specific contributing guides**:
-   - [Address Services](./addresses)
-   - [Exchange Rates](./exchange-rates)
-   - [Location Data](./locations)
+2. **📖 Read the essential guides**:
+   - [Validation Workflows](./validation-workflows) - Branch naming, PR validation, commit messages
+   - [Release Management](./release-management) - Creating releases and version management
+   - **Feature-specific guides**:
+     - [Address Services](./addresses)
+     - [Exchange Rates](./exchange-rates)
+     - [Location Data](./locations)
 3. **🛠️ Set up your development environment**
 4. **💬 Join our [Discord community](https://discord.gg/ghana-api)**
 5. **🚀 Make your first contribution!**

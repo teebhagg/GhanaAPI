@@ -1,0 +1,353 @@
+name: PR and Branch Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  statuses: write
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Validate Branch Name
+        id: branch-validation
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Branch name: $BRANCH_NAME"
+
+          # Define allowed branch patterns
+          VALID_PATTERNS=(
+            "^feature/[a-z0-9-]+$"           # feature/my-new-feature
+            "^bugfix/[a-z0-9-]+$"            # bugfix/fix-something
+            "^hotfix/[a-z0-9-]+$"            # hotfix/critical-fix
+            "^chore/[a-z0-9-]+$"             # chore/update-deps
+            "^docs/[a-z0-9-]+$"              # docs/update-readme
+            "^refactor/[a-z0-9-]+$"          # refactor/clean-code
+            "^test/[a-z0-9-]+$"              # test/add-unit-tests
+            "^ci/[a-z0-9-]+$"                # ci/update-workflow
+            "^version-bump/v[0-9]+\.[0-9]+\.[0-9]+.*$"  # version-bump/v1.2.3
+            "^dependabot/.*$"                # dependabot branches
+            "^renovate/.*$"                  # renovate branches
+          )
+
+          BRANCH_VALID=false
+          MATCHED_PATTERN=""
+
+          for pattern in "${VALID_PATTERNS[@]}"; do
+            if [[ $BRANCH_NAME =~ $pattern ]]; then
+              BRANCH_VALID=true
+              MATCHED_PATTERN=$pattern
+              break
+            fi
+          done
+
+          if [ "$BRANCH_VALID" = true ]; then
+            echo "✅ Branch name '$BRANCH_NAME' is valid (matches: $MATCHED_PATTERN)"
+            echo "branch_valid=true" >> $GITHUB_OUTPUT
+            echo "branch_message=✅ Branch name follows naming convention" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Branch name '$BRANCH_NAME' is invalid"
+            echo "branch_valid=false" >> $GITHUB_OUTPUT
+            echo "branch_message=❌ Branch name does not follow naming convention" >> $GITHUB_OUTPUT
+            
+            echo "Valid patterns:" 
+            echo "- feature/your-feature-name"
+            echo "- bugfix/issue-description"
+            echo "- hotfix/critical-fix"
+            echo "- chore/task-description"
+            echo "- docs/documentation-update"
+            echo "- refactor/code-improvement"
+            echo "- test/test-description"
+            echo "- ci/workflow-update"
+          fi
+
+      - name: Validate PR Title
+        id: pr-title-validation
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+
+          # Define PR title patterns (Conventional Commits style, no period at end)
+          VALID_TITLE_PATTERNS=(
+            "^feat(\(.+\))?: [a-z].{2,}[^.]$"        # feat: add new feature (no period)
+            "^fix(\(.+\))?: [a-z].{2,}[^.]$"         # fix: resolve bug (no period)
+            "^docs(\(.+\))?: [a-z].{2,}[^.]$"        # docs: update documentation (no period)
+            "^style(\(.+\))?: [a-z].{2,}[^.]$"       # style: formatting changes (no period)
+            "^refactor(\(.+\))?: [a-z].{2,}[^.]$"    # refactor: code restructuring (no period)
+            "^test(\(.+\))?: [a-z].{2,}[^.]$"        # test: add tests (no period)
+            "^chore(\(.+\))?: [a-z].{2,}[^.]$"       # chore: maintenance tasks (no period)
+            "^ci(\(.+\))?: [a-z].{2,}[^.]$"          # ci: workflow changes (no period)
+            "^perf(\(.+\))?: [a-z].{2,}[^.]$"        # perf: performance improvements (no period)
+            "^build(\(.+\))?: [a-z].{2,}[^.]$"       # build: build system changes (no period)
+            "^revert(\(.+\))?: [a-z].{2,}[^.]$"      # revert: revert changes (no period)
+          )
+
+          TITLE_VALID=false
+          MATCHED_TITLE_PATTERN=""
+
+          for pattern in "${VALID_TITLE_PATTERNS[@]}"; do
+            if [[ $PR_TITLE =~ $pattern ]]; then
+              TITLE_VALID=true
+              MATCHED_TITLE_PATTERN=$pattern
+              break
+            fi
+          done
+
+          if [ "$TITLE_VALID" = true ]; then
+            echo "✅ PR title '$PR_TITLE' is valid"
+            echo "title_valid=true" >> $GITHUB_OUTPUT
+            echo "title_message=✅ PR title follows conventional commits format" >> $GITHUB_OUTPUT
+          else
+            echo "❌ PR title '$PR_TITLE' is invalid"
+            echo "title_valid=false" >> $GITHUB_OUTPUT
+            echo "title_message=❌ PR title does not follow conventional commits format" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate PR Description
+        id: pr-description-validation
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Check PR description length - env vars are safer for special characters
+          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
+            echo "❌ PR description is too short or missing"
+            echo "description_valid=false" >> $GITHUB_OUTPUT
+            echo "description_message=❌ PR description must be at least 20 characters" >> $GITHUB_OUTPUT
+          else
+            echo "✅ PR description is adequate"
+            echo "description_valid=true" >> $GITHUB_OUTPUT
+            echo "description_message=✅ PR description is provided" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate Commit Messages
+        id: commit-validation
+        run: |
+          # Get all commits in this PR
+          COMMITS=$(git log --format="%H %s" origin/${{ github.base_ref }}..HEAD)
+
+          INVALID_COMMITS=()
+          VALID_COMMITS=()
+
+          # Conventional commit patterns (no period at end)
+          COMMIT_PATTERNS=(
+            "^feat(\(.+\))?: [a-z].*[^.]$"
+            "^fix(\(.+\))?: [a-z].*[^.]$"
+            "^docs(\(.+\))?: [a-z].*[^.]$"
+            "^style(\(.+\))?: [a-z].*[^.]$"
+            "^refactor(\(.+\))?: [a-z].*[^.]$"
+            "^test(\(.+\))?: [a-z].*[^.]$"
+            "^chore(\(.+\))?: [a-z].*[^.]$"
+            "^ci(\(.+\))?: [a-z].*[^.]$"
+            "^perf(\(.+\))?: [a-z].*[^.]$"
+            "^build(\(.+\))?: [a-z].*[^.]$"
+            "^revert(\(.+\))?: [a-z].*[^.]$"
+            "^Merge .+"  # Allow merge commits
+          )
+
+          while IFS= read -r commit_line; do
+            if [ -n "$commit_line" ]; then
+              COMMIT_HASH=$(echo "$commit_line" | cut -d' ' -f1)
+              COMMIT_MSG=$(echo "$commit_line" | cut -d' ' -f2-)
+              
+              COMMIT_VALID=false
+              for pattern in "${COMMIT_PATTERNS[@]}"; do
+                if [[ $COMMIT_MSG =~ $pattern ]]; then
+                  COMMIT_VALID=true
+                  break
+                fi
+              done
+              
+              if [ "$COMMIT_VALID" = true ]; then
+                VALID_COMMITS+=("$COMMIT_HASH: $COMMIT_MSG")
+              else
+                INVALID_COMMITS+=("$COMMIT_HASH: $COMMIT_MSG")
+              fi
+            fi
+          done <<< "$COMMITS"
+
+          if [ ${#INVALID_COMMITS[@]} -eq 0 ]; then
+            echo "✅ All commit messages follow conventional format"
+            echo "commits_valid=true" >> $GITHUB_OUTPUT
+            echo "commits_message=✅ All commit messages follow conventional commits format" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Some commit messages don't follow conventional format:"
+            for commit in "${INVALID_COMMITS[@]}"; do
+              echo "  - $commit"
+            done
+            echo "commits_valid=false" >> $GITHUB_OUTPUT
+            echo "commits_message=❌ Some commit messages don't follow conventional commits format" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Required Files
+        id: required-files-check
+        run: |
+          MISSING_FILES=()
+
+          # Check for important files that should exist
+          REQUIRED_FILES=(
+            "README.md"
+            "LICENSE"
+            "backend/package.json"
+          )
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -eq 0 ]; then
+            echo "✅ All required files are present"
+            echo "files_valid=true" >> $GITHUB_OUTPUT
+            echo "files_message=✅ All required files are present" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Missing required files:"
+            for file in "${MISSING_FILES[@]}"; do
+              echo "  - $file"
+            done
+            echo "files_valid=false" >> $GITHUB_OUTPUT
+            echo "files_message=❌ Some required files are missing" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create validation summary
+        id: summary
+        run: |
+          BRANCH_VALID="${{ steps.branch-validation.outputs.branch_valid }}"
+          TITLE_VALID="${{ steps.pr-title-validation.outputs.title_valid }}"
+          DESC_VALID="${{ steps.pr-description-validation.outputs.description_valid }}"
+          COMMITS_VALID="${{ steps.commit-validation.outputs.commits_valid }}"
+          FILES_VALID="${{ steps.required-files-check.outputs.files_valid }}"
+
+          OVERALL_VALID=true
+
+          if [ "$BRANCH_VALID" != "true" ] || [ "$TITLE_VALID" != "true" ] || [ "$DESC_VALID" != "true" ] || [ "$COMMITS_VALID" != "true" ] || [ "$FILES_VALID" != "true" ]; then
+            OVERALL_VALID=false
+          fi
+
+          echo "overall_valid=$OVERALL_VALID" >> $GITHUB_OUTPUT
+
+          # Create summary comment
+          if [ "$OVERALL_VALID" = true ]; then
+            COMMENT="## ✅ PR Validation Passed
+
+          All validation checks have passed successfully!
+
+          ### Validation Results:
+          - ${{ steps.branch-validation.outputs.branch_message }}
+          - ${{ steps.pr-title-validation.outputs.title_message }}
+          - ${{ steps.pr-description-validation.outputs.description_message }}
+          - ${{ steps.commit-validation.outputs.commits_message }}
+          - ${{ steps.required-files-check.outputs.files_message }}
+
+          Your PR is ready for review! 🚀"
+          else
+            COMMENT="## ❌ PR Validation Failed
+
+          Some validation checks have failed. Please fix the issues below:
+
+          ### Validation Results:
+          - ${{ steps.branch-validation.outputs.branch_message }}
+          - ${{ steps.pr-title-validation.outputs.title_message }}
+          - ${{ steps.pr-description-validation.outputs.description_message }}
+          - ${{ steps.commit-validation.outputs.commits_message }}
+          - ${{ steps.required-files-check.outputs.files_message }}
+
+          ### Guidelines:
+
+          **Branch Names:**
+          - \`feature/description\` - for new features
+          - \`bugfix/description\` - for bug fixes
+          - \`hotfix/description\` - for critical fixes
+          - \`chore/description\` - for maintenance tasks
+          - \`docs/description\` - for documentation updates
+
+          **PR Titles (Conventional Commits):**
+          - \`feat: add new feature description\`
+          - \`fix: resolve issue with something\`
+          - \`docs: update documentation\`
+          - \`chore: update dependencies\`
+
+          **Commit Messages:**
+          Follow the same conventional commits format as PR titles."
+          fi
+
+          echo "comment<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        env:
+          COMMENT_BODY: ${{ steps.summary.outputs.comment }}
+        with:
+          script: |
+            const comment = process.env.COMMENT_BODY;
+
+            // Find existing validation comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('PR Validation')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: comment
+              });
+            }
+
+      - name: Set PR check status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const overallValid = ${{ steps.summary.outputs.overall_valid }};
+            const state = overallValid ? 'success' : 'failure';
+            const description = overallValid ? 
+              'All validation checks passed' : 
+              'Some validation checks failed';
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: state,
+              target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+              description: description,
+              context: 'PR Validation'
+            });
+
+      - name: Fail if validation failed
+        if: steps.summary.outputs.overall_valid != 'true'
+        run: |
+          echo "❌ PR validation failed. Please fix the issues above."
+          exit 1

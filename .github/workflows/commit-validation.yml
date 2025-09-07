@@ -1,0 +1,176 @@
+name: Commit Message Validation
+
+on:
+  push:
+    branches-ignore:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Commit Messages
+        id: commit-validation
+        run: |
+          echo "🔍 Validating commit messages..."
+
+          # Get the base branch to compare against
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # For manual runs, check the last 10 commits
+            COMMITS=$(git log --format="%H|%s|%an|%ae" -n 10)
+          else
+            # For push events, get commits since the last push
+            COMMITS=$(git log --format="%H|%s|%an|%ae" ${{ github.event.before }}..${{ github.event.after }})
+          fi
+
+          # Conventional commit patterns (no period at end, present tense)
+          VALID_PATTERNS=(
+            "^feat(\(.+\))?: [a-z].*[^.]$"       # feat: description (no period)
+            "^fix(\(.+\))?: [a-z].*[^.]$"        # fix: description (no period)
+            "^docs(\(.+\))?: [a-z].*[^.]$"       # docs: description (no period)
+            "^style(\(.+\))?: [a-z].*[^.]$"      # style: description (no period)
+            "^refactor(\(.+\))?: [a-z].*[^.]$"   # refactor: description (no period)
+            "^test(\(.+\))?: [a-z].*[^.]$"       # test: description (no period)
+            "^chore(\(.+\))?: [a-z].*[^.]$"      # chore: description (no period)
+            "^ci(\(.+\))?: [a-z].*[^.]$"         # ci: description (no period)
+            "^perf(\(.+\))?: [a-z].*[^.]$"       # perf: description (no period)
+            "^build(\(.+\))?: [a-z].*[^.]$"      # build: description (no period)
+            "^revert(\(.+\))?: [a-z].*[^.]$"     # revert: description (no period)
+            "^Merge .+"                          # Allow merge commits
+            "^Initial commit$"                   # Allow initial commit
+            "^Revert .+"                         # Allow revert commits
+          )
+
+          INVALID_COMMITS=()
+          VALID_COMMITS=()
+          TOTAL_COMMITS=0
+
+          while IFS='|' read -r hash subject author email; do
+            if [ -n "$hash" ]; then
+              TOTAL_COMMITS=$((TOTAL_COMMITS + 1))
+              
+              # Skip commits from dependabot and renovate
+              if [[ "$email" == *"dependabot"* ]] || [[ "$email" == *"renovate"* ]]; then
+                VALID_COMMITS+=("$hash: $subject (automated)")
+                continue
+              fi
+              
+              COMMIT_VALID=false
+              MATCHED_PATTERN=""
+              
+              for pattern in "${VALID_PATTERNS[@]}"; do
+                if [[ $subject =~ $pattern ]]; then
+                  COMMIT_VALID=true
+                  MATCHED_PATTERN=$pattern
+                  break
+                fi
+              done
+              
+              if [ "$COMMIT_VALID" = true ]; then
+                VALID_COMMITS+=("$hash: $subject")
+              else
+                INVALID_COMMITS+=("$hash: $subject")
+              fi
+            fi
+          done <<< "$COMMITS"
+
+          echo "📊 Validation Summary:"
+          echo "- Total commits checked: $TOTAL_COMMITS"
+          echo "- Valid commits: ${#VALID_COMMITS[@]}"
+          echo "- Invalid commits: ${#INVALID_COMMITS[@]}"
+
+          if [ ${#INVALID_COMMITS[@]} -eq 0 ]; then
+            echo "✅ All commit messages follow conventional format!"
+            echo "validation_result=success" >> $GITHUB_OUTPUT
+            echo "summary=All $TOTAL_COMMITS commit(s) follow conventional commits format" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Found ${#INVALID_COMMITS[@]} invalid commit message(s):"
+            echo ""
+            echo "Invalid commits:"
+            for commit in "${INVALID_COMMITS[@]}"; do
+              echo "  ❌ $commit"
+            done
+            echo ""
+            echo "Valid commits:"
+            for commit in "${VALID_COMMITS[@]}"; do
+              echo "  ✅ $commit"
+            done
+            
+            echo "validation_result=failure" >> $GITHUB_OUTPUT
+            echo "summary=${#INVALID_COMMITS[@]} out of $TOTAL_COMMITS commit(s) don't follow conventional commits format" >> $GITHUB_OUTPUT
+          fi
+
+          # Output arrays for debugging
+          echo "Invalid commits: ${INVALID_COMMITS[*]}"
+          echo "Valid commits: ${VALID_COMMITS[*]}"
+      - name: Set commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = '${{ steps.commit-validation.outputs.validation_result }}';
+            const summary = '${{ steps.commit-validation.outputs.summary }}';
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: result === 'success' ? 'success' : 'failure',
+              target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+              description: summary,
+              context: 'Commit Message Validation'
+            });
+
+      - name: Comment on commit (if single commit push)
+        if: failure() && github.event_name == 'push' && github.event.commits
+        uses: actions/github-script@v7
+        env:
+          SUMMARY: ${{ steps.commit-validation.outputs.summary }}
+        with:
+          script: |
+            const summary = process.env.SUMMARY;
+            const comment = [
+              "## ❌ Commit Message Validation Failed",
+              "",
+              summary,
+              "",
+              "**Please update your commit message to follow conventional commits format:**",
+              "- `feat: description` - for new features",
+              "- `fix: description` - for bug fixes",
+              "- `docs: description` - for documentation", 
+              "- `chore: description` - for maintenance",
+              "- `refactor: description` - for code improvements",
+              "",
+              "**To fix your commit message:**",
+              "```bash",
+              "git commit --amend -m \"new conventional message\"",
+              "```"
+            ].join('\n');
+
+            // Create a comment on the commit
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+
+      - name: Fail if validation failed
+        if: steps.commit-validation.outputs.validation_result == 'failure'
+        run: |
+          echo "❌ Commit message validation failed!"
+          echo "Please update your commit messages to follow conventional commits format."
+          echo "Run 'git commit --amend -m \"new message\"' to fix the last commit message."
+          exit 1

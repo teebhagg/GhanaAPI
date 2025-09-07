@@ -31,8 +31,15 @@ jobs:
             # For manual runs, check the last 10 commits
             COMMITS=$(git log --format="%H|%s|%an|%ae" -n 10)
           else
-            # For push events, get commits since the last push
-            COMMITS=$(git log --format="%H|%s|%an|%ae" ${{ github.event.before }}..${{ github.event.after }})
+            # Check if this is a new branch push (before SHA is all zeros)
+            if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+              echo "📋 New branch detected - comparing against main branch"
+              # Get commits that are in current branch but not in main
+              COMMITS=$(git log --format="%H|%s|%an|%ae" main..${{ github.event.after }})
+            else
+              # For regular push events, get commits since the last push
+              COMMITS=$(git log --format="%H|%s|%an|%ae" ${{ github.event.before }}..${{ github.event.after }})
+            fi
           fi
 
           # Conventional commit patterns (no period at end, present tense)

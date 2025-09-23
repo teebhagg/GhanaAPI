@@ -6,12 +6,14 @@ import * as cheerio from 'cheerio';
 import { firstValueFrom } from 'rxjs';
 
 export interface FuelPrice {
-  petrol: number;
-  diesel: number;
-  lpg?: number;
+  petrol: number | null;
+  diesel: number | null;
+  lpg?: number | null;
   currency: string;
   lastUpdated: string;
   source: string;
+  status: 'success' | 'partial' | 'failed';
+  errorMessage?: string;
 }
 
 @Injectable()
@@ -28,10 +30,10 @@ export class FuelPriceService {
   ];
 
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
-  
+
   // Cache TTL constants
   private readonly FAILURE_CACHE_TTL_MS = 3600 * 1000; // 1 hour for failed requests
-  
+
   // Price validation constants (configurable)
   private readonly MIN_PETROL_PRICE = 5;
   private readonly MAX_PETROL_PRICE = 50;
@@ -39,7 +41,7 @@ export class FuelPriceService {
   private readonly MAX_DIESEL_PRICE = 50;
   private readonly MIN_LPG_PRICE = 3;
   private readonly MAX_LPG_PRICE = 30;
-  
+
   // Common fuel price search terms for consistency
   private readonly FUEL_SEARCH_TERMS = [
     'fuel',
@@ -49,8 +51,15 @@ export class FuelPriceService {
     'diesel',
     'indicative', // NPA term, added for consistency across scrapers
     'lpg',
-    'gasoline'
+    'gasoline',
   ];
+
+  // Regex patterns for price extraction (reusable)
+  private readonly PRICE_REGEX_PATTERNS = {
+    petrol: /(?:petrol|gasoline).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
+    diesel: /diesel.*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
+    lpg: /(?:lpg|liquefied petroleum gas|gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
+  };
 
   constructor(
     private readonly httpService: HttpService,
@@ -160,10 +169,10 @@ export class FuelPriceService {
       lpg: 0,
       currency: 'GHS',
       lastUpdated: new Date().toISOString(),
-      source: 'All sources failed - returning zero values',
-    };
-
-    // Cache zero values for a shorter period (1 hour) to avoid repeated failed requests
+      source: 'No sources available',
+      status: 'failed',
+      errorMessage: 'All fuel price sources returned zero or invalid values',
+    }; // Cache zero values for a shorter period (1 hour) to avoid repeated failed requests
     await this.cacheManager.set(
       this.FUEL_PRICE_CACHE_KEY,
       zeroPrices,
@@ -188,7 +197,10 @@ export class FuelPriceService {
   }
 
   // Helper method to validate individual price values
-  private isValidPrice(price: number, fuelType: 'petrol' | 'diesel' | 'lpg'): boolean {
+  private isValidPrice(
+    price: number,
+    fuelType: 'petrol' | 'diesel' | 'lpg',
+  ): boolean {
     if (isNaN(price) || price <= 0) {
       return false;
     }
@@ -208,7 +220,7 @@ export class FuelPriceService {
   // Helper method to check if content contains fuel price related terms
   private containsFuelPriceTerms(text: string): boolean {
     const lowerText = text.toLowerCase();
-    return this.FUEL_SEARCH_TERMS.some(term => lowerText.includes(term));
+    return this.FUEL_SEARCH_TERMS.some((term) => lowerText.includes(term));
   }
 
   private async getFuelPricesFromCediRates(): Promise<FuelPrice> {
@@ -320,6 +332,7 @@ export class FuelPriceService {
         currency: 'GHS',
         lastUpdated: new Date().toISOString(),
         source: 'CediRates.com (Shell, Goil, Total, Star Oil Average)',
+        status: 'success',
       };
     } catch (error) {
       this.logger.error(`Failed to parse CediRates HTML: ${error.message}`);
@@ -376,14 +389,12 @@ export class FuelPriceService {
 
             // Extract prices using regex patterns for GHS
             const petrolMatches = articleText.match(
-              /(?:petrol|gasoline).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
+              this.PRICE_REGEX_PATTERNS.petrol,
             );
             const dieselMatches = articleText.match(
-              /diesel.*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
+              this.PRICE_REGEX_PATTERNS.diesel,
             );
-            const lpgMatches = articleText.match(
-              /(?:lpg|liquefied petroleum gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
-            );
+            const lpgMatches = articleText.match(this.PRICE_REGEX_PATTERNS.lpg);
 
             if (petrolMatches && petrolMatches.length > 0) {
               const priceMatch = petrolMatches[0].match(/(\d+\.?\d*)/);
@@ -442,6 +453,7 @@ export class FuelPriceService {
         currency: 'GHS',
         lastUpdated: new Date().toISOString(),
         source: 'National Petroleum Authority (NPA)',
+        status: 'success',
       };
     } catch (error) {
       this.logger.error(`Failed to fetch NPA fuel prices: ${error.message}`);
@@ -493,10 +505,9 @@ export class FuelPriceService {
             ).text();
 
             // Extract prices using improved regex patterns
-            const petrolRegex =
-              /(?:petrol|gasoline).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const dieselRegex = /diesel.*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const lpgRegex = /(?:lpg|gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
+            const petrolRegex = this.PRICE_REGEX_PATTERNS.petrol;
+            const dieselRegex = this.PRICE_REGEX_PATTERNS.diesel;
+            const lpgRegex = this.PRICE_REGEX_PATTERNS.lpg;
 
             const petrolMatches = articleText.match(petrolRegex);
             const dieselMatches = articleText.match(dieselRegex);
@@ -555,6 +566,7 @@ export class FuelPriceService {
         currency: 'GHS',
         lastUpdated: new Date().toISOString(),
         source: 'Citi News Room',
+        status: 'success',
       };
     } catch (error) {
       this.logger.error(
@@ -608,10 +620,9 @@ export class FuelPriceService {
             ).text();
 
             // Extract prices using regex
-            const petrolRegex =
-              /(?:petrol|gasoline).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const dieselRegex = /diesel.*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const lpgRegex = /(?:lpg|gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
+            const petrolRegex = this.PRICE_REGEX_PATTERNS.petrol;
+            const dieselRegex = this.PRICE_REGEX_PATTERNS.diesel;
+            const lpgRegex = this.PRICE_REGEX_PATTERNS.lpg;
 
             const petrolMatches = articleText.match(petrolRegex);
             const dieselMatches = articleText.match(dieselRegex);
@@ -670,6 +681,7 @@ export class FuelPriceService {
         currency: 'GHS',
         lastUpdated: new Date().toISOString(),
         source: 'Joy Online',
+        status: 'success',
       };
     } catch (error) {
       this.logger.error(
@@ -728,10 +740,9 @@ export class FuelPriceService {
             ).text();
 
             // Extract prices using regex
-            const petrolRegex =
-              /(?:petrol|gasoline).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const dieselRegex = /diesel.*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
-            const lpgRegex = /(?:lpg|gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi;
+            const petrolRegex = this.PRICE_REGEX_PATTERNS.petrol;
+            const dieselRegex = this.PRICE_REGEX_PATTERNS.diesel;
+            const lpgRegex = this.PRICE_REGEX_PATTERNS.lpg;
 
             const petrolMatches = articleText.match(petrolRegex);
             const dieselMatches = articleText.match(dieselRegex);
@@ -790,6 +801,7 @@ export class FuelPriceService {
         currency: 'GHS',
         lastUpdated: new Date().toISOString(),
         source: 'GhanaWeb',
+        status: 'success',
       };
     } catch (error) {
       this.logger.error(

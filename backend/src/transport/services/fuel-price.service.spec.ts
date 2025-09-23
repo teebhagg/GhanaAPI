@@ -142,7 +142,7 @@ describe('FuelPriceService', () => {
 
   describe('getFuelPrices', () => {
     it('should return cached prices if available', async () => {
-      const cachedPrices: FuelPrice = {
+      const cachedPrices: Partial<FuelPrice> = {
         petrol: 13.5,
         diesel: 14.2,
         lpg: 13.8,
@@ -175,6 +175,7 @@ describe('FuelPriceService', () => {
       expect(result.lpg).toBe(13.8);
       expect(result.currency).toBe('GHS');
       expect(result.source).toBe('National Petroleum Authority (NPA)');
+      expect(result.status).toBe('success');
       expect(cacheManager.set).toHaveBeenCalled();
     });
 
@@ -192,6 +193,7 @@ describe('FuelPriceService', () => {
       expect(result.diesel).toBeCloseTo(13.89, 2);
       expect(result.currency).toBe('GHS');
       expect(result.source).toContain('CediRates.com');
+      expect(result.status).toBe('success');
     });
 
     it('should fallback to Citi News when both NPA and CediRates fail', async () => {
@@ -210,6 +212,7 @@ describe('FuelPriceService', () => {
       expect(result.diesel).toBe(13.85);
       expect(result.currency).toBe('GHS');
       expect(result.source).toBe('Citi News Room');
+      expect(result.status).toBe('success');
     });
 
     it('should return zero values when all sources fail', async () => {
@@ -226,7 +229,11 @@ describe('FuelPriceService', () => {
       expect(result.diesel).toBe(0);
       expect(result.lpg).toBe(0);
       expect(result.currency).toBe('GHS');
-      expect(result.source).toBe('All sources failed - returning zero values');
+      expect(result.source).toBe('No sources available');
+      expect(result.status).toBe('failed');
+      expect(result.errorMessage).toBe(
+        'All fuel price sources returned zero or invalid values',
+      );
 
       // Should cache zero values for shorter period
       expect(cacheManager.set).toHaveBeenCalledWith(
@@ -239,7 +246,7 @@ describe('FuelPriceService', () => {
 
   describe('isValidFuelPriceData', () => {
     it('should validate correct fuel price data', () => {
-      const validData: FuelPrice = {
+      const validData: Partial<FuelPrice> = {
         petrol: 13.5,
         diesel: 14.2,
         currency: 'GHS',
@@ -253,7 +260,7 @@ describe('FuelPriceService', () => {
     });
 
     it('should reject data with zero prices', () => {
-      const invalidData: FuelPrice = {
+      const invalidData: Partial<FuelPrice> = {
         petrol: 0,
         diesel: 14.2,
         currency: 'GHS',
@@ -266,7 +273,7 @@ describe('FuelPriceService', () => {
     });
 
     it('should reject data with unrealistic high prices', () => {
-      const invalidData: FuelPrice = {
+      const invalidData: Partial<FuelPrice> = {
         petrol: 100, // Too high
         diesel: 14.2,
         currency: 'GHS',
@@ -279,7 +286,7 @@ describe('FuelPriceService', () => {
     });
 
     it('should reject data with wrong currency', () => {
-      const invalidData: FuelPrice = {
+      const invalidData: Partial<FuelPrice> = {
         petrol: 13.5,
         diesel: 14.2,
         currency: 'USD', // Wrong currency
@@ -323,6 +330,7 @@ describe('FuelPriceService', () => {
       expect(result.diesel).toBeCloseTo(expectedDieselAvg, 2);
       expect(result.currency).toBe('GHS');
       expect(result.source).toContain('CediRates.com');
+      expect(result.status).toBe('success');
     });
 
     it('should handle empty HTML gracefully', () => {
@@ -346,7 +354,8 @@ describe('FuelPriceService', () => {
 
       expect(result.petrol).toBe(0);
       expect(result.diesel).toBe(0);
-      expect(result.source).toBe('All sources failed - returning zero values');
+      expect(result.source).toBe('No sources available');
+      expect(result.status).toBe('failed');
     });
 
     it('should handle malformed HTML gracefully', async () => {
@@ -357,7 +366,8 @@ describe('FuelPriceService', () => {
 
       expect(result.petrol).toBe(0);
       expect(result.diesel).toBe(0);
-      expect(result.source).toBe('All sources failed - returning zero values');
+      expect(result.source).toBe('No sources available');
+      expect(result.status).toBe('failed');
     });
 
     it('should handle HTTP 404 responses gracefully', async () => {
@@ -370,7 +380,8 @@ describe('FuelPriceService', () => {
 
       expect(result.petrol).toBe(0);
       expect(result.diesel).toBe(0);
-      expect(result.source).toBe('All sources failed - returning zero values');
+      expect(result.source).toBe('No sources available');
+      expect(result.status).toBe('failed');
     });
   });
 
@@ -436,19 +447,35 @@ describe('FuelPriceService', () => {
 
   describe('containsFuelPriceTerms', () => {
     it('should detect fuel price related terms', () => {
-      expect((service as any).containsFuelPriceTerms('Fuel prices increase')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('Petrol costs more')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('Diesel price update')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('Indicative petroleum prices')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('LPG gas prices')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('Random news article')).toBe(false);
+      expect(
+        (service as any).containsFuelPriceTerms('Fuel prices increase'),
+      ).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Petrol costs more')).toBe(
+        true,
+      );
+      expect(
+        (service as any).containsFuelPriceTerms('Diesel price update'),
+      ).toBe(true);
+      expect(
+        (service as any).containsFuelPriceTerms('Indicative petroleum prices'),
+      ).toBe(true);
+      expect((service as any).containsFuelPriceTerms('LPG gas prices')).toBe(
+        true,
+      );
+      expect(
+        (service as any).containsFuelPriceTerms('Random news article'),
+      ).toBe(false);
       expect((service as any).containsFuelPriceTerms('')).toBe(false);
     });
 
     it('should be case insensitive', () => {
       expect((service as any).containsFuelPriceTerms('FUEL PRICES')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('Petrol PRICE')).toBe(true);
-      expect((service as any).containsFuelPriceTerms('indicative prices')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Petrol PRICE')).toBe(
+        true,
+      );
+      expect((service as any).containsFuelPriceTerms('indicative prices')).toBe(
+        true,
+      );
     });
   });
 });

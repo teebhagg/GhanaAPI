@@ -36,16 +36,16 @@ describe('FuelPriceService Integration', () => {
     expect(result.source).toBeDefined();
 
     // At least one of petrol or diesel should be valid (> 0)
-    expect(result.petrol >= 0).toBe(true);
-    expect(result.diesel >= 0).toBe(true);
+    expect(result.petrol !== null && result.petrol >= 0).toBe(true);
+    expect(result.diesel !== null && result.diesel >= 0).toBe(true);
 
     // If we get non-zero values, they should be reasonable
-    if (result.petrol > 0) {
+    if (result.petrol !== null && result.petrol > 0) {
       expect(result.petrol).toBeGreaterThan(5);
       expect(result.petrol).toBeLessThan(50);
     }
 
-    if (result.diesel > 0) {
+    if (result.diesel !== null && result.diesel > 0) {
       expect(result.diesel).toBeGreaterThan(5);
       expect(result.diesel).toBeLessThan(50);
     }

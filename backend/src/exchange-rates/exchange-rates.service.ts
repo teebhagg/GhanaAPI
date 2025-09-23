@@ -48,6 +48,8 @@ export class ExchangeRatesService {
       // prefer BoG-specific error code when scraping fails
       throw AppException.rateProviderFailed(merged.message);
     }
+    
+    // Only cache when successful
     await this.cache.set(cacheKey, merged.data, 30 * 60);
     return merged.data as ExchangeRateDto[];
   }
@@ -101,10 +103,12 @@ export class ExchangeRatesService {
 
     const result = await this.getDataWithFallbackForConversion(providers);
 
-    await this.cache.set(cacheKey, result, 30 * 60);
     if (!result.success) {
       throw AppException.rateProviderFailed(result.message);
     }
+    
+    // Only cache when successful
+    await this.cache.set(cacheKey, result, 30 * 60);
     return result.data[0] as ConversionResult;
   }
 

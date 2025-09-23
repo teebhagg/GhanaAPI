@@ -28,6 +28,29 @@ export class FuelPriceService {
   ];
 
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
+  
+  // Cache TTL constants
+  private readonly FAILURE_CACHE_TTL_MS = 3600 * 1000; // 1 hour for failed requests
+  
+  // Price validation constants (configurable)
+  private readonly MIN_PETROL_PRICE = 5;
+  private readonly MAX_PETROL_PRICE = 50;
+  private readonly MIN_DIESEL_PRICE = 5;
+  private readonly MAX_DIESEL_PRICE = 50;
+  private readonly MIN_LPG_PRICE = 3;
+  private readonly MAX_LPG_PRICE = 30;
+  
+  // Common fuel price search terms for consistency
+  private readonly FUEL_SEARCH_TERMS = [
+    'fuel',
+    'petroleum',
+    'price',
+    'petrol',
+    'diesel',
+    'indicative', // NPA term, added for consistency across scrapers
+    'lpg',
+    'gasoline'
+  ];
 
   constructor(
     private readonly httpService: HttpService,
@@ -144,7 +167,7 @@ export class FuelPriceService {
     await this.cacheManager.set(
       this.FUEL_PRICE_CACHE_KEY,
       zeroPrices,
-      3600 * 1000,
+      this.FAILURE_CACHE_TTL_MS,
     );
 
     return zeroPrices;
@@ -159,9 +182,33 @@ export class FuelPriceService {
       data.petrol > 0 &&
       data.diesel > 0 &&
       data.currency === 'GHS' &&
-      data.petrol < 50 && // Sanity check - prices shouldn't be over 50 GHS
-      data.diesel < 50
+      data.petrol <= this.MAX_PETROL_PRICE && // Use configurable constant
+      data.diesel <= this.MAX_DIESEL_PRICE
     );
+  }
+
+  // Helper method to validate individual price values
+  private isValidPrice(price: number, fuelType: 'petrol' | 'diesel' | 'lpg'): boolean {
+    if (isNaN(price) || price <= 0) {
+      return false;
+    }
+
+    switch (fuelType) {
+      case 'petrol':
+        return price >= this.MIN_PETROL_PRICE && price <= this.MAX_PETROL_PRICE;
+      case 'diesel':
+        return price >= this.MIN_DIESEL_PRICE && price <= this.MAX_DIESEL_PRICE;
+      case 'lpg':
+        return price >= this.MIN_LPG_PRICE && price <= this.MAX_LPG_PRICE;
+      default:
+        return false;
+    }
+  }
+
+  // Helper method to check if content contains fuel price related terms
+  private containsFuelPriceTerms(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return this.FUEL_SEARCH_TERMS.some(term => lowerText.includes(term));
   }
 
   private async getFuelPricesFromCediRates(): Promise<FuelPrice> {
@@ -309,15 +356,7 @@ export class FuelPriceService {
         const link = titleElement.attr('href');
 
         // Check if this is a fuel price related announcement
-        if (
-          link &&
-          (title.includes('fuel') ||
-            title.includes('petroleum') ||
-            title.includes('price') ||
-            title.includes('petrol') ||
-            title.includes('diesel') ||
-            title.includes('indicative'))
-        ) {
+        if (link && this.containsFuelPriceTerms(title)) {
           this.logger.debug(`Checking NPA article: ${title}`);
 
           try {
@@ -350,8 +389,7 @@ export class FuelPriceService {
               const priceMatch = petrolMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
-                  // Sanity check
+                if (this.isValidPrice(price, 'petrol')) {
                   petrolPrice = price;
                   this.logger.debug(`Found NPA petrol price: ${petrolPrice}`);
                 }
@@ -362,8 +400,7 @@ export class FuelPriceService {
               const priceMatch = dieselMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
-                  // Sanity check
+                if (this.isValidPrice(price, 'diesel')) {
                   dieselPrice = price;
                   this.logger.debug(`Found NPA diesel price: ${dieselPrice}`);
                 }
@@ -374,8 +411,7 @@ export class FuelPriceService {
               const priceMatch = lpgMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 3 && price < 30) {
-                  // Sanity check for LPG
+                if (this.isValidPrice(price, 'lpg')) {
                   lpgPrice = price;
                   this.logger.debug(`Found NPA LPG price: ${lpgPrice}`);
                 }
@@ -440,13 +476,7 @@ export class FuelPriceService {
         const articleLink = articleElement.attr('href');
         const articleTitle = articleElement.text().toLowerCase();
 
-        if (
-          articleLink &&
-          (articleTitle.includes('fuel') ||
-            articleTitle.includes('petrol') ||
-            articleTitle.includes('diesel') ||
-            articleTitle.includes('price'))
-        ) {
+        if (articleLink && this.containsFuelPriceTerms(articleTitle)) {
           try {
             const articleResponse = await firstValueFrom(
               this.httpService.get(articleLink, {
@@ -476,7 +506,7 @@ export class FuelPriceService {
               const priceMatch = petrolMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'petrol')) {
                   petrolPrice = price;
                 }
               }
@@ -486,7 +516,7 @@ export class FuelPriceService {
               const priceMatch = dieselMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'diesel')) {
                   dieselPrice = price;
                 }
               }
@@ -496,7 +526,7 @@ export class FuelPriceService {
               const priceMatch = lpgMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 3 && price < 30) {
+                if (this.isValidPrice(price, 'lpg')) {
                   lpgPrice = price;
                 }
               }
@@ -561,13 +591,7 @@ export class FuelPriceService {
         const articleLink = articleElement.attr('href');
         const articleTitle = articleElement.text().toLowerCase();
 
-        if (
-          articleLink &&
-          (articleTitle.includes('fuel') ||
-            articleTitle.includes('petrol') ||
-            articleTitle.includes('diesel') ||
-            articleTitle.includes('price'))
-        ) {
+        if (articleLink && this.containsFuelPriceTerms(articleTitle)) {
           try {
             const articleResponse = await firstValueFrom(
               this.httpService.get(articleLink, {
@@ -597,7 +621,7 @@ export class FuelPriceService {
               const priceMatch = petrolMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'petrol')) {
                   petrolPrice = price;
                 }
               }
@@ -607,7 +631,7 @@ export class FuelPriceService {
               const priceMatch = dieselMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'diesel')) {
                   dieselPrice = price;
                 }
               }
@@ -617,7 +641,7 @@ export class FuelPriceService {
               const priceMatch = lpgMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 3 && price < 30) {
+                if (this.isValidPrice(price, 'lpg')) {
                   lpgPrice = price;
                 }
               }
@@ -682,13 +706,7 @@ export class FuelPriceService {
         const articleLink = articleElement.attr('href');
         const articleTitle = articleElement.text().toLowerCase();
 
-        if (
-          articleLink &&
-          (articleTitle.includes('fuel') ||
-            articleTitle.includes('petrol') ||
-            articleTitle.includes('diesel') ||
-            articleTitle.includes('price'))
-        ) {
+        if (articleLink && this.containsFuelPriceTerms(articleTitle)) {
           // Ensure we have a full URL
           const fullUrl = articleLink.startsWith('http')
             ? articleLink
@@ -723,7 +741,7 @@ export class FuelPriceService {
               const priceMatch = petrolMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'petrol')) {
                   petrolPrice = price;
                 }
               }
@@ -733,7 +751,7 @@ export class FuelPriceService {
               const priceMatch = dieselMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 5 && price < 50) {
+                if (this.isValidPrice(price, 'diesel')) {
                   dieselPrice = price;
                 }
               }
@@ -743,7 +761,7 @@ export class FuelPriceService {
               const priceMatch = lpgMatches[0].match(/(\d+\.?\d*)/);
               if (priceMatch) {
                 const price = parseFloat(priceMatch[1]);
-                if (price > 3 && price < 30) {
+                if (this.isValidPrice(price, 'lpg')) {
                   lpgPrice = price;
                 }
               }

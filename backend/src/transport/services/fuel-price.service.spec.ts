@@ -232,7 +232,7 @@ describe('FuelPriceService', () => {
       expect(cacheManager.set).toHaveBeenCalledWith(
         'fuel_prices',
         result,
-        3600 * 1000,
+        expect.any(Number), // Using FAILURE_CACHE_TTL_MS constant
       );
     });
   });
@@ -409,6 +409,46 @@ describe('FuelPriceService', () => {
         }),
         expect.any(Number), // TTL in milliseconds
       );
+    });
+  });
+
+  describe('isValidPrice', () => {
+    it('should validate petrol prices within range', () => {
+      expect((service as any).isValidPrice(13.5, 'petrol')).toBe(true);
+      expect((service as any).isValidPrice(4.9, 'petrol')).toBe(false); // Too low
+      expect((service as any).isValidPrice(50.1, 'petrol')).toBe(false); // Too high
+      expect((service as any).isValidPrice(0, 'petrol')).toBe(false); // Zero
+      expect((service as any).isValidPrice(NaN, 'petrol')).toBe(false); // NaN
+    });
+
+    it('should validate diesel prices within range', () => {
+      expect((service as any).isValidPrice(14.2, 'diesel')).toBe(true);
+      expect((service as any).isValidPrice(4.9, 'diesel')).toBe(false); // Too low
+      expect((service as any).isValidPrice(50.1, 'diesel')).toBe(false); // Too high
+    });
+
+    it('should validate LPG prices within range', () => {
+      expect((service as any).isValidPrice(15.5, 'lpg')).toBe(true);
+      expect((service as any).isValidPrice(2.9, 'lpg')).toBe(false); // Too low
+      expect((service as any).isValidPrice(30.1, 'lpg')).toBe(false); // Too high
+    });
+  });
+
+  describe('containsFuelPriceTerms', () => {
+    it('should detect fuel price related terms', () => {
+      expect((service as any).containsFuelPriceTerms('Fuel prices increase')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Petrol costs more')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Diesel price update')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Indicative petroleum prices')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('LPG gas prices')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Random news article')).toBe(false);
+      expect((service as any).containsFuelPriceTerms('')).toBe(false);
+    });
+
+    it('should be case insensitive', () => {
+      expect((service as any).containsFuelPriceTerms('FUEL PRICES')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('Petrol PRICE')).toBe(true);
+      expect((service as any).containsFuelPriceTerms('indicative prices')).toBe(true);
     });
   });
 });

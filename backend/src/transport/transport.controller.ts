@@ -522,6 +522,15 @@ export class TransportController {
 
       switch (mode.toLowerCase()) {
         case 'car': {
+          if (fuelPrices.petrol === null) {
+            throw new HttpException(
+              {
+                success: false,
+                message: 'Fuel price data is temporarily unavailable. Please try again later.',
+              },
+              HttpStatus.SERVICE_UNAVAILABLE,
+            );
+          }
           const fuelNeeded = distance / fuelEfficiency;
           cost = fuelNeeded * fuelPrices.petrol;
           breakdown = {

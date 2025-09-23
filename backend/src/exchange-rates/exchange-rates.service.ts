@@ -5,7 +5,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import type { Cache } from 'cache-manager';
-import { AppException } from 'src/common/exceptions/app-exception';
+import { AppException } from '../common/exceptions/app-exception';
 import { ConvertCurrencyDto } from './dto/convert-currency.dto';
 import { ExchangeRateDto } from './dto/exchange-rate.dto';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
@@ -33,7 +33,7 @@ export class ExchangeRatesService {
     const list = (
       currencies?.length ? currencies : this.supportedCurrencies
     ).map((c) => c.toUpperCase());
-    const cacheKey = `fx:current:${list.sort().join(',')}`;
+    const cacheKey = `fx:current:${[...list].sort().join(',')}`;
     const cached = await this.cache.get<ExchangeRateDto[]>(cacheKey);
     if (cached) return cached;
 
@@ -44,11 +44,13 @@ export class ExchangeRatesService {
     ];
 
     const merged = await this.getDataWithFallback(providers);
-    await this.cache.set(cacheKey, merged, 30 * 60);
     if (!merged.success) {
       // prefer BoG-specific error code when scraping fails
       throw AppException.rateProviderFailed(merged.message);
     }
+    
+    // Only cache when successful
+    await this.cache.set(cacheKey, merged.data, 30 * 60);
     return merged.data as ExchangeRateDto[];
   }
 
@@ -101,10 +103,12 @@ export class ExchangeRatesService {
 
     const result = await this.getDataWithFallbackForConversion(providers);
 
-    await this.cache.set(cacheKey, result, 30 * 60);
     if (!result.success) {
       throw AppException.rateProviderFailed(result.message);
     }
+    
+    // Only cache when successful
+    await this.cache.set(cacheKey, result, 30 * 60);
     return result.data[0] as ConversionResult;
   }
 

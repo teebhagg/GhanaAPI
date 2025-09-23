@@ -6,6 +6,150 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🧪 [0.2.3] - 2025-09-23</strong> - Comprehensive Test Suite & Bug Fixes</summary>
+
+### Added
+
+- **Comprehensive Test Coverage**
+
+  - Complete test suites for all API modules with 119 passing tests across 10 test suites
+  - Transport Service tests with 18 comprehensive scenarios covering routing, geocoding, and fuel price integration
+  - Transport Controller tests with 13 detailed test cases for all endpoints and error conditions
+  - Locations Service tests with 14 test cases for Ghana's administrative divisions and data accuracy
+  - Locations Controller tests with 11 test cases for regional and district endpoint validation
+  - Addresses Service tests with 15 test cases for digital code validation and geocoding
+  - Addresses Controller tests with comprehensive endpoint testing
+  - Exchange Rates Service tests with 13 test cases for currency conversion and provider fallback
+  - Exchange Rates Controller tests with endpoint validation and error handling
+  - App Controller tests with proper Ghana API branding validation
+
+- **Enhanced Test Infrastructure**
+
+  - Proper dependency injection mocking for all services to avoid external API calls during testing
+  - Systematic test data alignment with actual Ghana administrative data structure
+  - Comprehensive error handling and edge case testing across all modules
+  - Integration test setup for fuel price service with real-world scenario testing
+
+- **Data Accuracy Improvements**
+  - Fixed Ghana region code mappings (ASH → ASR for Ashanti Region)
+  - Corrected district naming conventions to match actual administrative data
+  - Updated test expectations to align with real Ghana geographical data
+  - Enhanced digital code extraction for Ghana postal addresses
+
+### Fixed
+
+- **Critical Exchange Rates Caching Bug**
+
+  - Fixed caching logic where failed results were being cached before success validation
+  - Restructured `getCurrentRates()` method to only cache successful exchange rate data
+  - Fixed `convertCurrency()` method caching to prevent caching of failed conversion attempts
+  - Improved error handling flow to check success before caching operations
+  - Enhanced data integrity by ensuring only valid exchange rate data is stored in cache
+
+- **Test Suite Stability Issues**
+
+  - Resolved dependency injection failures in Transport Service tests with proper service mocking
+  - Fixed App Controller missing method issues and restored welcome message functionality
+  - Corrected import path resolution for exchange rates modules (absolute vs relative imports)
+  - Fixed TypeScript compilation errors in test files with proper enum imports
+  - Resolved data accuracy mismatches between test expectations and actual API responses
+
+- **Build and Compilation Issues**
+  - Fixed missing `RouteProfile` imports in transport controller test files
+  - Corrected string literals to use proper enum values for route profiles
+  - Resolved module resolution issues across test files
+  - Fixed TypeScript strict typing issues in test implementations
+
+### Enhanced
+
+- **Test Quality & Coverage**
+
+  - Achieved 100% test success rate with systematic test corrections
+  - Enhanced test isolation with proper mocking strategies to avoid external dependencies
+  - Improved test data accuracy to reflect real Ghana administrative and geographical data
+  - Added comprehensive error scenario testing for all API endpoints
+
+- **Code Quality & Reliability**
+  - Improved error handling patterns across exchange rates service
+  - Enhanced caching logic to ensure data integrity and prevent corruption
+  - Better separation of concerns in test architecture with proper dependency injection
+  - Systematic code review and bug fixing across all modules
+
+### Technical Implementation
+
+- **Test Architecture Improvements**
+
+  - Implemented comprehensive mocking strategy for external services (geocoding, routing, fuel prices)
+  - Enhanced test data management with realistic Ghana-specific test cases
+  - Improved test isolation to prevent cross-test contamination and external API dependencies
+  - Added proper TypeScript typing and enum usage across all test files
+
+- **Bug Resolution Process**
+
+  - Systematic identification and correction of caching logic flaws in exchange rates service
+  - Data-driven test corrections using actual Ghana administrative data from regions.json
+  - Import path standardization across modules for consistent build behavior
+  - Comprehensive validation of test expectations against actual service implementations
+
+- **Performance & Reliability**
+  - Optimized test execution time by eliminating external API calls during testing
+  - Enhanced cache integrity in exchange rates service to prevent data corruption
+  - Improved error propagation and handling across all service layers
+  - Better resource management in test environment with proper cleanup procedures
+
+</details>
+
+<details>
+<summary><strong>⛽ [0.2.2] - 2025-09-23</strong> - Enhanced Fuel Price API with Multiple Sources</summary>
+
+### Added
+
+- **Multiple Fuel Price Data Sources**
+
+  - Added National Petroleum Authority (NPA) as primary fuel price source with web scraping of official press releases
+  - Added Citi News Room as secondary fallback source for fuel price data
+  - Added Joy Online as tertiary fallback source for comprehensive coverage
+  - Added GhanaWeb as quaternary fallback source for maximum reliability
+  - Existing CediRates.com integration moved to secondary priority position
+
+- **Improved Fuel Price Accuracy & Reliability**
+
+  - Enhanced fuel price validation with configurable price range validation (GHS 5-50 for petrol/diesel, GHS 3-30 for LPG)
+  - Added intelligent content filtering using fuel-related search terms for better data extraction
+  - Implemented comprehensive regex patterns for price extraction across different source formats
+  - Added robust error handling and graceful fallback between multiple data sources
+
+- **Smart Caching & Performance**
+  - Enhanced cache TTL calculation to expire fuel prices at 11:59 PM daily for fresh morning data
+  - Implemented shorter cache TTL (1 hour) for failed requests to allow retry without overwhelming sources
+  - Added detailed logging for fuel price source success/failure tracking and debugging
+
+### Enhanced
+
+- **Fuel Price Service Architecture**
+  - Refactored service to use priority-based source selection: NPA → CediRates → Citi News → Joy Online → GhanaWeb
+  - Added standardized price validation and data quality checks across all sources
+  - Improved error handling with detailed error messages and source attribution
+  - Enhanced data parsing with robust text extraction and price validation
+
+### Technical Implementation
+
+- **Source Integration**
+
+  - NPA integration: Scrapes official government press releases for authoritative fuel price announcements
+  - CediRates integration: Averages prices from major oil companies (Shell, Goil, Total, Star Oil, TotalEnergies)
+  - News source integrations: Extract fuel prices from recent articles using content analysis
+  - Price validation: Ensures all prices are within realistic ranges and properly formatted
+
+- **Data Quality & Validation**
+  - Added `isValidPrice()` method for individual fuel type validation
+  - Enhanced `isValidFuelPriceData()` method for comprehensive data validation
+  - Added `containsFuelPriceTerms()` for intelligent content filtering
+  - Implemented consistent price rounding to 2 decimal places across all sources
+
+</details>
+
+<details>
 <summary><strong>📋 [0.2.1] - 2025-09-06</strong> - Validation Workflows & Release Management</summary>
 
 ### Added

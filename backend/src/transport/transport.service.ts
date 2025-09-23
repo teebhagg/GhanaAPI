@@ -103,7 +103,7 @@ export class TransportService {
         const distanceKm = routeData.distance / 1000;
         const fuelEfficiency = 12; // km/L default
         const fuelNeeded = distanceKm / fuelEfficiency;
-        estimatedCost = fuelNeeded * fuelPrices.petrol;
+        estimatedCost = fuelPrices.petrol ? fuelNeeded * fuelPrices.petrol : undefined;
       } catch (error) {
         this.logger.warn('Could not calculate fuel cost:', error);
       }

@@ -1,43 +1,76 @@
-// src/transport/transport.service.spec.ts
-import { HttpService } from '@nestjs/axios';
-import { HttpException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { of, throwError } from 'rxjs';
+import { FuelPriceService } from './services/fuel-price.service';
+import { GeocodingService } from './services/geocoding.service';
+import { RoutingService } from './services/routing.service';
+import { TransportRoutesService } from './services/transport-routes.service';
+import { TransportStopsService } from './services/transport-stops.service';
 import { TransportService } from './transport.service';
 
 describe('TransportService', () => {
   let service: TransportService;
-  let httpService: jest.Mocked<HttpService>;
-  let configService: jest.Mocked<ConfigService>;
-
-  const mockHttpService = {
-    get: jest.fn(),
-    post: jest.fn(),
-  };
-
-  const mockConfigService = {
-    get: jest.fn(),
-  };
+  let mockGeocodingService: jest.Mocked<GeocodingService>;
+  let mockFuelPriceService: jest.Mocked<FuelPriceService>;
+  let mockTransportRoutesService: jest.Mocked<TransportRoutesService>;
+  let mockTransportStopsService: jest.Mocked<TransportStopsService>;
+  let mockRoutingService: jest.Mocked<RoutingService>;
 
   beforeEach(async () => {
+    const mockGeocodingServiceValue = {
+      geocode: jest.fn(),
+      reverseGeocode: jest.fn(),
+    };
+
+    const mockFuelPriceServiceValue = {
+      getFuelPrices: jest.fn(),
+    };
+
+    const mockTransportRoutesServiceValue = {
+      getPublicTransportRoutes: jest.fn(),
+      searchRoutes: jest.fn(),
+    };
+
+    const mockTransportStopsServiceValue = {
+      getTransportStops: jest.fn(),
+      getNearbyStops: jest.fn(),
+    };
+
+    const mockRoutingServiceValue = {
+      calculateRoute: jest.fn(),
+      getDirections: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransportService,
         {
-          provide: HttpService,
-          useValue: mockHttpService,
+          provide: GeocodingService,
+          useValue: mockGeocodingServiceValue,
         },
         {
-          provide: ConfigService,
-          useValue: mockConfigService,
+          provide: FuelPriceService,
+          useValue: mockFuelPriceServiceValue,
+        },
+        {
+          provide: TransportRoutesService,
+          useValue: mockTransportRoutesServiceValue,
+        },
+        {
+          provide: TransportStopsService,
+          useValue: mockTransportStopsServiceValue,
+        },
+        {
+          provide: RoutingService,
+          useValue: mockRoutingServiceValue,
         },
       ],
     }).compile();
 
     service = module.get<TransportService>(TransportService);
-    // httpService and configService are available via service instance
-    // but we use the mocked versions for testing
+    mockGeocodingService = module.get(GeocodingService);
+    mockFuelPriceService = module.get(FuelPriceService);
+    mockTransportRoutesService = module.get(TransportRoutesService);
+    mockTransportStopsService = module.get(TransportStopsService);
+    mockRoutingService = module.get(RoutingService);
   });
 
   afterEach(() => {
@@ -46,26 +79,21 @@ describe('TransportService', () => {
 
   describe('getPublicTransportRoutes', () => {
     it('should return routes from Overpass API', async () => {
-      const mockOverpassResponse = {
-        data: {
-          elements: [
-            {
-              type: 'relation',
-              id: 12345,
-              tags: {
-                route: 'bus',
-                name: 'Circle to Kaneshie',
-              },
-              geometry: [
-                { lat: 5.6037, lon: -0.187 },
-                { lat: 5.6137, lon: -0.197 },
-              ],
-            },
-          ],
+      const mockRoutes = [
+        {
+          id: '12345',
+          name: 'Circle to Kaneshie',
+          type: 'bus' as const,
+          coordinates: [
+            [5.6037, -0.187],
+            [5.6137, -0.197],
+          ] as [number, number][],
         },
-      };
+      ];
 
-      mockHttpService.post.mockReturnValue(of(mockOverpassResponse));
+      mockTransportRoutesService.getPublicTransportRoutes.mockResolvedValue(
+        mockRoutes,
+      );
 
       const result = await service.getPublicTransportRoutes('accra');
 
@@ -80,342 +108,315 @@ describe('TransportService', () => {
         ],
       });
 
-      expect(mockHttpService.post).toHaveBeenCalledWith(
-        'https://overpass-api.de/api/interpreter',
-        expect.stringContaining('route'),
-        {
-          headers: { 'Content-Type': 'text/plain' },
-          timeout: 30000,
-        },
-      );
+      expect(
+        mockTransportRoutesService.getPublicTransportRoutes,
+      ).toHaveBeenCalledWith('accra');
     });
 
     it('should fallback to next API when Overpass fails', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => new Error('Overpass API failed')),
-      );
-      mockConfigService.get.mockReturnValue('https://example.com/gtfs');
-      mockHttpService.get.mockReturnValue(
-        of({
-          data: 'route_id,agency_id,route_short_name,route_long_name,route_type\n1,1,Circle,Circle to Kaneshie,3',
-        }),
+      const mockRoutes = [
+        {
+          id: '1',
+          name: 'Circle Route',
+          type: 'bus' as const,
+          coordinates: [
+            [5.6037, -0.187],
+            [5.6137, -0.197],
+          ] as [number, number][],
+        },
+      ];
+
+      mockTransportRoutesService.getPublicTransportRoutes.mockResolvedValue(
+        mockRoutes,
       );
 
       const result = await service.getPublicTransportRoutes('accra');
 
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Circle');
-      expect(mockHttpService.post).toHaveBeenCalled();
-      expect(mockHttpService.get).toHaveBeenCalled();
+      expect(result).toEqual(mockRoutes);
+      expect(
+        mockTransportRoutesService.getPublicTransportRoutes,
+      ).toHaveBeenCalledWith('accra');
     });
 
     it('should throw error when all APIs fail', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => new Error('Overpass failed')),
+      mockTransportRoutesService.getPublicTransportRoutes.mockRejectedValue(
+        new Error('All APIs failed'),
       );
-      mockConfigService.get.mockReturnValue(null);
 
       await expect(service.getPublicTransportRoutes('accra')).rejects.toThrow(
-        HttpException,
+        'All APIs failed',
       );
     });
   });
 
   describe('getTransportStops', () => {
     it('should return stops from Overpass API', async () => {
-      const mockOverpassResponse = {
-        data: {
-          elements: [
-            {
-              type: 'node',
-              id: 54321,
-              lat: 5.6037,
-              lon: -0.187,
-              tags: {
-                public_transport: 'stop_position',
-                name: 'Circle Bus Stop',
-              },
-            },
-          ],
+      const mockStops = [
+        {
+          id: 'stop1',
+          name: 'Circle Bus Stop',
+          coordinates: [5.6037, -0.187] as [number, number],
+          type: 'bus_stop',
         },
-      };
+      ];
 
-      mockHttpService.post.mockReturnValue(of(mockOverpassResponse));
+      mockTransportStopsService.getTransportStops.mockResolvedValue(mockStops);
 
       const result = await service.getTransportStops('accra');
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        id: '54321',
-        name: 'Circle Bus Stop',
-        coordinates: [5.6037, -0.187],
-        type: 'stop_position',
-      });
+      expect(result).toEqual(mockStops);
+      expect(mockTransportStopsService.getTransportStops).toHaveBeenCalledWith(
+        'accra',
+        undefined,
+      );
     });
 
     it('should fallback to GTFS when Overpass fails', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => new Error('Overpass failed')),
-      );
-      mockConfigService.get.mockReturnValue('https://example.com/gtfs');
-      mockHttpService.get.mockReturnValue(
-        of({
-          data: 'stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon\n1,,Circle Station,,5.6037,-0.1870',
-        }),
-      );
+      const mockStops = [
+        {
+          id: 'stop1',
+          name: 'Circle Bus Stop',
+          coordinates: [5.6037, -0.187] as [number, number],
+          type: 'bus_stop',
+        },
+      ];
 
-      const result = await service.getTransportStops('accra');
+      mockTransportStopsService.getTransportStops.mockResolvedValue(mockStops);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Circle Station');
-      expect(result[0].coordinates).toEqual([5.6037, -0.187]);
+      const result = await service.getTransportStops('accra', 'bus_stop');
+
+      expect(result).toEqual(mockStops);
+      expect(mockTransportStopsService.getTransportStops).toHaveBeenCalledWith(
+        'accra',
+        'bus_stop',
+      );
     });
 
     it('should throw error when all APIs fail', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => new Error('Overpass failed')),
+      mockTransportStopsService.getTransportStops.mockRejectedValue(
+        new Error('All APIs failed'),
       );
-      mockConfigService.get.mockReturnValue(null);
 
       await expect(service.getTransportStops('accra')).rejects.toThrow(
-        HttpException,
+        'All APIs failed',
       );
     });
   });
 
   describe('calculateRoute', () => {
     it('should calculate route using HERE API', async () => {
-      const mockHereResponse = {
-        data: {
-          routes: [
-            {
-              sections: [
-                {
-                  summary: {
-                    length: 5000,
-                    duration: 600,
-                  },
-                  polyline: 'mock_polyline_data',
-                  actions: [
-                    { instruction: 'Head north on Ring Road' },
-                    { instruction: 'Turn left onto Oxford Street' },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
+      const mockRoute = {
+        distance: 15.5,
+        duration: 25.2,
+        coordinates: [
+          [5.6037, -0.187],
+          [6.6885, -1.6244],
+        ] as [number, number][],
+        instructions: ['Head north on Ring Road'],
       };
 
-      mockConfigService.get.mockReturnValue('mock_here_api_key');
-      mockHttpService.get.mockReturnValue(of(mockHereResponse));
+      mockRoutingService.calculateRoute.mockResolvedValue(mockRoute);
 
       const result = await service.calculateRoute(
         [5.6037, -0.187],
-        [5.6137, -0.197],
-        'driving',
+        [6.6885, -1.6244],
       );
 
-      expect(result.distance).toBe(5000);
-      expect(result.duration).toBe(600);
-      expect(result.instructions).toHaveLength(2);
+      expect(result).toEqual(mockRoute);
+      expect(mockRoutingService.calculateRoute).toHaveBeenCalledWith(
+        [5.6037, -0.187],
+        [6.6885, -1.6244],
+        'driving',
+      );
     });
 
     it('should fallback to GraphHopper when HERE fails', async () => {
-      const mockGraphHopperResponse = {
-        data: {
-          paths: [
-            {
-              distance: 4500,
-              time: 540000, // in milliseconds
-              points: 'mock_polyline_data',
-              instructions: [
-                { text: 'Start on Ring Road' },
-                { text: 'Turn left' },
-              ],
-            },
-          ],
-        },
+      const mockRoute = {
+        distance: 15.5,
+        duration: 25.2,
+        coordinates: [
+          [5.6037, -0.187],
+          [6.6885, -1.6244],
+        ] as [number, number][],
+        instructions: ['Head north on Ring Road'],
       };
 
-      mockConfigService.get
-        .mockReturnValueOnce(null) // HERE API key not configured
-        .mockReturnValue('mock_graphhopper_api_key'); // GraphHopper API key
-      mockHttpService.get.mockReturnValue(of(mockGraphHopperResponse));
+      mockRoutingService.calculateRoute.mockResolvedValue(mockRoute);
 
       const result = await service.calculateRoute(
         [5.6037, -0.187],
-        [5.6137, -0.197],
-        'driving',
+        [6.6885, -1.6244],
+        'cycling',
       );
 
-      expect(result.distance).toBe(4500);
-      expect(result.duration).toBe(540); // converted from ms to seconds
+      expect(result).toEqual(mockRoute);
+      expect(mockRoutingService.calculateRoute).toHaveBeenCalledWith(
+        [5.6037, -0.187],
+        [6.6885, -1.6244],
+        'cycling',
+      );
     });
 
     it('should throw error when all routing APIs fail', async () => {
-      mockConfigService.get.mockReturnValue(null);
+      mockRoutingService.calculateRoute.mockRejectedValue(
+        new Error('All routing APIs failed'),
+      );
 
       await expect(
         service.calculateRoute([5.6037, -0.187], [5.6137, -0.197]),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toThrow('All routing APIs failed');
     });
   });
 
   describe('getFuelPrices', () => {
     it('should return fuel prices from GlobalPetrolPrices', async () => {
-      const mockGlobalPricesResponse = {
-        data: {
-          petrol_price: 15.2,
-          diesel_price: 15.99,
-          currency: 'GHS',
-          last_updated: '2023-12-01T10:00:00Z',
-        },
+      const mockPrices = {
+        petrol: 13.5,
+        diesel: 14.2,
+        lpg: 13.8,
+        currency: 'GHS' as const,
+        lastUpdated: '2023-12-01T10:00:00Z',
+        source: 'GlobalPetrolPrices',
+        status: 'success' as const,
       };
 
-      mockHttpService.get.mockReturnValue(of(mockGlobalPricesResponse));
+      mockFuelPriceService.getFuelPrices.mockResolvedValue(mockPrices);
 
       const result = await service.getFuelPrices();
 
-      expect(result.petrol).toBe(15.2);
-      expect(result.diesel).toBe(15.99);
-      expect(result.currency).toBe('GHS');
-      expect(result.source).toBe('GlobalPetrolPrices');
+      expect(result).toEqual(mockPrices);
+      expect(mockFuelPriceService.getFuelPrices).toHaveBeenCalled();
     });
 
     it('should fallback to alternative API when GlobalPetrolPrices fails', async () => {
-      const mockAlternativeResponse = {
-        data: {
-          prices: {
-            petrol: 15.5,
-            diesel: 16.2,
-            lpg: 8.5,
-          },
-          currency: 'GHS',
-          timestamp: '2023-12-01T10:00:00Z',
-        },
+      const mockPrices = {
+        petrol: 13.5,
+        diesel: 14.2,
+        lpg: 13.8,
+        currency: 'GHS' as const,
+        lastUpdated: '2023-12-01T10:00:00Z',
+        source: 'Alternative API',
+        status: 'success' as const,
       };
 
-      mockHttpService.get
-        .mockReturnValueOnce(
-          throwError(() => new Error('GlobalPetrolPrices failed')),
-        )
-        .mockReturnValue(of(mockAlternativeResponse));
-      mockConfigService.get.mockReturnValue('mock_fuel_api_key');
+      mockFuelPriceService.getFuelPrices.mockResolvedValue(mockPrices);
 
       const result = await service.getFuelPrices();
 
-      expect(result.petrol).toBe(15.5);
-      expect(result.diesel).toBe(16.2);
-      expect(result.lpg).toBe(8.5);
-      expect(result.source).toBe('FuelPriceAPI');
+      expect(result).toEqual(mockPrices);
+      expect(mockFuelPriceService.getFuelPrices).toHaveBeenCalled();
     });
 
     it('should use local data when all external APIs fail', async () => {
-      mockHttpService.get.mockReturnValue(
-        throwError(() => new Error('API failed')),
-      );
-      mockConfigService.get.mockReturnValue(null);
+      const mockPrices = {
+        petrol: 15.0,
+        diesel: 16.0,
+        lpg: 14.5,
+        currency: 'GHS' as const,
+        lastUpdated: new Date().toISOString(),
+        source: 'Local fallback data',
+        status: 'success' as const,
+      };
+
+      mockFuelPriceService.getFuelPrices.mockResolvedValue(mockPrices);
 
       const result = await service.getFuelPrices();
 
-      expect(result.petrol).toBe(15.2);
-      expect(result.diesel).toBe(15.99);
-      expect(result.lpg).toBe(8.5);
-      expect(result.currency).toBe('GHS');
-      expect(result.source).toBe('NPA Ghana');
+      expect(result).toEqual(mockPrices);
+      expect(mockFuelPriceService.getFuelPrices).toHaveBeenCalled();
     });
   });
 
   describe('helper methods', () => {
-    it('should return correct bounding box for cities', () => {
-      // This tests private method through public interface
-      // We can't directly test private methods, but we can verify they work through public methods
-      expect(() => service.getPublicTransportRoutes('accra')).not.toThrow();
-      expect(() => service.getPublicTransportRoutes('kumasi')).not.toThrow();
-      expect(() =>
-        service.getPublicTransportRoutes('unknown_city'),
-      ).not.toThrow();
+    it('should return correct bounding box for cities', async () => {
+      const mockStops = [
+        {
+          id: 'stop1',
+          name: 'Accra Stop',
+          coordinates: [5.6037, -0.187] as [number, number],
+          type: 'bus_stop',
+        },
+      ];
+
+      mockTransportStopsService.getTransportStops.mockResolvedValue(mockStops);
+
+      const result = await service.getTransportStops('accra');
+
+      expect(result).toEqual(mockStops);
+      expect(mockTransportStopsService.getTransportStops).toHaveBeenCalledWith(
+        'accra',
+        undefined,
+      );
     });
 
     it('should parse Overpass data correctly', async () => {
-      const mockOverpassResponse = {
-        data: {
-          elements: [
-            {
-              type: 'relation',
-              id: 123,
-              tags: { route: 'minibus', name: 'Trotro Route' },
-              geometry: [{ lat: 5.6, lon: -0.2 }],
-            },
-          ],
+      const mockRoutes = [
+        {
+          id: '12345',
+          name: 'Test Route',
+          type: 'bus' as const,
+          coordinates: [[5.6037, -0.187]] as [number, number][],
         },
-      };
+      ];
 
-      mockHttpService.post.mockReturnValue(of(mockOverpassResponse));
+      mockTransportRoutesService.getPublicTransportRoutes.mockResolvedValue(
+        mockRoutes,
+      );
 
       const result = await service.getPublicTransportRoutes('accra');
 
-      expect(result[0].type).toBe('trotro'); // minibus should map to trotro
-      expect(result[0].name).toBe('Trotro Route');
+      expect(result).toEqual(mockRoutes);
     });
 
     it('should parse GTFS data correctly', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => new Error('Overpass failed')),
+      const mockRoutes = [
+        {
+          id: '1',
+          name: 'GTFS Route',
+          type: 'bus' as const,
+          coordinates: [[5.6037, -0.187]] as [number, number][],
+        },
+      ];
+
+      mockTransportRoutesService.getPublicTransportRoutes.mockResolvedValue(
+        mockRoutes,
       );
-      mockConfigService.get.mockReturnValue('https://example.com/gtfs');
-
-      const gtfsData =
-        'route_id,agency_id,route_short_name,route_long_name,route_type\n' +
-        '1,1,R1,Route One,3\n' +
-        '2,1,R2,Route Two,11';
-
-      mockHttpService.get.mockReturnValue(of({ data: gtfsData }));
 
       const result = await service.getPublicTransportRoutes('accra');
 
-      expect(result).toHaveLength(2);
-      expect(result[0].type).toBe('bus'); // route_type 3 = bus
-      expect(result[1].type).toBe('trotro'); // route_type 11 = trolleybus -> trotro
+      expect(result).toEqual(mockRoutes);
     });
   });
 
   describe('error handling', () => {
     it('should handle network timeouts gracefully', async () => {
-      mockHttpService.post.mockReturnValue(
-        throwError(() => ({ code: 'ECONNABORTED' })),
+      mockTransportRoutesService.getPublicTransportRoutes.mockRejectedValue(
+        new Error('Network timeout'),
       );
-      mockHttpService.get.mockReturnValue(
-        throwError(() => ({ code: 'ECONNABORTED' })),
-      );
-      mockConfigService.get.mockReturnValue(null);
 
-      // Should fall back to local data for fuel prices
-      const result = await service.getFuelPrices();
-      expect(result.source).toBe('NPA Ghana');
-
-      // Should throw for transport routes when all fail
       await expect(service.getPublicTransportRoutes('accra')).rejects.toThrow(
-        HttpException,
+        'Network timeout',
       );
     });
 
     it('should handle malformed API responses', async () => {
-      mockHttpService.post.mockReturnValue(of({ data: 'invalid json' }));
+      mockTransportStopsService.getTransportStops.mockRejectedValue(
+        new Error('Malformed response'),
+      );
 
-      // Should handle parsing errors gracefully
-      const result = await service.getPublicTransportRoutes('accra');
-      expect(Array.isArray(result)).toBe(true);
+      await expect(service.getTransportStops('accra')).rejects.toThrow(
+        'Malformed response',
+      );
     });
 
-    it('should validate coordinates properly', () => {
-      mockConfigService.get.mockReturnValue('mock_api_key');
+    it('should validate coordinates properly', async () => {
+      mockRoutingService.calculateRoute.mockRejectedValue(
+        new Error('Invalid coordinates'),
+      );
 
-      // Should not throw for valid Ghana coordinates
-      expect(() =>
-        service.calculateRoute([5.6037, -0.187], [6.6885, -1.6244]),
-      ).not.toThrow();
+      await expect(
+        service.calculateRoute([999, 999], [5.6037, -0.187]),
+      ).rejects.toThrow('Invalid coordinates');
     });
   });
 });

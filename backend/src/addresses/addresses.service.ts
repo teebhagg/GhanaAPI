@@ -1,10 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
+import type { Cache } from 'cache-manager';
 import { AddressValidationDto } from './dto/address-validation.dto';
 import { AddressDto } from './dto/address.dto';
 import { StandardizedAddressDto } from './dto/standardized-address.dto';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class AddressesService {
@@ -95,7 +95,9 @@ export class AddressesService {
 
   standardizeAddress(rawAddress: string): StandardizedAddressDto {
     const cleaned = rawAddress.replace(/\s+/g, ' ').trim();
-    const match = cleaned.toUpperCase().match(this.digitalCodeRegex);
+    // Look for digital code pattern anywhere in the string (remove ^ and $ anchors)
+    const digitalCodePattern = /[A-Z]{2,3}-\d{3}-\d{4}/;
+    const match = cleaned.toUpperCase().match(digitalCodePattern);
     const digitalCode = match ? match[0] : undefined;
 
     return {

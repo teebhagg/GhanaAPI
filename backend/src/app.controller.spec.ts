@@ -15,8 +15,10 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return Ghana API welcome message', () => {
+      expect(appController.getHello()).toBe(
+        "Welcome to Ghana API - Your gateway to Ghana's data and services",
+      );
     });
   });
 });

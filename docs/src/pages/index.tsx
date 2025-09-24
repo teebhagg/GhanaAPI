@@ -15,20 +15,20 @@ function HomepageHeader() {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <div className={styles.badge}>
-              <span>🚀 Version 0.2.1</span>
+              <span>🚀 Version 0.3.0</span>
             </div>
             <Heading as="h1" className={styles.heroTitle}>
               Ghana API
             </Heading>
             <p className={styles.heroSubtitle}>
               The definitive REST API for Ghanaian services. Access
-              comprehensive data for addresses, exchange rates, transport &
-              logistics, and administrative information with our reliable,
-              developer-friendly platform.
+              comprehensive data for addresses, banking facilities, exchange
+              rates, transport & logistics, and administrative information with
+              our reliable, developer-friendly platform.
             </p>
             <div className={styles.heroStats}>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>12</span>
+                <span className={styles.statNumber}>18</span>
                 <span className={styles.statLabel}>API Endpoints</span>
               </div>
               <div className={styles.stat}>
@@ -76,6 +76,11 @@ const rates = await fetch(
 // Search addresses
 const addresses = await fetch(
   'https://api.ghana-api.dev/v1/addresses/search?q=Accra'
+);
+
+// Find nearby banks and ATMs
+const banks = await fetch(
+  'https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187'
 );
 
 // Calculate route
@@ -135,6 +140,17 @@ function FeaturesSection() {
             </Link>
           </div>
           <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>🏦</div>
+            <h3>Banking & ATM Locator</h3>
+            <p>
+              Find banks and ATMs across Ghana with location-based search and
+              real-time facility information
+            </p>
+            <Link to="/docs/api/banking" className={styles.featureLink}>
+              Learn More →
+            </Link>
+          </div>
+          <div className={styles.featureCard}>
             <div className={styles.featureIcon}>💱</div>
             <h3>Exchange Rates</h3>
             <p>
@@ -146,7 +162,7 @@ function FeaturesSection() {
             </Link>
           </div>
           <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>�</div>
+            <div className={styles.featureIcon}>🚗</div>
             <h3>Transport & Logistics</h3>
             <p>
               Route planning, transport stops, fuel prices, and travel cost
@@ -211,8 +227,8 @@ export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title="Ghana API - Address Services, Exchange Rates, Transport & Location Data"
-      description="Comprehensive APIs for Ghana including address validation, real-time exchange rates, transport & logistics, and administrative location data. Free to use with reliable data from Bank of Ghana and official sources.">
+      title="Ghana API - Address Services, Banking, Exchange Rates, Transport & Location Data"
+      description="Comprehensive APIs for Ghana including address validation, bank & ATM locator, real-time exchange rates, transport & logistics, and administrative location data. Free to use with reliable data from Bank of Ghana and official sources.">
       <HomepageHeader />
       <main className={styles.main}>
         <FeaturesSection />

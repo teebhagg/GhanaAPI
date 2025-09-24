@@ -21,6 +21,17 @@ Validate, search, and geocode Ghana Post Digital Addresses
 - ⏳ Address validation (Coming Soon)
 - ⏳ Address standardization (Coming Soon)
 
+### 🏦 [Banking & ATM Locator](./banking)
+
+Find banks and ATM locations across Ghana
+
+- ✅ Bank and ATM search by name, location, or type
+- ✅ Location-based search with radius filtering
+- ✅ Regional and city-based browsing
+- ✅ Real-time data from OpenStreetMap
+- ✅ Comprehensive bank information (hours, services, contact)
+- ✅ Distance calculation and sorting
+
 ### 💱 [Exchange Rates](./exchange-rates)
 
 Real-time and historical currency exchange rates
@@ -55,24 +66,24 @@ Transportation services and route planning
 
 ## 📊 Implementation Status
 
-| Service              | Feature                 | Status         | Notes                                           |
-| -------------------- | ----------------------- | -------------- | ----------------------------------------------- |
-| **Address Services** | Address Search          | ✅ Live        | Fully implemented                               |
-|                      | Reverse Geocoding       | ✅ Live        | Fully implemented                               |
-|                      | Address Validation      | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-|                      | Address Standardization | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-| **Exchange Rates**   | Current Rates           | ✅ Live        | Fully implemented                               |
-|                      | Currency Conversion     | ✅ Live        | Fully implemented                               |
-|                      | Historical Data         | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-|                      | Rate Trends             | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-| **Location Data**    | Regions                 | ✅ Live        | Fully implemented                               |
-|                      | Districts               | ✅ Live        | Fully implemented                               |
-| **Transport & Logistics** | Transport Stops    | ✅ Live        | Bus stops, stations, and public transport hubs |
-|                      | Route Calculation       | ✅ Live        | Optimal routing between locations               |
-|                      | Route Directions        | ✅ Live        | Turn-by-turn navigation instructions            |
-|                      | Travel Cost Estimation  | ✅ Live        | Fuel costs and fare calculations                |
-|                      | Fuel Prices             | ✅ Live        | Current petrol, diesel, and LPG prices         |
-|                      | Nearby Services         | ✅ Live        | Find transport stops within radius             |
+| Service                   | Feature                 | Status         | Notes                                           |
+| ------------------------- | ----------------------- | -------------- | ----------------------------------------------- |
+| **Address Services**      | Address Search          | ✅ Live        | Fully implemented                               |
+|                           | Reverse Geocoding       | ✅ Live        | Fully implemented                               |
+|                           | Address Validation      | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
+|                           | Address Standardization | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
+| **Exchange Rates**        | Current Rates           | ✅ Live        | Fully implemented                               |
+|                           | Currency Conversion     | ✅ Live        | Fully implemented                               |
+|                           | Historical Data         | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
+|                           | Rate Trends             | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
+| **Location Data**         | Regions                 | ✅ Live        | Fully implemented                               |
+|                           | Districts               | ✅ Live        | Fully implemented                               |
+| **Transport & Logistics** | Transport Stops         | ✅ Live        | Bus stops, stations, and public transport hubs  |
+|                           | Route Calculation       | ✅ Live        | Optimal routing between locations               |
+|                           | Route Directions        | ✅ Live        | Turn-by-turn navigation instructions            |
+|                           | Travel Cost Estimation  | ✅ Live        | Fuel costs and fare calculations                |
+|                           | Fuel Prices             | ✅ Live        | Current petrol, diesel, and LPG prices          |
+|                           | Nearby Services         | ✅ Live        | Find transport stops within radius              |
 
 ### Status Legend
 
@@ -214,13 +225,19 @@ console.log(conversion.data.result); // Converted amount
 #### Route Planning
 
 ```javascript
-const calculateRoute = async (startLat, startLng, endLat, endLng, mode = 'driving') => {
+const calculateRoute = async (
+  startLat,
+  startLng,
+  endLat,
+  endLng,
+  mode = "driving"
+) => {
   const params = new URLSearchParams({
     start_lat: startLat,
     start_lng: startLng,
     end_lat: endLat,
     end_lng: endLng,
-    mode: mode
+    mode: mode,
   });
 
   const response = await fetch(
@@ -231,7 +248,7 @@ const calculateRoute = async (startLat, startLng, endLat, endLng, mode = 'drivin
 };
 
 // Usage
-const route = await calculateRoute(5.6037, -0.187, 6.6885, -1.6244, 'driving');
+const route = await calculateRoute(5.6037, -0.187, 6.6885, -1.6244, "driving");
 console.log(route.data.distance); // Distance in kilometers
 console.log(route.data.duration); // Duration in seconds
 ```

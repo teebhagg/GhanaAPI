@@ -15,6 +15,7 @@ import {
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { motion } from "framer-motion";
 import {
+  Building2,
   ChevronDown,
   FileText,
   Github,
@@ -81,6 +82,13 @@ export function Navbar() {
                     onClick={() => scrollToSection("addresses")}>
                     <MapPin className="w-4 h-4 mr-2" />
                     Address Lookup & Validation
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => scrollToSection("banking")}>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Bank & ATM Locator
                   </Button>
                   <Button
                     variant="ghost"
@@ -166,6 +174,10 @@ export function Navbar() {
                 <DropdownMenuItem onClick={() => scrollToSection("addresses")}>
                   <MapPin className="w-4 h-4 mr-2" />
                   Address Lookup & Validation
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("banking")}>
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Bank & ATM Locator
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => scrollToSection("locations")}>
                   <Globe className="w-4 h-4 mr-2" />

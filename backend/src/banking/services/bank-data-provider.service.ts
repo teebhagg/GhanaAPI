@@ -135,11 +135,12 @@ export class BankDataProviderService {
     try {
       const query = `
         [out:json][timeout:25];
+        area["name"="Ghana"]->.searchArea;
         (
-          node["amenity"="bank"]["addr:country"="GH"];
-          node["amenity"="atm"]["addr:country"="GH"];
-          way["amenity"="bank"]["addr:country"="GH"];
-          way["amenity"="atm"]["addr:country"="GH"];
+          node["amenity"="bank"](area.searchArea);
+          node["amenity"="atm"](area.searchArea);
+          way["amenity"="bank"](area.searchArea);
+          way["amenity"="atm"](area.searchArea);
         );
         out geom;
       `;

@@ -1,11 +1,75 @@
 export type AddressDto = {
   digitalCode: string;
-  addressLine1: string;
+  addressLine1?: string;
   addressLine2?: string;
   latitude: number;
   longitude: number;
   postalCode?: string;
 };
+
+export type BankSearchQuery = {
+ q?: string;
+ lat?: number;
+ lng?: number;
+ radius?: number;
+ type?: 'bank' | 'atm';
+ limit?: number;
+ region?: string;
+ city?: string;
+};
+
+export type BankDto = {
+  id: string;
+  name: string;
+  type: "bank" | "atm";
+  code?: string;
+  address: string;
+  city: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  phone?: string;
+  email?: string;
+  website?: string;
+  operatingHours?: string;
+  services?: string[];
+  distance?: number;
+  branchInfo?: {
+    branchCode?: string;
+    isHeadOffice?: boolean;
+    hasATM?: boolean;
+    is24Hours?: boolean;
+  };
+};
+
+export type BankSearchResponseDto = {
+  success: boolean;
+  data: BankDto[];
+  total: number;
+  searchParams: {
+    query?: string;
+    location?: {
+      lat: number;
+      lng: number;
+      radius: number;
+    };
+    type: string;
+    limit: number;
+  };
+  source: string;
+  timestamp: string;
+};
+
+// export type BankSearchQuery = {
+//   q?: string;
+//   lat?: number;
+//   lng?: number;
+//   radius?: number;
+//   type?: "all" | "bank" | "atm";
+//   limit?: number;
+//   region?: string;
+//   city?: string;
+// };
 
 export type ExchangeRateDto = {
   baseCurrency: string;
@@ -148,6 +212,37 @@ export const api = {
   searchAddresses(q: string) {
     const qs = new URLSearchParams({ q }).toString();
     return http<AddressDto[]>(`/addresses/search?${qs}`);
+  },
+
+  // Banking & ATM Locator
+  searchBanks(query: BankSearchQuery) {
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined) {
+        params.append(key, value.toString());
+      }
+    });
+    return http<BankSearchResponseDto>(`/banking/search?${params}`);
+  },
+  getNearbyBanks(lat: number, lng: number, radius = 5000) {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString(),
+      radius: radius.toString(),
+    });
+    return http<BankSearchResponseDto>(`/banking/nearby?${params}`);
+  },
+  getBanksByRegion(region: string, type: 'bank' | 'atm' = 'bank') {
+    const params = new URLSearchParams({
+      type,
+    });
+    return http<BankDto[]>(`/banking/region/${encodeURIComponent(region)}?${params}`);
+  },
+  getBanksByCity(city: string, type: 'bank' | 'atm' = 'bank') {
+    const params = new URLSearchParams({
+      type,
+    });
+    return http<BankDto[]>(`/banking/city/${encodeURIComponent(city)}?${params}`);
   },
 
   // Locations

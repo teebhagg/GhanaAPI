@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AddressesModule } from './addresses/addresses.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BankingModule } from './banking/banking.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { LocationsModule } from './locations/locations.module';
 import { TransportModule } from './transport/transport.module';
@@ -18,6 +19,7 @@ import { TransportModule } from './transport/transport.module';
     AddressesModule,
     LocationsModule,
     ExchangeRatesModule,
+    BankingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

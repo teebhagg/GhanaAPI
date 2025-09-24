@@ -6,6 +6,61 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🏦 [0.3.0] - 2025-09-24</strong> - Banking & ATM Locator</summary>
+
+### Added
+
+- **Banking & ATM Locator Services**
+
+  - Complete banking module with comprehensive bank and ATM location services
+  - Support for location-based search with radius filtering and distance calculation
+  - Text search capabilities for banks by name, code, address, or city
+  - Integration with OpenStreetMap Overpass API for real-time banking facility data
+  - Fallback static directory for reliable service availability
+  - Smart data deduplication and validation for accurate results
+  - Multiple search endpoints: search, banks, ATMs, nearby, by region, by city
+  - Support for both bank branches and ATM-only locations
+  - Comprehensive test coverage with 18 test cases ensuring reliability
+  - RESTful API design following project conventions
+  - Swagger/OpenAPI documentation integration
+  - Distance-based sorting for location searches
+  - Ghana-specific coordinate validation and region mapping
+  - Full TypeScript support with proper DTOs and entities
+
+- **Enhanced API Documentation**
+
+  - Added Banking & ATM Locator tag to Swagger documentation
+  - Comprehensive API examples and responses for all banking endpoints
+  - Updated main README with banking service examples and usage
+
+- **Version Updates**
+
+  - Updated backend version to 0.3.0
+  - Updated frontend version to 0.3.0
+  - Updated docs version to 0.3.0
+  - Updated version badges across all documentation
+
+### Technical Implementation
+
+- **Banking Module Architecture**
+
+  - BankingController with 6 endpoints for comprehensive search functionality
+  - BankingService with business logic and data processing
+  - BankDataProviderService for external data integration and caching
+  - Proper entity definitions for Bank and ATMLocation interfaces
+  - Input validation with class-validator decorators
+  - Comprehensive error handling and user-friendly responses
+  - 24-hour data caching for performance optimization
+
+- **Testing & Quality Assurance**
+  - Complete test coverage for banking controller and service
+  - All 137 tests passing including new banking functionality
+  - ESLint compliance across all new code
+  - TypeScript strict mode compatibility
+
+</details>
+
+<details>
 <summary><strong>🧪 [0.2.3] - 2025-09-23</strong> - Comprehensive Test Suite & Bug Fixes</summary>
 
 ### Added

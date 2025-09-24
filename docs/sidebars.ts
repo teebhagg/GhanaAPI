@@ -14,6 +14,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "api/overview",
         "api/addresses",
+        "api/banking",
         "api/exchange-rates",
         "api/locations",
         "api/transport",
@@ -24,7 +25,11 @@ const sidebars: SidebarsConfig = {
       label: "Contributing",
       items: [
         "contributing/overview",
+        "contributing/quick-reference",
+        "contributing/validation-workflows",
+        "contributing/release-management",
         "contributing/addresses",
+        "contributing/banking",
         "contributing/exchange-rates",
         "contributing/locations",
         "contributing/transport",

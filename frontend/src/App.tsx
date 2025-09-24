@@ -1,4 +1,5 @@
 import { AddressesPanel } from "@/components/addresses-panel";
+import { BankingPanel } from "@/components/banking-panel";
 import { DocsPage } from "@/components/docs-page";
 import { EnhancedTransportExplorer } from "@/components/enhanced-transport-explorer";
 import { ExchangeRatesPanel } from "@/components/exchange-rates-panel";
@@ -31,7 +32,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}>
-              Explore Ghana's comprehensive API services for addresses,
+              Explore Ghana's comprehensive API services for addresses, banking,
               locations, transport directions, and real-time exchange rates
             </motion.p>
           </header>
@@ -57,11 +58,27 @@ function HomePage() {
             </motion.section>
 
             <motion.section
-              id="locations"
+              id="banking"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.6, delay: 0.1 }}
+              className="scroll-mt-24">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-2">Bank & ATM Locator</h2>
+                <p className="text-muted-foreground text-lg">
+                  Find banks and ATMs across Ghana with location-based search
+                </p>
+              </div>
+              <BankingPanel />
+            </motion.section>
+
+            <motion.section
+              id="locations"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
               className="scroll-mt-24">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">
@@ -79,7 +96,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
               className="scroll-mt-24">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">
@@ -97,7 +114,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
               className="scroll-mt-24">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">

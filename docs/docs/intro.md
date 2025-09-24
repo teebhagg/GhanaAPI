@@ -5,6 +5,7 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 ## 🌟 Features
 
 - **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
+- **🏦 Bank & ATM Locator** - Find banks and ATMs across Ghana with location-based search
 - **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching

@@ -32,6 +32,7 @@ async function bootstrap() {
     .setDescription('Comprehensive API for Ghanaian services')
     .setVersion('1.0')
     .addTag('Addresses', 'Digital address and location services')
+    .addTag('Banking & ATM Locator', 'Bank and ATM location services')
     .addTag('Exchange Rates', 'Currency exchange rate services')
     .addTag('Locations', 'Location services')
     .build();

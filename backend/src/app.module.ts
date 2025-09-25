@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { BankingModule } from './banking/banking.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { LocationsModule } from './locations/locations.module';
+import { StockMarketModule } from './stock-market/stock-market.module';
 import { TransportModule } from './transport/transport.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { TransportModule } from './transport/transport.module';
     LocationsModule,
     ExchangeRatesModule,
     BankingModule,
+    StockMarketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

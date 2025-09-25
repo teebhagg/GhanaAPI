@@ -35,6 +35,7 @@ async function bootstrap() {
     .addTag('Banking & ATM Locator', 'Bank and ATM location services')
     .addTag('Exchange Rates', 'Currency exchange rate services')
     .addTag('Locations', 'Location services')
+    .addTag('Stock Market Data', 'Ghana Stock Exchange data and analytics')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

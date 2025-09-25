@@ -6,6 +6,136 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>📈 [0.4.0] - 2025-09-24</strong> - Stock Market Data Integration</summary>
+
+### Added
+
+- **Real-time Ghana Stock Exchange (GSE) Data Integration**
+
+  - Live data integration with external GSE API (https://dev.kwayisi.org/apis/gse)
+  - 7 comprehensive REST endpoints for stock market operations
+  - Real-time stock prices, market data, and trading information
+  - All 30+ GSE-listed companies with detailed company profiles
+  - Sector performance analysis across 13+ sectors (Financials, Basic Materials, Industrial, etc.)
+  - Market summary with GSE Composite index and market statistics
+  - Advanced search and filtering capabilities (price range, sector, volume, market cap)
+  - Company information including address, contact details, financial metrics
+  - Performance-optimized caching with 5-minute TTL during market hours
+  - Scheduled cache updates every 5 minutes during GSE trading hours
+  - Market hours detection (Monday-Friday, 10:00 AM - 3:00 PM Ghana Time)
+  - Comprehensive error handling with retry logic and exponential backoff
+  - HTTP client integration with timeout and connection management
+
+- **GSE API Provider Architecture**
+
+  - Robust external API integration with automatic retries (3 attempts)
+  - Rate limiting protection and 429 error handling
+  - Data transformation and mapping from external GSE format
+  - Market status calculation and timezone handling for Africa/Accra
+  - Estimated financial metrics (PE ratio, dividend yield) when not available
+  - Company profile enrichment with detailed business information
+  - Stock status determination (OPEN/CLOSED based on trading volume)
+
+- **Enhanced Testing & Documentation**
+
+  - Complete unit test coverage for service and controller layers (19 tests)
+  - Integration tests for real GSE API connectivity
+  - Mock provider implementation for reliable testing
+  - Comprehensive API documentation with 400+ line stock-market.md guide
+  - Swagger/OpenAPI integration with detailed endpoint documentation
+  - Real-world examples with actual GSE stock symbols (ACCESS, GCB, etc.)
+  - Performance testing and error scenario coverage
+
+- **API Endpoints Added**
+  - `GET /stock-market/search` - Advanced stock search with filtering
+  - `GET /stock-market/stock/{symbol}` - Individual stock details
+  - `GET /stock-market/market-summary` - Market overview and indices
+  - `GET /stock-market/sectors` - Available sector list
+  - `GET /stock-market/sectors/{sector}` - Stocks by sector
+  - `GET /stock-market/sector-performance` - Sector analytics
+  - `GET /stock-market/all` - Complete stock listing
+
+### Changed
+
+- **Documentation Updates**
+
+  - Homepage now showcases 30+ API endpoints across 6 core services
+  - Updated intro.md with stock market examples and real-time data features
+  - Enhanced API overview with live GSE data source attribution
+  - Added stock market section to quick start guide
+  - Updated sidebars navigation with stock market documentation
+
+- **Architecture Improvements**
+  - HttpModule integration for external API calls
+  - Enhanced caching strategy with separate cache keys for different data types
+  - Improved error handling with service-specific exception handling
+  - TypeScript interface updates for market indices and status
+
+### Fixed
+
+- Interface compatibility issues between mock and real API providers
+- Market status calculation for Ghana timezone
+- Data type handling for null/undefined financial metrics
+- Test suite compatibility with new provider architecture
+
+</details>
+
+<details>
+<summary><strong>🏦 [0.3.0] - 2025-09-24</strong> - Banking & ATM Locator</summary>
+
+### Added
+
+- **Banking & ATM Locator Services**
+
+  - Complete banking module with comprehensive bank and ATM location services
+  - Support for location-based search with radius filtering and distance calculation
+  - Text search capabilities for banks by name, code, address, or city
+  - Integration with OpenStreetMap Overpass API for real-time banking facility data
+  - Fallback static directory for reliable service availability
+  - Smart data deduplication and validation for accurate results
+  - Multiple search endpoints: search, banks, ATMs, nearby, by region, by city
+  - Support for both bank branches and ATM-only locations
+  - Comprehensive test coverage with 18 test cases ensuring reliability
+  - RESTful API design following project conventions
+  - Swagger/OpenAPI documentation integration
+  - Distance-based sorting for location searches
+  - Ghana-specific coordinate validation and region mapping
+  - Full TypeScript support with proper DTOs and entities
+
+- **Enhanced API Documentation**
+
+  - Added Banking & ATM Locator tag to Swagger documentation
+  - Comprehensive API examples and responses for all banking endpoints
+  - Updated main README with banking service examples and usage
+
+- **Version Updates**
+
+  - Updated backend version to 0.3.0
+  - Updated frontend version to 0.3.0
+  - Updated docs version to 0.3.0
+  - Updated version badges across all documentation
+
+### Technical Implementation
+
+- **Banking Module Architecture**
+
+  - BankingController with 6 endpoints for comprehensive search functionality
+  - BankingService with business logic and data processing
+  - BankDataProviderService for external data integration and caching
+  - Proper entity definitions for Bank and ATMLocation interfaces
+  - Input validation with class-validator decorators
+  - Comprehensive error handling and user-friendly responses
+  - 24-hour data caching for performance optimization
+
+- **Testing & Quality Assurance**
+  - Complete test coverage for banking controller and service
+  - All 137 tests passing including new banking functionality
+  - ESLint compliance across all new code
+  - TypeScript strict mode compatibility
+
+</details>
+
+<details>
 <summary><strong>🧪 [0.2.3] - 2025-09-23</strong> - Comprehensive Test Suite & Bug Fixes</summary>
 
 ### Added

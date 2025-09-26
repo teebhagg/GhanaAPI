@@ -118,22 +118,60 @@ Object.assign(global, {
   },
 });
 
-// Mock Cheerio module to prevent import-time issues
+// Mock Cheerio module to prevent import-time issues - DISABLED FOR NOW
+/*
 jest.mock('cheerio', () => {
   // Create a comprehensive mock for cheerio elements
   const createMockElement = (mockData?: any) => {
     const element = {
       find: jest.fn().mockImplementation((selector: string) => {
+        // Handle NPA selectors
+        if (selector.includes('.entry-title a') || selector.includes('.post-title a') || selector.includes('h3 a') || selector.includes('h2 a')) {
+          return {
+            slice: jest.fn().mockReturnValue([{
+              eq: jest.fn().mockImplementation((index: number) => ({
+                text: jest.fn().mockReturnValue('Latest Fuel Price Announcement'),
+                attr: jest.fn().mockImplementation((attrName: string) => {
+                  if (attrName === 'href') return '/press-release-fuel-prices';
+                  return '';
+                }),
+              })),
+              length: 1,
+            }]),
+            length: 1,
+          };
+        }
+        
+        // Handle NPA article content
+        if (selector.includes('.entry-content') || selector.includes('.post-content') || selector.includes('.content') || selector.includes('.article-content')) {
+          return {
+            text: jest.fn().mockReturnValue(
+              'The National Petroleum Authority announces the following indicative prices: Petrol: GH¢ 13.50 per litre Diesel: GH¢ 14.20 per litre LPG: GH¢ 13.80 per kilogram'
+            ),
+          };
+        }
+        
         // Mock specific selectors for fuel price parsing
         if (selector.includes('td') || selector.includes('.price')) {
           return createMockElement({ text: '12.50' });
         }
         if (selector.includes('tr')) {
-          return [
-            createMockElement({ text: 'Shell 12.90' }),
-            createMockElement({ text: 'Goil 12.80' }),
-            createMockElement({ text: 'Total 12.95' }),
+          // Return array-like structure for fuel price table rows
+          const rows = [
+            createMockElement({ text: 'Shell 12.89 13.89 14.99' }),
+            createMockElement({ text: 'Goil 12.99 13.90 14.90' }),
+            createMockElement({ text: 'Total 12.88 14.30 16.67' }),
+            createMockElement({ text: 'StarOil 12.77 13.45 14.68' }),
           ];
+          rows.length = 4;
+          (rows as any).each = jest.fn().mockImplementation((callback) => {
+            rows.forEach((row, index) => callback.call(row, index, row));
+            return rows;
+          });
+          return rows;
+        }
+        if (selector.includes('table')) {
+          return createMockElement({ length: 1 });
         }
         return createMockElement();
       }),
@@ -144,11 +182,37 @@ jest.mock('cheerio', () => {
       attr: jest.fn().mockReturnValue(''),
       html: jest.fn().mockReturnValue(''),
       val: jest.fn().mockReturnValue(''),
-      each: jest.fn().mockImplementation(function(this: any, callback: Function) {
+      each: jest.fn().mockImplementation(function (
+        this: any,
+        callback: Function,
+      ) {
         // Mock each iteration for table rows/cells
         if (typeof callback === 'function') {
-          ['Shell 12.90', 'Goil 12.80', 'Total 12.95'].forEach((item, index) => {
-            const mockRow = createMockElement({ text: item });
+          // Mock fuel price data from CediRates table structure
+          const fuelData = [
+            { text: () => 'Shell', cells: [() => '', () => 'Shell Get', () => '12.89', () => '13.89', () => '14.99'] },
+            { text: () => 'Goil', cells: [() => '', () => 'Goil Get', () => '12.99', () => '13.90', () => '14.90'] },
+            { text: () => 'Total', cells: [() => '', () => 'TotalEnergies Get', () => '12.88', () => '14.30', () => '16.67'] },
+            { text: () => 'StarOil', cells: [() => '', () => 'StarOil Get', () => '12.77', () => '13.45', () => '14.68'] },
+          ];
+          
+          fuelData.forEach((item, index) => {
+            const mockRow = {
+              ...createMockElement({ text: item.text() }),
+              find: jest.fn().mockImplementation((sel: string) => {
+                if (sel.includes('td')) {
+                  // Return mock table cells with fuel price data
+                  const cells = item.cells.map((cellData, cellIndex) => ({
+                    ...createMockElement({ text: cellData() }),
+                    eq: jest.fn().mockImplementation((i) => createMockElement({ text: cellData() })),
+                  }));
+                  cells.length = item.cells.length;
+                  (cells as any).eq = jest.fn().mockImplementation((i) => createMockElement({ text: item.cells[i]() }));
+                  return cells;
+                }
+                return createMockElement();
+              }),
+            };
             callback.call(mockRow, index, mockRow);
           });
         }
@@ -162,7 +226,7 @@ jest.mock('cheerio', () => {
         // Return mock table cells/rows for fuel price parsing
         return [
           createMockElement({ text: 'Shell' }),
-          createMockElement({ text: '12.90' }),
+          createMockElement({ text: '12.89' }),
         ];
       }),
       siblings: jest.fn().mockReturnThis(),
@@ -181,13 +245,14 @@ jest.mock('cheerio', () => {
       map: jest.fn().mockReturnThis(),
       get: jest.fn().mockReturnValue([]),
       toArray: jest.fn().mockReturnValue([]),
-      length: mockData?.length || 3, // Default length for table rows
+      length: mockData?.length || 4, // Default length for table rows
     };
 
     // Add array-like behavior
     element[0] = element;
     element[1] = element;
     element[2] = element;
+    element[3] = element;
 
     return element;
   };
@@ -195,37 +260,40 @@ jest.mock('cheerio', () => {
   const mockCheerio = {
     load: jest.fn().mockImplementation((html: string) => {
       // Create the root cheerio function
-      const cheerioRoot = jest.fn().mockImplementation((selector?: string) => {
+      const cheerioRoot = jest.fn().mockImplementation((selector?: any) => {
         if (!selector) return createMockElement();
-        
+
+        // Convert selector to string for safety
+        const selectorStr = String(selector);
+
         // Return specific mocks for fuel price selectors
-        if (selector.includes('table') || selector.includes('tbody')) {
+        if (selectorStr.includes('table') || selectorStr.includes('tbody')) {
           return createMockElement({ length: 1 });
         }
-        
-        if (selector.includes('tr')) {
-          return createMockElement({ length: 3 });
+
+        if (selectorStr.includes('tr')) {
+          return createMockElement({ length: 4 });
         }
-        
-        if (selector.includes('td')) {
+
+        if (selectorStr.includes('td')) {
           // Mock fuel price data extraction
           return createMockElement({ text: '12.50' });
         }
-        
+
         return createMockElement();
       });
 
       // Add cheerio methods to the root function without overriding length
       const methods = createMockElement();
-      Object.keys(methods).forEach(key => {
+      Object.keys(methods).forEach((key) => {
         if (key !== 'length') {
           cheerioRoot[key] = methods[key];
         }
       });
-      
+
       return cheerioRoot;
     }),
-    
+
     // Export other cheerio utilities
     html: jest.fn().mockReturnValue('<html></html>'),
     text: jest.fn().mockReturnValue(''),
@@ -246,23 +314,143 @@ jest.mock('cheerio', () => {
     load: mockCheerio.load,
   };
 });
+*/
 
-// Mock axios to prevent HTTP requests during tests
+// Mock axios and @nestjs/axios to prevent HTTP requests during tests
+import { of } from 'rxjs';
+
 jest.mock('axios', () => ({
   default: {
-    get: jest.fn().mockResolvedValue({ data: '<html><body>Mock HTML</body></html>' }),
-    post: jest.fn().mockResolvedValue({ data: {} }),
-    put: jest.fn().mockResolvedValue({ data: {} }),
-    delete: jest.fn().mockResolvedValue({ data: {} }),
+    get: jest
+      .fn()
+      .mockResolvedValue({ data: '<html><body>Mock HTML</body></html>', status: 200 }),
+    post: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
+    put: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
+    delete: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
     create: jest.fn().mockReturnThis(),
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
     },
   },
-  get: jest.fn().mockResolvedValue({ data: '<html><body>Mock HTML</body></html>' }),
-  post: jest.fn().mockResolvedValue({ data: {} }),
-  put: jest.fn().mockResolvedValue({ data: {} }),
-  delete: jest.fn().mockResolvedValue({ data: {} }),
+  get: jest
+    .fn()
+    .mockResolvedValue({ data: '<html><body>Mock HTML</body></html>', status: 200 }),
+  post: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
+  put: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
+  delete: jest.fn().mockResolvedValue({ data: {}, status: 200 }),
   create: jest.fn().mockReturnThis(),
 }));
+
+// Mock @nestjs/axios completely with proper module structure
+jest.mock('@nestjs/axios', () => {
+  const { of } = require('rxjs');
+  
+  class MockHttpService {
+    get(url?: string) {
+      let mockData = '<html><body>Mock HTML</body></html>';
+      
+      // Mock NPA press releases page
+      if (url && url.includes('npa.gov.gh/category/press-releases')) {
+        mockData = `
+          <html>
+            <body>
+              <div class="entry-title">
+                <a href="/press-release-fuel-prices">Latest Fuel Price Announcement</a>
+              </div>
+            </body>
+          </html>
+        `;
+      }
+      
+      // Mock NPA article page
+      if (url && url.includes('/press-release-fuel-prices')) {
+        mockData = `
+          <html>
+            <body>
+              <div class="entry-content">
+                The National Petroleum Authority announces the following indicative prices: Petrol: GH¢ 13.50 per litre Diesel: GH¢ 14.20 per litre LPG: GH¢ 13.80 per kilogram
+              </div>
+            </body>
+          </html>
+        `;
+      }
+      
+      // Mock CediRates fuel prices page
+      if (url && url.includes('cedirates.com/fuel-prices')) {
+        mockData = `
+          <html>
+            <body>
+              <table>
+                <tr><td>Shell</td><td>12.89</td><td>13.89</td><td>14.99</td></tr>
+                <tr><td>Goil</td><td>12.99</td><td>13.90</td><td>14.90</td></tr>
+                <tr><td>Total</td><td>12.88</td><td>14.30</td><td>16.67</td></tr>
+                <tr><td>StarOil</td><td>12.77</td><td>13.45</td><td>14.68</td></tr>
+              </table>
+            </body>
+          </html>
+        `;
+      }
+      
+      return of({
+        data: mockData,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+    }
+    post() {
+      return of({
+        data: {},
+        status: 200,
+        statusText: 'OK', 
+        headers: {},
+        config: {},
+      });
+    }
+    put() {
+      return of({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+    }
+    delete() {
+      return of({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+    }
+  }
+  
+  class MockHttpModule {
+    static register() {
+      return {
+        module: MockHttpModule,
+        providers: [
+          {
+            provide: MockHttpService,
+            useClass: MockHttpService,
+          },
+        ],
+        exports: [MockHttpService],
+        global: false,
+      };
+    }
+    
+    static forRoot() {
+      return MockHttpModule.register();
+    }
+  }
+  
+  return {
+    HttpService: MockHttpService,
+    HttpModule: MockHttpModule,
+  };
+});

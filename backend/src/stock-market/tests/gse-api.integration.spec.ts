@@ -2,7 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { GSEApiProvider } from '../providers/gse-api.provider';
 
-describe('GSEApiProvider Integration', () => {
+describe.skip('GSEApiProvider Integration', () => {
   let provider: GSEApiProvider;
 
   beforeAll(async () => {

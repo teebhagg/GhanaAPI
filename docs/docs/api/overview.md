@@ -1,6 +1,20 @@
 # GhanaAPI - Developer Guide
 
-Welcome to GhanaAPI! This comprehensive REST API provides access to essential Ghanaian services including address validation, exchange rates, and location data.
+Welc### 📈 [Stock Market Data](./stock-market)
+
+Ghana Stock Exchange (GSE) real-time data and analytics - **7 API endpoints**
+
+- ✅ **Live GSE data** from https://dev.kwayisi.org/apis/gse
+- ✅ Real-time stock prices and trading volumes
+- ✅ All 30+ GSE-listed companies with detailed profiles
+- ✅ Market summary with GSE Composite index and statistics
+- ✅ Sector performance analysis and rankings (13+ sectors)
+- ✅ Advanced search and filtering (price, sector, market cap, volume)
+- ✅ Company information (address, contact, financial metrics)
+- ✅ Market hours detection and trading status
+- ✅ Performance-optimized caching with 5-minute TTL
+
+**Covered Sectors:** Financials, Basic Materials, Industrial, Consumer Goods, Telecommunications, Energy, Healthcare, Technology, and moreAPI! This comprehensive REST API provides **30+ endpoints** across 6 core services, delivering reliable access to essential Ghanaian data and services.
 
 ## 🚀 Quick Start
 
@@ -32,7 +46,20 @@ Find banks and ATM locations across Ghana
 - ✅ Comprehensive bank information (hours, services, contact)
 - ✅ Distance calculation and sorting
 
-### 💱 [Exchange Rates](./exchange-rates)
+### � [Stock Market Data](./stock-market)
+
+Ghana Stock Exchange (GSE) real-time data and analytics
+
+- ✅ Real-time stock prices and market data
+- ✅ All 30+ GSE-listed companies
+- ✅ Sector performance analysis
+- ✅ Market summary and GSE indices
+- ✅ Advanced filtering and search
+- ✅ Portfolio tracking capabilities
+
+**Covered Sectors:** Banking, Mining, Telecommunications, Manufacturing, Oil & Gas, and 8+ more
+
+### �💱 [Exchange Rates](./exchange-rates)
 
 Real-time and historical currency exchange rates
 

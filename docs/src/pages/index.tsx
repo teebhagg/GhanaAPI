@@ -23,12 +23,13 @@ function HomepageHeader() {
             <p className={styles.heroSubtitle}>
               The definitive REST API for Ghanaian services. Access
               comprehensive data for addresses, banking facilities, exchange
-              rates, transport & logistics, and administrative information with
-              our reliable, developer-friendly platform.
+              rates, stock market information, transport & logistics, and
+              administrative information with our reliable, developer-friendly
+              platform.
             </p>
             <div className={styles.heroStats}>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>18</span>
+                <span className={styles.statNumber}>30+</span>
                 <span className={styles.statLabel}>API Endpoints</span>
               </div>
               <div className={styles.stat}>
@@ -76,6 +77,11 @@ const rates = await fetch(
 // Search addresses
 const addresses = await fetch(
   'https://api.ghana-api.dev/v1/addresses/search?q=Accra'
+);
+
+// Get Ghana Stock Exchange data
+const stocks = await fetch(
+  'https://api.ghana-api.dev/v1/stock-market/search?sector=Banking'
 );
 
 // Find nearby banks and ATMs
@@ -162,6 +168,17 @@ function FeaturesSection() {
             </Link>
           </div>
           <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>📈</div>
+            <h3>Stock Market Data</h3>
+            <p>
+              Live Ghana Stock Exchange (GSE) prices, market sectors, historical
+              data, and real-time trading information
+            </p>
+            <Link to="/docs/api/stock-market" className={styles.featureLink}>
+              Learn More →
+            </Link>
+          </div>
+          <div className={styles.featureCard}>
             <div className={styles.featureIcon}>🚗</div>
             <h3>Transport & Logistics</h3>
             <p>
@@ -196,8 +213,9 @@ function CTASection() {
         <div className={styles.ctaContent}>
           <h2>Ready to Get Started?</h2>
           <p>
-            Join thousands of developers building amazing applications with
-            Ghana API
+            Join the Ghana developer community building amazing applications
+            with Ghana API. Contribute code, improve documentation, or add new
+            features!
           </p>
           <div className={styles.ctaButtons}>
             <Link
@@ -206,15 +224,15 @@ function CTASection() {
                 styles.ctaPrimaryButton
               )}
               to="/docs/contributing/overview">
-              Start Building Now
+              🤝 Start Contributing
             </Link>
             <Link
               className={clsx(
                 "button button--outline button--lg",
                 styles.ctaSecondaryButton
               )}
-              href="https://github.com/teebhagg/GhanaAPI">
-              View on GitHub
+              to="/docs/intro">
+              📚 View Documentation
             </Link>
           </div>
         </div>

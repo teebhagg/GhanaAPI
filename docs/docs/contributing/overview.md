@@ -124,6 +124,48 @@ GhanaAPI is organized into distinct feature areas. Choose the area you'd like to
 - Administrative boundaries
 - **Skills needed**: Geographic data, government data, data modeling
 
+### 📈 Stock Market Data
+
+- **Live GSE stock prices** - Real-time stock market data from Ghana Stock Exchange
+- **Market sectors** - 13+ sectors including Financials, Basic Materials, Energy
+- **Historical data** - Stock performance tracking and trends
+- **Market status** - Trading hours and market holidays
+- **Skills needed**: Financial APIs, external API integration, data caching, real-time systems
+
+#### Key Implementation Areas:
+
+**External API Integration**
+
+- Integrate with Ghana Stock Exchange APIs
+- Handle rate limiting and API quotas
+- Implement robust error handling for external services
+- Cache strategies for real-time data
+
+**Data Processing**
+
+- Stock price normalization and validation
+- Market sector categorization
+- Historical data aggregation
+- Performance metrics calculation
+
+**Testing Strategies**
+
+- Mock external API responses for unit tests
+- Integration tests with rate limiting considerations
+- Performance testing for real-time data endpoints
+- Error scenario testing (API downtime, rate limits)
+
+**Development Setup**
+
+```bash
+# Test stock market endpoints
+npm run test src/stock-market
+npm run test:e2e -- --grep "stock-market"
+
+# Development with external APIs
+# Note: Some tests may require API keys or rate limiting considerations
+```
+
 ## 📝 Contribution Workflow
 
 ### 1. Choose an Issue or Feature

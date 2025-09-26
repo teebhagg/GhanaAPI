@@ -147,7 +147,7 @@ export function ExchangeRatesPanel() {
                   size="sm"
                   onClick={handleSelectNone}
                   className="text-xs">
-                  Clear
+                  <X className="w-3 h-3" />
                 </Button>
               </div>
             </div>
@@ -185,7 +185,6 @@ export function ExchangeRatesPanel() {
                   disabled={selectedCurrencies.length === 0}
                   className="text-xs">
                   <X className="w-3 h-3" />
-                  Clear
                 </Button>
               </div>
             </div>
@@ -297,7 +296,7 @@ export function ExchangeRatesPanel() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button type="submit" disabled={loading}>
                 {loading ? "Converting..." : "Convert Currency"}
               </Button>
@@ -305,11 +304,11 @@ export function ExchangeRatesPanel() {
                 type="button"
                 variant="outline"
                 onClick={clearConverter}
+                size={"icon"}
                 disabled={
                   from === "GHS" && to === "USD" && amount === "100" && !result
                 }>
                 <X className="w-4 h-4" />
-                Clear
               </Button>
             </div>
           </form>

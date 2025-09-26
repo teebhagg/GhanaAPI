@@ -59,7 +59,7 @@ export function LocationsPanel() {
             <label className="text-sm font-medium text-foreground block">
               Choose Region
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Select a region to explore..." />
@@ -75,9 +75,9 @@ export function LocationsPanel() {
               <Button
                 variant="outline"
                 onClick={clearAll}
+                size="icon"
                 disabled={!region && districts.length === 0}>
                 <X className="w-4 h-4" />
-                Clear
               </Button>
             </div>
           </div>

@@ -182,11 +182,11 @@ export function AddressesPanel() {
                 </Button>
                 <Button
                   type="button"
+                  size={"icon"}
                   variant="outline"
                   onClick={clearSearch}
                   disabled={!q && items.length === 0}>
                   <X className="w-4 h-4" />
-                  Clear
                 </Button>
               </div>
             </form>
@@ -255,10 +255,10 @@ export function AddressesPanel() {
                 <Button
                   type="button"
                   variant="outline"
+                  size={"icon"}
                   onClick={clearReverse}
                   disabled={!lat && !lng && items.length === 0}>
                   <X className="w-4 h-4" />
-                  Clear
                 </Button>
               </div>
             </form>
@@ -297,10 +297,10 @@ export function AddressesPanel() {
           className="flex justify-center">
           <Button
             variant="outline"
+            size={"icon"}
             onClick={clearAll}
             className="flex items-center gap-2">
             <X className="w-4 h-4" />
-            Clear All
           </Button>
         </motion.div>
       )}

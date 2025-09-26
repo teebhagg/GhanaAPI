@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import {
+  Activity,
+  Building2,
+  DollarSign,
   ExternalLink,
   FileText,
   Github,
@@ -10,7 +13,6 @@ import {
   MapPin,
   Navigation,
   Play,
-  TrendingUp,
 } from "lucide-react";
 
 export function Footer() {
@@ -81,6 +83,22 @@ export function Footer() {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => scrollToSection("banking")}
+                className="w-full justify-start p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Building2 className="w-4 h-4 mr-2" />
+                Bank & ATM Locator
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => scrollToSection("stocks")}
+                className="w-full justify-start p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Activity className="w-4 h-4 mr-2" />
+                Stock Market Data
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => scrollToSection("locations")}
                 className="w-full justify-start p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
                 <Globe className="w-4 h-4 mr-2" />
@@ -99,7 +117,7 @@ export function Footer() {
                 size="sm"
                 onClick={() => scrollToSection("fx")}
                 className="w-full justify-start p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                <TrendingUp className="w-4 h-4 mr-2" />
+                <DollarSign className="w-4 h-4 mr-2" />
                 Currency Exchange
               </Button>
             </div>
@@ -131,16 +149,6 @@ export function Footer() {
                   <Play className="w-4 h-4 mr-2" />
                   API Playground
                   <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start p-0 h-auto text-sm text-muted-foreground hover:text-foreground"
-                asChild>
-                <a href="/transport">
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Transport Demo
                 </a>
               </Button>
               <Button

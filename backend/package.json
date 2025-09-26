@@ -29,7 +29,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "cache-manager": "^7.1.1",
     "cheerio": "^1.1.2",
     "class-transformer": "^0.5.1",
@@ -62,7 +62,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "whatwg-fetch": "^3.6.20"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -79,6 +80,18 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "node",
+        "node-addons"
+      ]
+    },
+    "setupFiles": [
+      "<rootDir>/test/jest-setup.ts"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.ts"
+    ]
   }
 }

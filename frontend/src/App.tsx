@@ -9,6 +9,7 @@ import { Navbar } from "@/components/navbar";
 import { RouteSEO } from "@/components/route-seo";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SEO, defaultStructuredData } from "@/components/seo";
+import { StockMarketPanel } from "@/components/stock-market-panel";
 import { motion } from "framer-motion";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
@@ -33,7 +34,8 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}>
               Explore Ghana's comprehensive API services for addresses, banking,
-              locations, transport directions, and real-time exchange rates
+              locations, stock market data, transport directions, and real-time
+              exchange rates
             </motion.p>
           </header>
 
@@ -74,6 +76,25 @@ function HomePage() {
             </motion.section>
 
             <motion.section
+              id="stocks"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="scroll-mt-24">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-2">
+                  Ghana Stock Exchange
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Real-time stock market data from the Ghana Stock Exchange
+                  (GSE)
+                </p>
+              </div>
+              <StockMarketPanel />
+            </motion.section>
+
+            <motion.section
               id="locations"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -96,7 +117,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
               className="scroll-mt-24">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">
@@ -114,7 +135,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
               className="scroll-mt-24">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">

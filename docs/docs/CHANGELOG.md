@@ -6,6 +6,81 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>📈 [0.4.0] - 2025-09-24</strong> - Stock Market Data Integration</summary>
+
+### Added
+
+- **Real-time Ghana Stock Exchange (GSE) Data Integration**
+
+  - Live data integration with external GSE API (https://dev.kwayisi.org/apis/gse)
+  - 7 comprehensive REST endpoints for stock market operations
+  - Real-time stock prices, market data, and trading information
+  - All 30+ GSE-listed companies with detailed company profiles
+  - Sector performance analysis across 13+ sectors (Financials, Basic Materials, Industrial, etc.)
+  - Market summary with GSE Composite index and market statistics
+  - Advanced search and filtering capabilities (price range, sector, volume, market cap)
+  - Company information including address, contact details, financial metrics
+  - Performance-optimized caching with 5-minute TTL during market hours
+  - Scheduled cache updates every 5 minutes during GSE trading hours
+  - Market hours detection (Monday-Friday, 10:00 AM - 3:00 PM Ghana Time)
+  - Comprehensive error handling with retry logic and exponential backoff
+  - HTTP client integration with timeout and connection management
+
+- **GSE API Provider Architecture**
+
+  - Robust external API integration with automatic retries (3 attempts)
+  - Rate limiting protection and 429 error handling
+  - Data transformation and mapping from external GSE format
+  - Market status calculation and timezone handling for Africa/Accra
+  - Estimated financial metrics (PE ratio, dividend yield) when not available
+  - Company profile enrichment with detailed business information
+  - Stock status determination (OPEN/CLOSED based on trading volume)
+
+- **Enhanced Testing & Documentation**
+
+  - Complete unit test coverage for service and controller layers (19 tests)
+  - Integration tests for real GSE API connectivity
+  - Mock provider implementation for reliable testing
+  - Comprehensive API documentation with 400+ line stock-market.md guide
+  - Swagger/OpenAPI integration with detailed endpoint documentation
+  - Real-world examples with actual GSE stock symbols (ACCESS, GCB, etc.)
+  - Performance testing and error scenario coverage
+
+- **API Endpoints Added**
+  - `GET /stock-market/search` - Advanced stock search with filtering
+  - `GET /stock-market/stock/{symbol}` - Individual stock details
+  - `GET /stock-market/market-summary` - Market overview and indices
+  - `GET /stock-market/sectors` - Available sector list
+  - `GET /stock-market/sectors/{sector}` - Stocks by sector
+  - `GET /stock-market/sector-performance` - Sector analytics
+  - `GET /stock-market/all` - Complete stock listing
+
+### Changed
+
+- **Documentation Updates**
+
+  - Homepage now showcases 30+ API endpoints across 6 core services
+  - Updated intro.md with stock market examples and real-time data features
+  - Enhanced API overview with live GSE data source attribution
+  - Added stock market section to quick start guide
+  - Updated sidebars navigation with stock market documentation
+
+- **Architecture Improvements**
+  - HttpModule integration for external API calls
+  - Enhanced caching strategy with separate cache keys for different data types
+  - Improved error handling with service-specific exception handling
+  - TypeScript interface updates for market indices and status
+
+### Fixed
+
+- Interface compatibility issues between mock and real API providers
+- Market status calculation for Ghana timezone
+- Data type handling for null/undefined financial metrics
+- Test suite compatibility with new provider architecture
+
+</details>
+
+<details>
 <summary><strong>🏦 [0.3.0] - 2025-09-24</strong> - Banking & ATM Locator</summary>
 
 ### Added

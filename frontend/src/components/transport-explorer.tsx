@@ -439,7 +439,7 @@ export function TransportExplorer() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 onClick={getRouteDirections}
                 disabled={loading || !startLocation || !endLocation}
@@ -456,9 +456,8 @@ export function TransportExplorer() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={clearRoute}>
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Clear
+              <Button variant="outline" size={"icon"} onClick={clearRoute}>
+                <RotateCcw className="h-4 w-4" />
               </Button>
             </div>
 

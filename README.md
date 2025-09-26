@@ -5,9 +5,9 @@
 </div>
 
 [![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://api.ghana-api.dev)
-[![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
+[![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
 
 > **The definitive REST API for Ghanaian services** - Addresses, Exchange Rates, Locations, Transport & Logistics, and more. Built for developers who need reliable access to essential Ghanaian data and services.
 
@@ -22,7 +22,9 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 ### **🔥 Key Features**
 
 - **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
-- **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
+- **🏦 Bank & ATM Locator** - Find banks and ATMs across Ghana with location-based search
+- **� Stock Market Data** - Real-time Ghana Stock Exchange (GSE) data with market analytics and trends
+- **�💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
 - **🏛️ Government Data** - Regional information, districts, and official datasets
 - **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
 - **⚡ High Performance** - Sub-200ms response times with intelligent caching
@@ -42,6 +44,15 @@ const response = await fetch(
 const data = await response.json();
 console.log(`1 USD = ${data.rates.USD.rate} GHS`);
 
+// Get real-time stock market data
+const stocks = await fetch(
+  "https://api.ghana-api.dev/v1/stock-market/search?limit=10"
+);
+const stockData = await stocks.json();
+console.log(
+  `GCB Bank: ₵${stockData.data[0].price} (${stockData.data[0].changePercent}%)`
+);
+
 // Validate Ghana Post Digital Address
 const address = await fetch(
   "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
@@ -54,7 +65,11 @@ const route = await fetch(
   "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
 );
 const routeData = await route.json();
-console.log(`Distance: ${routeData.data.distance}km, Duration: ${routeData.data.duration/60}min`);
+console.log(
+  `Distance: ${routeData.data.distance}km, Duration: ${
+    routeData.data.duration / 60
+  }min`
+);
 ```
 
 ### **Base URL**
@@ -121,7 +136,160 @@ GET /v1/addresses/search?q={query}&limit={limit}
 curl "https://api.ghana-api.dev/v1/addresses/search?q=University%20of%20Ghana&limit=5"
 ```
 
-### **💱 Exchange Rate Services**
+### **🏦 Banking & ATM Locator Services**
+
+#### **Search Banks and ATMs**
+
+```http
+GET /v1/banking/search?q={query}&lat={lat}&lng={lng}&radius={radius}&type={type}&limit={limit}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/banking/search?q=GCB&limit=10"
+```
+
+**Location-based search:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=5&limit=10"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "gcb-head-office",
+      "name": "GCB Bank Limited - Head Office",
+      "type": "bank",
+      "code": "GCB",
+      "address": "Thorpe Road, Accra",
+      "city": "Accra",
+      "region": "Greater Accra",
+      "latitude": 5.6037,
+      "longitude": -0.187,
+      "phone": "+233302664910",
+      "website": "https://www.gcbbank.com.gh",
+      "operatingHours": "Mon-Fri: 8:00-17:00, Sat: 8:00-13:00",
+      "services": ["ATM", "Cash Deposit", "Foreign Exchange", "Loans"],
+      "distance": 0.1
+    }
+  ],
+  "total": 1,
+  "source": "OpenStreetMap + Static Directory"
+}
+```
+
+#### **Get Banks by Region**
+
+```http
+GET /v1/banking/region/{region}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/banking/region/Greater%20Accra"
+```
+
+### **� Stock Market Data Services**
+
+#### **Search Stocks**
+
+```http
+GET /v1/stock-market/search?q={query}&limit={limit}&sector={sector}&sort={sort}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/stock-market/search?limit=10&sector=Banking"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "GCB",
+      "name": "GCB Bank Limited",
+      "price": 4.25,
+      "change": 0.15,
+      "changePercent": 3.66,
+      "volume": 125000,
+      "marketCap": 2800000000,
+      "sector": "Banking",
+      "status": "ACTIVE",
+      "lastUpdated": "2025-01-15T15:30:00Z"
+    }
+  ],
+  "total": 25,
+  "source": "Ghana Stock Exchange API"
+}
+```
+
+#### **Get Stock by Symbol**
+
+```http
+GET /v1/stock-market/stocks/{symbol}
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/stock-market/stocks/GCB"
+```
+
+#### **Get Market Summary**
+
+```http
+GET /v1/stock-market/summary
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/stock-market/summary"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalStocks": 45,
+    "activeStocks": 42,
+    "gainers": 15,
+    "losers": 12,
+    "unchanged": 15,
+    "totalMarketCap": 75000000000,
+    "totalVolume": 2500000,
+    "lastUpdated": "2025-01-15T15:30:00Z"
+  },
+  "source": "Ghana Stock Exchange API"
+}
+```
+
+#### **Get Stock Sectors**
+
+```http
+GET /v1/stock-market/sectors
+```
+
+**Example:**
+
+```bash
+curl "https://api.ghana-api.dev/v1/stock-market/sectors"
+```
+
+### **�💱 Exchange Rate Services**
 
 #### **Current Exchange Rates**
 
@@ -214,8 +382,14 @@ curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&
   "data": {
     "distance": 247.8,
     "duration": 10800,
-    "coordinates": [[5.6037, -0.187], [6.6885, -1.6244]],
-    "instructions": ["Head north on Liberation Road", "Continue for 247 km to Kumasi"]
+    "coordinates": [
+      [5.6037, -0.187],
+      [6.6885, -1.6244]
+    ],
+    "instructions": [
+      "Head north on Liberation Road",
+      "Continue for 247 km to Kumasi"
+    ]
   },
   "start": [5.6037, -0.187],
   "end": [6.6885, -1.6244],
@@ -253,9 +427,9 @@ curl "https://api.ghana-api.dev/v1/transport/fuel-prices"
 {
   "success": true,
   "data": {
-    "petrol": 6.50,
+    "petrol": 6.5,
     "diesel": 6.85,
-    "lpg": 4.20,
+    "lpg": 4.2,
     "currency": "GHS",
     "lastUpdated": "2024-01-15T08:00:00Z",
     "source": "National Petroleum Authority"
@@ -308,6 +482,19 @@ npm run test:watch
 - **Commit Messages:** Use conventional commit format
 - **Issues:** Use our issue templates for bugs and feature requests
 
+### **Detailed Contributing Guides**
+
+We have comprehensive guides for each service area:
+
+📈 **[Stock Market Data](https://docs.ghana-api.dev/docs/contributing/stock-market)** - GSE integration and real-time data
+📍 **[Address Services](https://docs.ghana-api.dev/docs/contributing/addresses)** - Ghana Post Digital Address validation  
+🏦 **[Banking & ATMs](https://docs.ghana-api.dev/docs/contributing/banking)** - Bank and ATM location services
+💱 **[Exchange Rates](https://docs.ghana-api.dev/docs/contributing/exchange-rates)** - Currency data integration
+🚗 **[Transport & Logistics](https://docs.ghana-api.dev/docs/contributing/transport)** - Route planning and fuel prices
+🏛️ **[Location Data](https://docs.ghana-api.dev/docs/contributing/locations)** - Regional and administrative data
+
+**[📖 View Full Contributing Guide →](https://docs.ghana-api.dev/docs/contributing/overview)**
+
 ### **Areas We Need Help**
 
 - 🐛 **Bug fixes** and performance improvements
@@ -339,6 +526,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 Special thanks to:
 
 - **Bank of Ghana** for providing official exchange rate data
+- **Ghana Stock Exchange (GSE)** for real-time stock market data and trading information
 - **Ghana Statistical Service** for regional and demographic data
 - **OpenStreetMap Ghana community** for mapping data
 - **All contributors** who help make this project better

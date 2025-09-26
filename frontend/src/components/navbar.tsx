@@ -15,8 +15,10 @@ import {
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { motion } from "framer-motion";
 import {
+  Activity,
   Building2,
   ChevronDown,
+  DollarSign,
   FileText,
   Github,
   Globe,
@@ -25,7 +27,6 @@ import {
   Menu,
   Navigation,
   Play,
-  TrendingUp,
 } from "lucide-react";
 
 export function Navbar() {
@@ -93,6 +94,13 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     className="w-full justify-start"
+                    onClick={() => scrollToSection("stocks")}>
+                    <Activity className="w-4 h-4 mr-2" />
+                    Stock Market Data
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
                     onClick={() => scrollToSection("locations")}>
                     <Globe className="w-4 h-4 mr-2" />
                     Regions & Districts
@@ -108,7 +116,7 @@ export function Navbar() {
                     variant="ghost"
                     className="w-full justify-start"
                     onClick={() => scrollToSection("fx")}>
-                    <TrendingUp className="w-4 h-4 mr-2" />
+                    <DollarSign className="w-4 h-4 mr-2" />
                     Currency Exchange
                   </Button>
                 </div>
@@ -179,6 +187,10 @@ export function Navbar() {
                   <Building2 className="w-4 h-4 mr-2" />
                   Bank & ATM Locator
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => scrollToSection("stocks")}>
+                  <Activity className="w-4 h-4 mr-2" />
+                  Stock Market Data
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => scrollToSection("locations")}>
                   <Globe className="w-4 h-4 mr-2" />
                   Regions & Districts
@@ -188,7 +200,7 @@ export function Navbar() {
                   Transport & Routes
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => scrollToSection("fx")}>
-                  <TrendingUp className="w-4 h-4 mr-2" />
+                  <DollarSign className="w-4 h-4 mr-2" />
                   Currency Exchange
                 </DropdownMenuItem>
               </DropdownMenuContent>

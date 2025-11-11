@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +15,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -21,7 +23,7 @@ import {
   DollarSign,
   FileText,
   Github,
-  Globe,
+  Landmark,
   Layers,
   MapPin,
   Menu,
@@ -29,8 +31,29 @@ import {
   Play,
 } from "lucide-react";
 
+const featureLinks = [
+  { to: "/addresses", label: "Address Lookup & Validation", icon: MapPin },
+  { to: "/banking", label: "Bank & ATM Locator", icon: Building2 },
+  { to: "/stocks", label: "Ghana Stock Exchange", icon: Activity },
+  { to: "/locations", label: "Regions & Districts", icon: Landmark },
+  { to: "/exchange", label: "Currency Exchange", icon: DollarSign },
+  { to: "/transport", label: "Transport & Routes", icon: Navigation },
+];
+
 export function Navbar() {
-  const { scrollToSection } = useSmoothScroll();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const handleBrandClick = () => {
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
+
+  const renderFeatureLabel = (label: string) => label;
 
   return (
     <motion.nav
@@ -38,91 +61,58 @@ export function Navbar() {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}>
-      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <motion.div
-          className="flex items-center space-x-3 cursor-pointer"
+      <div className="container mx-auto flex h-16 items-center justify-between px-6">
+        <motion.button
+          type="button"
+          className="flex items-center space-x-3"
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          onClick={() => {
-            if (window.location.pathname === "/") {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            } else {
-              window.location.href = "/";
-            }
-          }}>
-          <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-background border border-border">
+          onClick={handleBrandClick}>
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
             <img
               src="/ghana-api.jpeg"
               alt="GhanaAPI Logo"
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           </div>
-          <span className="font-bold text-xl">GhanaAPI</span>
-        </motion.div>
+          <span className="text-xl font-bold">GhanaAPI</span>
+        </motion.button>
 
         <div className="flex items-center space-x-2">
-          {/* Mobile Menu */}
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="md:hidden">
-                <Menu className="w-4 h-4" />
+                <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80 px-4">
               <SheetHeader>
-                <SheetTitle>GhanaAPI Features</SheetTitle>
+                <SheetTitle>GhanaAPI Explorer</SheetTitle>
               </SheetHeader>
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                    API Features
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                    Feature Areas
                   </h3>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("addresses")}>
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Address Lookup & Validation
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("banking")}>
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Bank & ATM Locator
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("stocks")}>
-                    <Activity className="w-4 h-4 mr-2" />
-                    Stock Market Data
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("locations")}>
-                    <Globe className="w-4 h-4 mr-2" />
-                    Regions & Districts
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("transport")}>
-                    <Navigation className="w-4 h-4 mr-2" />
-                    Transport & Routes
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => scrollToSection("fx")}>
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    Currency Exchange
-                  </Button>
+                  {featureLinks.map(({ to, label, icon: Icon }) => (
+                    <Button
+                      key={to}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      asChild>
+                      <Link
+                        to={to}
+                        className="flex items-center"
+                        onClick={() => setSheetOpen(false)}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        {renderFeatureLabel(label)}
+                      </Link>
+                    </Button>
+                  ))}
                 </div>
 
-                <div className="border-t pt-4 space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                <div className="space-y-2 border-t pt-4">
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">
                     Resources
                   </h3>
                   <Button
@@ -133,8 +123,8 @@ export function Navbar() {
                       href="https://github.com/teebhagg/GhanaAPI"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="GitHub Repository (opens in new tab)">
-                      <Github className="w-4 h-4 mr-2" />
+                      aria-label="GitHub Repository">
+                      <Github className="mr-2 h-4 w-4" />
                       GitHub Repository
                     </a>
                   </Button>
@@ -143,7 +133,7 @@ export function Navbar() {
                     className="w-full justify-start"
                     asChild>
                     <a href="https://docs.ghana-api.dev">
-                      <FileText className="w-4 h-4 mr-2" />
+                      <FileText className="mr-2 h-4 w-4" />
                       Documentation
                     </a>
                   </Button>
@@ -155,8 +145,8 @@ export function Navbar() {
                       href="https://api.ghana-api.dev/docs"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="API Playground (opens in new tab)">
-                      <Play className="w-4 h-4 mr-2" />
+                      aria-label="API Playground">
+                      <Play className="mr-2 h-4 w-4" />
                       API Playground
                     </a>
                   </Button>
@@ -165,76 +155,59 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden items-center space-x-2 md:flex">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="flex items-center gap-2">
-                  <Layers className="w-4 h-4" />
+                  <Layers className="h-4 w-4" />
                   Features
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuItem onClick={() => scrollToSection("addresses")}>
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Address Lookup & Validation
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("banking")}>
-                  <Building2 className="w-4 h-4 mr-2" />
-                  Bank & ATM Locator
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("stocks")}>
-                  <Activity className="w-4 h-4 mr-2" />
-                  Stock Market Data
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("locations")}>
-                  <Globe className="w-4 h-4 mr-2" />
-                  Regions & Districts
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("transport")}>
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Transport & Routes
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => scrollToSection("fx")}>
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Currency Exchange
-                </DropdownMenuItem>
+                {featureLinks.map(({ to, label, icon: Icon }) => (
+                  <DropdownMenuItem key={to} asChild>
+                    <Link to={to} className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      {renderFeatureLabel(label)}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
 
-          {/* Desktop Right Side Links */}
-          <div className="hidden md:flex items-center space-x-3">
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://github.com/teebhagg/GhanaAPI"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub Repository (opens in new tab)">
-                <Github className="w-4 h-4" />
-                GitHub
-              </a>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <a href="https://docs.ghana-api.dev">
-                <FileText className="w-4 h-4" />
-                Docs
-              </a>
-            </Button>
-            <Button size="sm" asChild>
-              <a
-                href="https://api.ghana-api.dev/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="API Playground (opens in new tab)">
-                <Play className="w-4 h-4" />
-                Get Started
-              </a>
-            </Button>
+            {/* Desktop Right Side Links */}
+            <div className="hidden md:flex items-center space-x-3">
+              <Button variant="outline" size="sm" asChild>
+                <a
+                  href="https://github.com/teebhagg/GhanaAPI"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub Repository (opens in new tab)">
+                  <Github className="w-4 h-4" />
+                  GitHub
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="https://docs.ghana-api.dev">
+                  <FileText className="w-4 h-4" />
+                  Docs
+                </a>
+              </Button>
+              <Button size="sm" asChild>
+                <a
+                  href="https://api.ghana-api.dev/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="API Playground (opens in new tab)">
+                  <Play className="w-4 h-4" />
+                  Get Started
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

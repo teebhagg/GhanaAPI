@@ -186,7 +186,7 @@ export type NearbyStopsResponse = {
   radius: number;
 };
 
-const API_BASE = "https://api.ghana-api.dev/api/v1";
+const API_BASE = "http://localhost:3000/api/v1";
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {

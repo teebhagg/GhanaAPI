@@ -33,13 +33,16 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('Addresses', 'Digital address and location services')
     .addTag('Banking & ATM Locator', 'Bank and ATM location services')
+    .addTag('Education', 'Educational institutions data and services')
     .addTag('Exchange Rates', 'Currency exchange rate services')
     .addTag('Locations', 'Location services')
     .addTag('Stock Market Data', 'Ghana Stock Exchange data and analytics')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    useGlobalPrefix: true,
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

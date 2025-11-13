@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Educational institution categories
+enum SchoolCategory {
+  UNIVERSITY
+  COLLEGE
+  SHS
+  JHS
+  TECHNICAL_VOCATIONAL
+}
+
+// School grading system (A-D)
+enum SchoolGrade {
+  A
+  B
+  C
+  D
+  UNGRADED
+}
+
+// Gender types
+enum Gender {
+  MALE
+  FEMALE
+  MIXED
+}
+
+// Residency types
+enum Residency {
+  DAY
+  BOARDING
+  DAY_BOARDING
+}
+
+model School {
+  id                String         @id @default(uuid())
+  name              String
+  nickname          String?
+  category          SchoolCategory
+  region            String
+  district          String
+  location          String?
+  grade             SchoolGrade    @default(UNGRADED)
+  gender            Gender         @default(MIXED)
+  residency         Residency      @default(DAY)
+  email             String?
+  phone             String?
+  website           String?
+  boxAddress        String?
+  establishedYear   Int?
+  studentPopulation Int?
+  programsOffered   String[]       @default([])
+  metadata          Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Indexes for performance optimization
+  @@index([region])
+  @@index([district])
+  @@index([category])
+  @@index([grade])
+  @@index([name])
+  @@index([region, district])
+  @@index([category, grade])
+  @@map("schools")
+}

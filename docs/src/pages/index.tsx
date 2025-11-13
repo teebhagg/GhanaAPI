@@ -15,30 +15,30 @@ function HomepageHeader() {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <div className={styles.badge}>
-              <span>🚀 Version 0.3.0</span>
+              <span>🚀 Version 0.5.0</span>
             </div>
             <Heading as="h1" className={styles.heroTitle}>
               Ghana API
             </Heading>
             <p className={styles.heroSubtitle}>
               The definitive REST API for Ghanaian services. Access
-              comprehensive data for addresses, banking facilities, exchange
-              rates, stock market information, transport & logistics, and
-              administrative information with our reliable, developer-friendly
+              comprehensive data for education, addresses, banking facilities,
+              exchange rates, stock market information, transport & logistics,
+              and administrative insights with our reliable, developer-friendly
               platform.
             </p>
             <div className={styles.heroStats}>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>30+</span>
+                <span className={styles.statNumber}>35+</span>
                 <span className={styles.statLabel}>API Endpoints</span>
               </div>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>4</span>
-                <span className={styles.statLabel}>Currencies</span>
+                <span className={styles.statNumber}>7</span>
+                <span className={styles.statLabel}>Core Services</span>
               </div>
               <div className={styles.stat}>
                 <span className={styles.statNumber}>16</span>
-                <span className={styles.statLabel}>Regions</span>
+                <span className={styles.statLabel}>Regions Covered</span>
               </div>
             </div>
             <div className={styles.heroButtons}>
@@ -82,6 +82,11 @@ const addresses = await fetch(
 // Get Ghana Stock Exchange data
 const stocks = await fetch(
   'https://api.ghana-api.dev/v1/stock-market/search?sector=Banking'
+);
+
+// Search national schools directory
+const schools = await fetch(
+  'https://api.ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A'
 );
 
 // Find nearby banks and ATMs
@@ -190,7 +195,18 @@ function FeaturesSection() {
             </Link>
           </div>
           <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>�🗺️</div>
+            <div className={styles.featureIcon}>🎓</div>
+            <h3>Education Data</h3>
+            <p>
+              National directory of Ghanaian educational institutions with
+              advanced filtering and analytics
+            </p>
+            <Link to="/docs/api/education" className={styles.featureLink}>
+              Learn More →
+            </Link>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>🗺️</div>
             <h3>Location Data</h3>
             <p>
               Comprehensive administrative and geographic information for all

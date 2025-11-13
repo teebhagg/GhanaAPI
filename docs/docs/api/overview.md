@@ -1,34 +1,32 @@
 # GhanaAPI - Developer Guide
 
-Welc### 📈 [Stock Market Data](./stock-market)
-
-Ghana Stock Exchange (GSE) real-time data and analytics - **7 API endpoints**
-
-- ✅ **Live GSE data** from https://dev.kwayisi.org/apis/gse
-- ✅ Real-time stock prices and trading volumes
-- ✅ All 30+ GSE-listed companies with detailed profiles
-- ✅ Market summary with GSE Composite index and statistics
-- ✅ Sector performance analysis and rankings (13+ sectors)
-- ✅ Advanced search and filtering (price, sector, market cap, volume)
-- ✅ Company information (address, contact, financial metrics)
-- ✅ Market hours detection and trading status
-- ✅ Performance-optimized caching with 5-minute TTL
-
-**Covered Sectors:** Financials, Basic Materials, Industrial, Consumer Goods, Telecommunications, Energy, Healthcare, Technology, and moreAPI! This comprehensive REST API provides **30+ endpoints** across 6 core services, delivering reliable access to essential Ghanaian data and services.
+Welcome! GhanaAPI delivers a unified REST API for essential Ghanaian services. This guide highlights the available modules, how to get started, and where to find deeper documentation.
 
 ## 🚀 Quick Start
 
 ### Base URL
 
 ```
-https://ghana-api.dev/v1
+https://api.ghana-api.dev/v1
 ```
+
+All endpoints are versioned under `/v1` and return JSON responses with a consistent envelope (`success`, `data`, `message`, `timestamp`).
 
 ## 📚 Available Services
 
+### 🎓 [Education Data](./education)
+
+Comprehensive directory of Ghanaian educational institutions sourced from GES datasets.
+
+- ✅ Filterable search (region, district, category, grade, text query)
+- ✅ Dedicated endpoints for region/district/category/grade listings
+- ✅ School grading (A–D) and residency/gender metadata
+- ✅ Analytics endpoint with counts by category, grade, and region
+- ✅ Prisma-backed PostgreSQL storage seeded from official PDFs
+
 ### 📍 [Address Services](./addresses)
 
-Validate, search, and geocode Ghana Post Digital Addresses
+Validate and discover Ghana Post Digital Addresses.
 
 - ✅ Address search
 - ✅ Reverse geocoding
@@ -37,58 +35,46 @@ Validate, search, and geocode Ghana Post Digital Addresses
 
 ### 🏦 [Banking & ATM Locator](./banking)
 
-Find banks and ATM locations across Ghana
+Find bank branches and ATMs nationwide.
 
-- ✅ Bank and ATM search by name, location, or type
-- ✅ Location-based search with radius filtering
-- ✅ Regional and city-based browsing
-- ✅ Real-time data from OpenStreetMap
-- ✅ Comprehensive bank information (hours, services, contact)
-- ✅ Distance calculation and sorting
+- ✅ Text + proximity search with radius filtering
+- ✅ Region and city browsing
+- ✅ Branch metadata (hours, services, contacts)
+- ✅ OpenStreetMap-backed data enrichment
 
-### � [Stock Market Data](./stock-market)
+### 📈 [Stock Market Data](./stock-market)
 
-Ghana Stock Exchange (GSE) real-time data and analytics
+Real-time Ghana Stock Exchange data and analytics.
 
-- ✅ Real-time stock prices and market data
-- ✅ All 30+ GSE-listed companies
-- ✅ Sector performance analysis
-- ✅ Market summary and GSE indices
+- ✅ Live prices for all listed companies
+- ✅ Sector performance analysis (13+ sectors)
+- ✅ Market summaries, indices, and trading status
 - ✅ Advanced filtering and search
-- ✅ Portfolio tracking capabilities
 
-**Covered Sectors:** Banking, Mining, Telecommunications, Manufacturing, Oil & Gas, and 8+ more
+### 💱 [Exchange Rates](./exchange-rates)
 
-### �💱 [Exchange Rates](./exchange-rates)
-
-Real-time and historical currency exchange rates
+Real-time and historical currency information.
 
 - ✅ Current rates from Bank of Ghana
 - ✅ Currency conversion
 - ⏳ Historical data and trends (Coming Soon)
 - ⏳ Rate analytics (Coming Soon)
 
-**Supported Currencies:** USD, EUR, GBP, NGN (relative to GHS)
-
-**Note:** Currently limited to 4 major currencies. Additional currencies may be added in future updates.
-
 ### 🏛️ [Location Data](./locations)
 
-Administrative and geographic information
+Administrative boundaries and metadata.
 
-- ✅ Regional data
-- ✅ District information
-- ✅ Administrative hierarchy
+- ✅ Ghana region listings
+- ✅ District-level data
+- ✅ Administrative hierarchy normalization
 
 ### 🚗 [Transport & Logistics](./transport)
 
-Transportation services and route planning
+Routing, mobility, and cost information.
 
-- ✅ Transport stops (bus stops, stations)
-- ✅ Route calculation and optimization
-- ✅ Route directions with turn-by-turn navigation
-- ✅ Travel cost estimation
-- ✅ Current fuel prices
+- ✅ Route planning and directions
+- ✅ Transport stop catalogue
+- ✅ Fuel prices and travel cost estimation
 - ✅ Nearby transport services
 
 ## 📊 Implementation Status
@@ -177,6 +163,13 @@ All responses follow a consistent JSON format:
 
 ```bash
 curl -X GET "https://ghana-api.dev/v1/addresses/search?q=Accra" \
+  -H "Accept: application/json"
+```
+
+#### Search Schools
+
+```bash
+curl -X GET "https://ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A" \
   -H "Accept: application/json"
 ```
 

@@ -1,107 +1,60 @@
 # Welcome to Ghana API
 
-**3- **📍 Address & Location Services\*\* - Ghana Post Digital Address validation, geocoding, and location lookup
+GhanaAPI is the definitive REST API for Ghanaian services. It unifies data that is otherwise scattered across government portals, financial sources, and local datasets into one reliable, developer-friendly platform.
 
-- **🏦 Bank & ATM Locator** - Find banks and ATMs across Ghana with location-based search
-- **📈 Stock Market Data** - Ghana Stock Exchange real-time prices, market analytics, and sector performance
-- **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
-- **🏛️ Government Data** - Regional information, districts, and official datasets
-- **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
-- **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **📊 Developer Friendly** - Interactive Swagger docsndpoints\*\* across 6 core services:
+## 🌟 Core Services
 
-- **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
-- **🏦 Bank & ATM Locator** - Find banks and ATMs across Ghana with location-based search
-- **📈 Stock Market Data** - **7 endpoints** for Ghana Stock Exchange real-time data
-  - Live stock prices from all 30+ GSE-listed companies
-  - Real-time market summary with GSE Composite index
-  - Sector performance analytics across 13+ sectors
-  - Advanced search and filtering capabilities
-  - Company profiles with financial metrics
-  - Market hours detection and trading status
-- **💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
-- **🏛️ Government Data** - Regional information, districts, and official datasets
-- **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
+- **🎓 Education Data** – National directory of universities, colleges, SHS, JHS, and TVET institutions with regional filters, grading, and program metadata
+- **🏠 Address & Location Services** – Ghana Post Digital Address validation (coming soon), geocoding, reverse geocoding, and location lookup
+- **🏦 Banking & ATM Locator** – Searchable directory of bank branches and ATMs with proximity search, branch metadata, and OSM enrichment
+- **📈 Stock Market Data** – Real-time Ghana Stock Exchange pricing, market summaries, sector performance, and company profiles
+- **💱 Exchange Rates** – Live GHS exchange rates, currency conversion, and provider fallbacks (historical trends planned)
+- **🚗 Transport & Logistics** – Route planning, transport stops, fuel prices, travel cost estimation, and multi-provider routing fallbacks
+- **🗺️ Location Data** – Complete Ghanaian administrative hierarchy with regions, districts, and metadata
 
-**Additional Benefits:**
-
-- **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **📊 Developer Friendly** - Interactive Swagger docs with live API testing
-- **🔄 Real-time Data** - Live data from Ghana Stock Exchange via external GSE API
-
-GhanaAPI provides developers with unified, reliable access to essential Ghanaian services through a modern REST API. Instead of integrating with multiple fragmented services, developers can access everything through one comprehensive, well-documented API.
-
-## 🌟 Features
-
-- **📍 Address & Location Services** - Ghana Post Digital Address validation, geocoding, and location lookup
-- **🏦 Bank & ATM Locator** - Find banks and ATMs across Ghana with location-based search
-- **� Stock Market Data** - Ghana Stock Exchange real-time prices, market analytics, and sector performance
-- **�💱 Live Exchange Rates** - Real-time GHS exchange rates with historical data and trends
-- **🏛️ Government Data** - Regional information, districts, and official datasets
-- **⚡ High Performance** - Sub-200ms response times with intelligent caching
-- **🚗 Transport & Logistics** - Route planning, transport stops, fuel prices, and travel cost estimation
-- **📊 Developer Friendly** - Interactive Swagger docs
+Each service follows the same conventions: versioned endpoints under `/api/v1`, consistent response shapes, and comprehensive Swagger documentation.
 
 ## 🚀 Quick Start
-
-Get started with GhanaAPI in under 5 minutes:
 
 ```bash
 # Get current USD to GHS exchange rate (no auth required)
 curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
 
+# Search for Senior High Schools in Ashanti region
+curl "https://api.ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A"
+
 # Get Ghana Stock Exchange market summary
 curl "https://api.ghana-api.dev/v1/stock-market/market-summary"
 
-# Search for banking stocks with high performance
-curl "https://api.ghana-api.dev/v1/stock-market/search?sector=Banking&sortBy=changePercent&sortOrder=desc"
+# Find nearby banks and ATMs within 5km of Accra Mall
+curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6373&lng=-0.1708&radius=5"
 
-# Validate Ghana Post Digital Address
-curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+# Calculate a driving route between two coordinates in Accra
+curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=5.6081&end_lng=-0.171"
 
-# Calculate route between two locations
-curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
-
-# Get current fuel prices
-curl "https://api.ghana-api.dev/v1/transport/fuel-prices"
+# Retrieve the list of Ghanaian regions
+curl "https://api.ghana-api.dev/v1/locations/regions"
 ```
 
 ## 📖 What's Next?
 
-- **[Quick Start Guide](./getting-started/quick-start)** - Get up and running in minutes
-- **[API Reference](https://api.ghana-api.dev/docs)** - Complete interactive API documentation
-- **[API Documentation](./api/overview)** - Complete API reference and examples
-- **[Contributing Guide](./contributing/overview)** - Help improve Ghana API and build new features
+- **[Quick Start Guide](./getting-started/quick-start)** – Set up your environment and make your first requests
+- **[API Overview](./api/overview)** – Explore every service area with detailed examples
+- **[Interactive Swagger Docs](https://api.ghana-api.dev/docs)** – Try endpoints directly in your browser
+- **[Contributing Guide](./contributing/overview)** – Learn how to extend GhanaAPI with new features or datasets
 
 ## 🤝 Contributing
 
-Ghana API is open source and welcomes contributions from the developer community. Whether you want to:
-
-- **Add new features** - Help expand API capabilities
-- **Fix bugs** - Improve stability and reliability
-- **Improve documentation** - Make the API more accessible
-- **Add tests** - Increase code coverage and quality
-
-Check out our **[Contributing Guide](./contributing/overview)** to get started. We have detailed guides for each service:
-
-- **[Stock Market Data](./contributing/stock-market)** - GSE integration and real-time data
-- **[Address Services](./contributing/addresses)** - Ghana Post Digital Address validation
-- **[Banking & ATMs](./contributing/banking)** - Bank and ATM location services
-- **[Exchange Rates](./contributing/exchange-rates)** - Currency data integration
-- **[Transport & Logistics](./contributing/transport)** - Route planning and fuel prices
-- **[Location Data](./contributing/locations)** - Regional and administrative data
-
-### Development Setup
+We welcome contributions! Start with the [Contributing Overview](./contributing/overview) and then dive into the service-specific guides, including the brand-new **[Education](./contributing/education)** section for the school directory feature.
 
 ```bash
 # Clone the repository
 git clone https://github.com/teebhagg/GhanaAPI.git
 cd GhanaAPI
 
-# Install dependencies
+# Install dependencies and start the backend
+cd backend
 npm install
-
-# Start development server
 npm run start:dev
 
 # Run tests
@@ -110,18 +63,4 @@ npm test
 
 ## 🇬🇭 Made in Ghana
 
-GhanaAPI is built with ❤️ for the Ghanaian developer community, providing reliable access to local services and data through a world-class API experience.
-
----
-
-:::tip Need Help?
-
-Join our [GitHub Discussions](https://github.com/teebhagg/GhanaAPI/discussions) or check out our [interactive API docs](https://api.ghana-api.dev/docs) for more detailed information.
-
-:::
-
-:::info API Status
-
-Check our [status page](https://status.ghana-api.dev) for real-time API availability and performance metrics.
-
-:::
+GhanaAPI is built with ❤️ for the Ghanaian developer community, providing unified access to trusted local data through a modern API experience. Have questions? Visit our [GitHub Discussions](https://github.com/teebhagg/GhanaAPI/discussions) or check the [status page](https://status.ghana-api.dev) for real-time availability updates.

@@ -132,7 +132,7 @@ GhanaAPI is organized into distinct feature areas. Choose the area you'd like to
 - **Market status** - Trading hours and market holidays
 - **Skills needed**: Financial APIs, external API integration, data caching, real-time systems
 
-#### Key Implementation Areas:
+#### Stock Market Implementation Focus
 
 **External API Integration**
 
@@ -164,6 +164,50 @@ npm run test:e2e -- --grep "stock-market"
 
 # Development with external APIs
 # Note: Some tests may require API keys or rate limiting considerations
+```
+
+### 🎓 [Education Data](./education)
+
+- National school directory (universities, colleges, SHS, JHS, TVET)
+- PDF parsing pipeline for official GES datasets
+- Prisma + PostgreSQL data model and seed scripts
+- Advanced filters and analytics endpoints
+- **Skills needed**: Prisma, data ingestion, text parsing, PostgreSQL, API design
+
+#### Education Implementation Focus
+
+**Data Ingestion & Normalization**
+
+- Maintain the PDF parsing logic in `ges-school-parser.ts`
+- Normalize regions/districts against `locations/data/regions.json`
+- Enhance school grading heuristics and metadata enrichment
+- Expand seed pipeline with additional public datasets when available
+
+**API Enhancements**
+
+- Add new filters (programs offered, double-track status, residency type)
+- Improve search relevance (fuzzy search, phonetic matching)
+- Extend statistics endpoint with additional aggregations
+- Expose metadata such as `doubleTrack` and seed provenance
+
+**Testing Strategies**
+
+- Write unit tests for DTO validation and service filters
+- Add integration tests covering Prisma queries and caching layers
+- Validate seed script output with sample fixtures before database insertions
+- Verify API responses against expected data from GES PDFs
+
+**Development Setup**
+
+```bash
+# Generate Prisma client
+npm run prisma:generate
+
+# Run migration (if new fields were added)
+npm run prisma:migrate
+
+# Refresh data from GES PDFs
+npm run prisma:seed
 ```
 
 ## 📝 Contribution Workflow

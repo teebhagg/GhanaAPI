@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Activity,
-  Building2,
+  Banknote,
   DollarSign,
   ExternalLink,
   FileText,
   Github,
+  GraduationCap,
   Landmark,
   Mail,
   MapPin,
@@ -17,12 +17,12 @@ import {
 } from "lucide-react";
 
 const featureLinks = [
-  { to: "/addresses", label: "Address Lookup & Validation", icon: MapPin },
-  { to: "/banking", label: "Bank & ATM Locator", icon: Building2 },
-  { to: "/stocks", label: "Ghana Stock Exchange", icon: Activity },
-  { to: "/locations", label: "Regions & Districts", icon: Landmark },
-  { to: "/transport", label: "Transport & Routes", icon: Navigation },
+  { to: "/addresses", label: "Address & Regions Explorer", icon: MapPin },
+  { to: "/banking", label: "Bank & ATM Locator", icon: Banknote },
+  { to: "/stocks", label: "Ghana Stock Exchange", icon: Landmark },
   { to: "/exchange", label: "Currency Exchange", icon: DollarSign },
+  { to: "/transport", label: "Transport & Routes", icon: Navigation },
+  { to: "/education", label: "Education Insights", icon: GraduationCap },
 ];
 
 export function Footer() {
@@ -40,8 +40,7 @@ export function Footer() {
                 } else {
                   window.location.href = "/";
                 }
-              }}
-            >
+              }}>
               <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-background transition-transform group-hover:scale-105">
                 <img
                   src="/ghana-api.jpeg"
@@ -52,7 +51,8 @@ export function Footer() {
               <span className="text-xl font-bold">GhanaAPI</span>
             </button>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Comprehensive API services for Ghana including addresses, locations, transport directions, and real-time exchange rates.
+              Comprehensive API services for Ghana including addresses,
+              locations, transport directions, and real-time exchange rates.
             </p>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" asChild>
@@ -60,8 +60,7 @@ export function Footer() {
                   href="https://github.com/teebhagg/GhanaAPI"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
+                  className="flex items-center gap-2">
                   <Github className="h-4 w-4" />
                   GitHub
                 </a>
@@ -69,8 +68,7 @@ export function Footer() {
               <Button variant="outline" size="sm" asChild>
                 <a
                   href="mailto:support@ghana-api.dev"
-                  className="flex items-center gap-2"
-                >
+                  className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   Contact
                 </a>
@@ -87,8 +85,7 @@ export function Footer() {
                   variant="ghost"
                   size="sm"
                   className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                  asChild
-                >
+                  asChild>
                   <Link to={to}>
                     <Icon className="h-4 w-4" />
                     {label}
@@ -105,8 +102,7 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <a href="https://docs.ghana-api.dev">
                   <FileText className="h-4 w-4" />
                   Documentation
@@ -116,13 +112,11 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <a
                   href="https://api.ghana-api.dev/docs"
                   target="_blank"
-                  rel="noopener noreferrer"
-                >
+                  rel="noopener noreferrer">
                   <Play className="h-4 w-4" />
                   API Playground
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -132,13 +126,11 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <a
                   href="https://github.com/teebhagg/GhanaAPI/issues"
                   target="_blank"
-                  rel="noopener noreferrer"
-                >
+                  rel="noopener noreferrer">
                   <Github className="h-4 w-4" />
                   Report Issues
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -154,8 +146,7 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <Link to="/">
                   <FileText className="h-4 w-4" />
                   Overview
@@ -165,8 +156,7 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <Link to="/docs">
                   <FileText className="h-4 w-4" />
                   Docs Preview
@@ -176,13 +166,11 @@ export function Footer() {
                 variant="ghost"
                 size="sm"
                 className="flex w-full items-center justify-start gap-2 p-0 text-sm text-muted-foreground hover:text-foreground"
-                asChild
-              >
+                asChild>
                 <a
                   href="https://github.com/teebhagg/GhanaAPI/blob/main/README.md"
                   target="_blank"
-                  rel="noopener noreferrer"
-                >
+                  rel="noopener noreferrer">
                   <FileText className="h-4 w-4" />
                   README
                   <ExternalLink className="ml-1 h-3 w-3" />
@@ -196,13 +184,18 @@ export function Footer() {
 
         <div className="flex flex-col justify-between gap-4 text-xs text-muted-foreground md:flex-row">
           <p>
-            © {new Date().getFullYear()} GhanaAPI. Built for the developer community supporting Ghana's digital infrastructure.
+            © {new Date().getFullYear()} GhanaAPI. Built for the developer
+            community supporting Ghana's digital infrastructure.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <a href="https://ghana-api.dev/privacy" className="hover:text-foreground">
+            <a
+              href="https://ghana-api.dev/privacy"
+              className="hover:text-foreground">
               Privacy
             </a>
-            <a href="https://ghana-api.dev/terms" className="hover:text-foreground">
+            <a
+              href="https://ghana-api.dev/terms"
+              className="hover:text-foreground">
               Terms
             </a>
           </div>

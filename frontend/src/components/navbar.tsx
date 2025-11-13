@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import {
-  Activity,
-  Building2,
+  Banknote,
   ChevronDown,
   DollarSign,
   FileText,
   Github,
+  GraduationCap,
   Landmark,
   Layers,
   MapPin,
@@ -32,12 +32,12 @@ import {
 } from "lucide-react";
 
 const featureLinks = [
-  { to: "/addresses", label: "Address Lookup & Validation", icon: MapPin },
-  { to: "/banking", label: "Bank & ATM Locator", icon: Building2 },
-  { to: "/stocks", label: "Ghana Stock Exchange", icon: Activity },
-  { to: "/locations", label: "Regions & Districts", icon: Landmark },
+  { to: "/addresses", label: "Address & Regions Explorer", icon: MapPin },
+  { to: "/banking", label: "Bank & ATM Locator", icon: Banknote },
+  { to: "/stocks", label: "Ghana Stock Exchange", icon: Landmark },
   { to: "/exchange", label: "Currency Exchange", icon: DollarSign },
   { to: "/transport", label: "Transport & Routes", icon: Navigation },
+  { to: "/education", label: "Education Insights", icon: GraduationCap },
 ];
 
 export function Navbar() {

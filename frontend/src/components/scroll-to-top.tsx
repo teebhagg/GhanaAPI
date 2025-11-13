@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -26,11 +28,21 @@ export function ScrollToTop() {
     });
   };
 
+  // Check if footer is visible
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (footer) {
+      setFooterVisible(footer.offsetHeight > 0);
+    }
+  }, []);
+
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-6 right-6 z-50"
+          className={cn("fixed bottom-24 md:bottom-6 right-6 z-50", {
+            "bottom-24": footerVisible,
+          })}
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}

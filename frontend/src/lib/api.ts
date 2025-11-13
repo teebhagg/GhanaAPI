@@ -1,3 +1,5 @@
+import type { SchoolCategory, SchoolGrade } from "@/types/education";
+
 export type AddressDto = {
   digitalCode: string;
   addressLine1?: string;
@@ -8,14 +10,14 @@ export type AddressDto = {
 };
 
 export type BankSearchQuery = {
- q?: string;
- lat?: number;
- lng?: number;
- radius?: number;
- type?: 'bank' | 'atm';
- limit?: number;
- region?: string;
- city?: string;
+  q?: string;
+  lat?: number;
+  lng?: number;
+  radius?: number;
+  type?: "bank" | "atm";
+  limit?: number;
+  region?: string;
+  city?: string;
 };
 
 export type BankDto = {
@@ -186,7 +188,63 @@ export type NearbyStopsResponse = {
   radius: number;
 };
 
-const API_BASE = "http://localhost:3000/api/v1";
+export type SchoolDto = {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  category: SchoolCategory;
+  region: string;
+  district: string;
+  location?: string;
+  grade: SchoolGrade;
+  gender: "MALE" | "FEMALE" | "MIXED";
+  residency: "DAY" | "BOARDING" | "DAY_BOARDING";
+  email?: string;
+  phone?: string | null;
+  website?: string;
+  boxAddress?: string | null;
+  establishedYear?: number | null;
+  studentPopulation?: number | null;
+  programsOffered: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SchoolSearchQuery = {
+  name?: string;
+  region?: string;
+  district?: string;
+  category?: SchoolCategory;
+  grade?: SchoolGrade;
+  limit?: number;
+  offset?: number;
+};
+
+export type SchoolSearchResponse = {
+  success: boolean;
+  data: SchoolDto[];
+  total: number;
+  pagination: {
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+  searchParams: SchoolSearchQuery;
+  timestamp: string;
+};
+
+export type SchoolStatistics = {
+  totalSchools: number;
+  byCategory: Record<string, number>;
+  byGrade: Record<string, number>;
+  byRegion: Record<string, number>;
+  timestamp: string;
+};
+
+const API_BASE =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
+  "http://localhost:3000/api/v1";
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -232,17 +290,21 @@ export const api = {
     });
     return http<BankSearchResponseDto>(`/banking/nearby?${params}`);
   },
-  getBanksByRegion(region: string, type: 'bank' | 'atm' = 'bank') {
+  getBanksByRegion(region: string, type: "bank" | "atm" = "bank") {
     const params = new URLSearchParams({
       type,
     });
-    return http<BankDto[]>(`/banking/region/${encodeURIComponent(region)}?${params}`);
+    return http<BankDto[]>(
+      `/banking/region/${encodeURIComponent(region)}?${params}`
+    );
   },
-  getBanksByCity(city: string, type: 'bank' | 'atm' = 'bank') {
+  getBanksByCity(city: string, type: "bank" | "atm" = "bank") {
     const params = new URLSearchParams({
       type,
     });
-    return http<BankDto[]>(`/banking/city/${encodeURIComponent(city)}?${params}`);
+    return http<BankDto[]>(
+      `/banking/city/${encodeURIComponent(city)}?${params}`
+    );
   },
 
   // Locations
@@ -303,5 +365,32 @@ export const api = {
       params.append("type", query.type);
     }
     return http<NearbyStopsResponse>(`/transport/nearby-stops?${params}`);
+  },
+
+  // Education
+  searchSchools(query: SchoolSearchQuery) {
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        params.append(key, String(value));
+      }
+    });
+    return http<SchoolSearchResponse>(`/education/schools/search?${params}`);
+  },
+  getSchoolById(id: string) {
+    return http<SchoolDto>(`/education/schools/${encodeURIComponent(id)}`);
+  },
+  getSchoolStatistics() {
+    return http<SchoolStatistics>(`/education/schools/statistics`);
+  },
+  getSchoolsByRegion(region: string) {
+    return http<SchoolDto[]>(
+      `/education/schools/region/${encodeURIComponent(region)}`
+    );
+  },
+  getSchoolsByDistrict(district: string) {
+    return http<SchoolDto[]>(
+      `/education/schools/district/${encodeURIComponent(district)}`
+    );
   },
 };

@@ -2,8 +2,8 @@ import {
   ArrowRight,
   Banknote,
   BookText,
-  Building2,
   DollarSign,
+  GraduationCap,
   Landmark,
   MapPinned,
   Route,
@@ -15,9 +15,9 @@ import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 
 const features = [
   {
-    name: "Address Intelligence",
+    name: "Address & Regions",
     description:
-      "Validate, geocode, and normalize addresses with datasets covering all 261 districts.",
+      "Validate GhanaPost GPS addresses, explore districts, and enrich location metadata in one interface.",
     to: "/addresses",
     cta: "Explore addresses",
     Icon: MapPinned,
@@ -27,7 +27,7 @@ const features = [
         <div className="absolute -right-16 top-10 h-48 w-48 rounded-full bg-primary/20 blur-3xl transition-all duration-300 group-hover:bg-primary/30" />
         <div className="absolute top-6 right-6 rounded-2xl border border-primary/20 bg-background/80 px-4 py-3 text-left text-xs font-mono text-primary/80 shadow-sm">
           <p>GET /addresses/search</p>
-          <p className="text-muted-foreground">q=Kwabre East&nbsp;District</p>
+          <p className="text-muted-foreground">region=Ashanti</p>
         </div>
       </div>
     ),
@@ -61,20 +61,6 @@ const features = [
     ),
   },
   {
-    name: "Regional Atlas",
-    description:
-      "Navigate Ghana's regional hierarchy with boundaries, populations, and locality stats.",
-    to: "/locations",
-    cta: "Browse regions",
-    Icon: Building2,
-    className: "md:col-span-2 md:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-10 top-10 h-32 w-32 rounded-full bg-cyan-200/40 blur-2xl transition-all duration-300 group-hover:bg-cyan-200/60" />
-      </div>
-    ),
-  },
-  {
     name: "Forex Benchmarks",
     description:
       "Stream daily FX rates and conversions across the top traded currency pairs.",
@@ -85,6 +71,20 @@ const features = [
     background: (
       <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-6">
         <div className="h-20 w-32 rounded-full bg-sky-200/40 blur-2xl transition-all duration-300 group-hover:bg-sky-200/60" />
+      </div>
+    ),
+  },
+  {
+    name: "Education Insights",
+    description:
+      "Search Ghana Education Service data to track institutions by grade, category, and regional stats.",
+    to: "/education",
+    cta: "Explore schools",
+    Icon: GraduationCap,
+    className: "lg:col-span-1 lg:row-span-1",
+    background: (
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="h-24 w-24 rounded-full bg-rose-200/40 blur-3xl transition-all duration-300 group-hover:bg-rose-200/60" />
       </div>
     ),
   },

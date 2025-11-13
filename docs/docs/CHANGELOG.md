@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🎓 [0.5.0] - 2025-11-11</strong> - Education Data Platform</summary>
+
+### Added
+
+- **Education Module** with eight REST endpoints, caching, Prisma-backed filters, and statistics
+- **GES Data Pipeline** that downloads SHS/TVET and Double Track PDFs, parses them, and seeds PostgreSQL via Prisma
+- **Comprehensive API Docs** including category/grade tables, data pipeline guidance, and use-case examples
+- **Education Contribution Guide** covering architecture, testing, and roadmap ideas
+
+### Changed
+
+- Updated docs homepage, intro, and API overview to highlight the Education service
+- Added Education to implementation status tables and feature grids
+- Bumped documentation version to **0.5.0**
+
+</details>
+
+<details>
 <summary><strong>📈 [0.4.0] - 2025-09-24</strong> - Stock Market Data Integration</summary>
 
 ### Added

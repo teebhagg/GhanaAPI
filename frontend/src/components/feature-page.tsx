@@ -15,9 +15,7 @@ export function FeaturePage({ title, description, children }: FeaturePageProps) 
         </h2>
         <p className="text-muted-foreground text-base md:text-lg">{description}</p>
       </header>
-      <div className="rounded-3xl border bg-card/60 p-4 shadow-sm backdrop-blur md:p-6">
         {children}
-      </div>
     </section>
   );
 }

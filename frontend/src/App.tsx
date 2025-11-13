@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
+  useLocation,
 } from "react-router-dom";
 
 import { AppDockLayout } from "@/components/app-dock-layout";
@@ -11,8 +13,8 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { AddressesPage } from "@/pages/addresses";
 import { BankingPage } from "@/pages/banking";
 import { DocsFeaturePage } from "@/pages/docs";
+import { EducationPage } from "@/pages/education";
 import { ExchangePage } from "@/pages/exchange";
-import { LocationsPage } from "@/pages/locations";
 import { OverviewPage } from "@/pages/overview";
 import { StocksPage } from "@/pages/stocks";
 import { TransportPage } from "@/pages/transport";
@@ -21,9 +23,20 @@ import "./App.css";
 import { Footer } from "./components/footer";
 import { Navbar } from "./components/navbar";
 
+function RouteScrollReset() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <Router>
+      <RouteScrollReset />
       <RouteSEO />
       <Navbar />
       <ScrollToTop />
@@ -33,9 +46,9 @@ function App() {
           <Route path="addresses" element={<AddressesPage />} />
           <Route path="banking" element={<BankingPage />} />
           <Route path="stocks" element={<StocksPage />} />
-          <Route path="locations" element={<LocationsPage />} />
           <Route path="exchange" element={<ExchangePage />} />
           <Route path="transport" element={<TransportPage />} />
+          <Route path="education" element={<EducationPage />} />
           <Route path="docs" element={<DocsFeaturePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

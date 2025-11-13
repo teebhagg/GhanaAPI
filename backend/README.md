@@ -23,13 +23,73 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+GhanaAPI Backend - A comprehensive NestJS application providing APIs for Ghanaian services including addresses, banking, education, exchange rates, locations, stock market, and transport.
 
 ## Project setup
 
 ```bash
 $ npm install
 ```
+
+## Environment Variables
+
+Create a `.env` file in the backend directory with the following variables:
+
+```bash
+# Database Configuration
+DATABASE_URL="postgresql://user:password@localhost:5432/ghanaapi?schema=public"
+
+# Application
+PORT=3000
+NODE_ENV=development
+
+# External API Keys (Optional)
+OPENROUTESERVICE_API_KEY=your_ors_key
+HERE_API_KEY=your_here_key
+GRAPHHOPPER_API_KEY=your_graphhopper_key
+```
+
+## Database Setup
+
+This project uses PostgreSQL with Prisma ORM for the Education module.
+
+### Prerequisites
+
+- PostgreSQL 12+ installed and running
+- Database created: `ghanaapi`
+
+### Setup Steps
+
+1. **Install dependencies** (if not already done):
+
+```bash
+npm install
+```
+
+2. **Generate Prisma Client**:
+
+```bash
+npm run prisma:generate
+```
+
+3. **Run database migrations**:
+
+```bash
+npm run prisma:migrate
+```
+
+4. **Seed the database** with initial school data:
+
+```bash
+npm run prisma:seed
+```
+
+### Prisma Commands
+
+- `npm run prisma:generate` - Generate Prisma Client
+- `npm run prisma:migrate` - Run database migrations
+- `npm run prisma:seed` - Seed database with initial data
+- `npm run prisma:studio` - Open Prisma Studio (database GUI)
 
 ## Compile and run the project
 

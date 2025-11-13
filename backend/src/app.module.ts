@@ -10,6 +10,8 @@ import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { LocationsModule } from './locations/locations.module';
 import { StockMarketModule } from './stock-market/stock-market.module';
 import { TransportModule } from './transport/transport.module';
+import { BusinessVerificationModule } from './business-verification/business-verification.module';
+import { EducationModule } from './education/education.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { TransportModule } from './transport/transport.module';
     ExchangeRatesModule,
     BankingModule,
     StockMarketModule,
+    BusinessVerificationModule,
+    EducationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

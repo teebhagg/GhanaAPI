@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { MotionProps } from "motion/react";
 import {
@@ -7,9 +8,8 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import React, { useRef } from "react";
 import type { PropsWithChildren } from "react";
-import { cn } from "@/lib/utils";
+import React, { useRef } from "react";
 
 export interface DockProps extends VariantProps<typeof dockVariants> {
   className?: string;

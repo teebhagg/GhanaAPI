@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🎓 [0.5.0] - 2025-11-11</strong> - Education Data Platform</summary>
+
+### Added
+
+- **National Education Directory**
+  - PostgreSQL + Prisma-backed `School` model with indexes on region, district, category, grade, and name
+  - Complete NestJS module (`EducationModule`, controller, service, DTOs) with validation and caching
+  - Eight REST endpoints: search, list, detail, region, district, category, grade, and statistics
+  - School grading (A–D), gender, residency, and program metadata exposed via API
+  - Swagger/OpenAPI documentation with examples and schema annotations
+- **GES Data Pipeline**
+  - `ges-school-parser.ts` utility that downloads, parses, and normalizes official GES PDFs
+  - Prisma seed script (`npm run prisma:seed`) that loads ~650 institutions and prints summary statistics
+  - Region/district normalization against `locations/data/regions.json`
+  - Double-track metadata surfaced through resource `metadata`
+
+### Changed
+
+- Bumped backend version to **0.5.0** and docs version to **0.5.0**
+- Updated docs homepage, overview, and intro to highlight the new Education service
+- Added comprehensive API and contributing guides for Education, including seeding instructions and implementation focus areas
+- Expanded implementation status tables to include Education features
+
+### Documentation
+
+- New `docs/docs/api/education.md` sections covering school categories, grading, and data pipeline
+- New `docs/docs/contributing/education.md` contribution playbook
+- Updated sidebars to include the Education documentation set
+
+</details>
+
+<details>
 <summary><strong>📈 [0.4.0] - 2025-09-24</strong> - Stock Market Data Integration</summary>
 
 ### Added

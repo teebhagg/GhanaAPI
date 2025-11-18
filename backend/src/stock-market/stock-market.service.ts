@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
@@ -305,7 +306,7 @@ export class StockMarketService {
   /**
    * Update stock data cache (runs every 5 minutes during market hours)
    */
-  @Cron('*/5 * * * *') // Every 5 minutes
+  @Cron('0 */1 * * *') // Every 1 hour
   async updateStockDataCache() {
     try {
       const marketStatus = this.stockDataProvider.getMarketStatus();

@@ -27,6 +27,11 @@ export class BankOfGhanaProvider implements RateProvider {
     if (/(^|[^A-Z])EUR([^A-Z]|$)|EURO/.test(L)) return 'EUR';
     if (/(^|[^A-Z])GBP([^A-Z]|$)|POUND/.test(L)) return 'GBP';
     if (/(^|[^A-Z])NGN([^A-Z]|$)|NAIRA/.test(L)) return 'NGN';
+    if (/(^|[^A-Z])CHF([^A-Z]|$)|SWISS\s*FRANC/.test(L)) return 'CHF';
+    if (/(^|[^A-Z])JPY([^A-Z]|$)|JAPANESE\s*YEN|YEN(?!\s*RENMINBI)/.test(L))
+      return 'JPY';
+    if (/(^|[^A-Z])CNY([^A-Z]|$)|CHINESE\s*YUAN|RENMINBI|RMB|YUAN|CN¥/.test(L))
+      return 'CNY';
     return null;
   }
 

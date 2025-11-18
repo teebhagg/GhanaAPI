@@ -1,17 +1,17 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { PrismaService } from '../common/database/prisma.service';
+import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
+import { SchoolSearchDto } from './dto/school-search.dto';
+import { SchoolDto } from './dto/school.dto';
 import { EducationService } from './education.service';
-import { PrismaService } from './services/prisma.service';
 import {
   Gender,
   Residency,
   SchoolCategory,
   SchoolGrade,
 } from './entities/school.entity';
-import { SchoolSearchDto } from './dto/school-search.dto';
-import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
-import { SchoolDto } from './dto/school.dto';
 
 const createPrismaSchool = () => {
   const now = new Date();

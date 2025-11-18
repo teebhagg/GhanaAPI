@@ -4,7 +4,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EducationController } from './education.controller';
 import { EducationService } from './education.service';
-import { PrismaService } from './services/prisma.service';
 import { SchoolDataProviderService } from './services/school-data-provider.service';
 
 @Module({
@@ -20,7 +19,7 @@ import { SchoolDataProviderService } from './services/school-data-provider.servi
     }),
   ],
   controllers: [EducationController],
-  providers: [EducationService, PrismaService, SchoolDataProviderService],
-  exports: [EducationService, PrismaService, SchoolDataProviderService],
+  providers: [EducationService, SchoolDataProviderService],
+  exports: [EducationService, SchoolDataProviderService],
 })
 export class EducationModule {}

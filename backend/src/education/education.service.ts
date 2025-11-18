@@ -4,11 +4,11 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
+import { PrismaService } from '../common/database/prisma.service';
 import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
 import { SchoolSearchDto } from './dto/school-search.dto';
 import { SchoolDto } from './dto/school.dto';
 import { SchoolCategory, SchoolGrade } from './entities/school.entity';
-import { PrismaService } from './services/prisma.service';
 
 @Injectable()
 export class EducationService {

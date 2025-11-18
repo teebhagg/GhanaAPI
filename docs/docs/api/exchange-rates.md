@@ -9,10 +9,11 @@ The Exchange Rates API provides real-time and historical currency exchange data 
 The API provides:
 
 - **Real-time rates** from Bank of Ghana and multiple providers
-- **Historical data** for trend analysis
+- **Historical data** with automatic tracking and persistence
 - **Currency conversion** with accurate calculations
-- **Rate trends** and analytics
-- **Multiple currency support** (USD, EUR, GBP, NGN)
+- **Automatic rate persistence** - rates saved to database when fetched
+- **Lazy-loading** - today's rates automatically fetched when missing
+- **Multiple currency support** (USD, EUR, GBP, NGN, CHF, JPY, CNY)
 
 ### Supported Currencies
 
@@ -23,16 +24,19 @@ The API provides:
 | Euro           | EUR  | European Union Euro                           |
 | British Pound  | GBP  | United Kingdom Pound Sterling                 |
 | Nigerian Naira | NGN  | Nigerian Naira                                |
+| Swiss Franc    | CHF  | Swiss Franc                                   |
+| Japanese Yen   | JPY  | Japanese Yen                                  |
+| Chinese Yuan   | CNY  | Chinese Yuan Renminbi                         |
 
 **Note:** All exchange rates are provided relative to GHS (Ghanaian Cedi) as the base currency.
 
 ### Currency Limitations
 
-The API currently supports a limited set of currencies to ensure data quality and reliability:
+The API currently supports a focused set of currencies to ensure data quality and reliability:
 
 - **Base Currency:** GHS (Ghanaian Cedi) - all rates are relative to GHS
-- **Supported Currencies:** USD, EUR, GBP, NGN
-- **Total Currency Pairs:** 10 possible combinations
+- **Supported Currencies:** USD, EUR, GBP, NGN, CHF, JPY, CNY
+- **Total Currency Pairs:** Multiple combinations available
 
 This limitation allows us to:
 
@@ -59,9 +63,9 @@ Retrieve current exchange rates for specified currencies against the Ghana Cedi 
 
 #### Query Parameters
 
-| Parameter    | Type   | Required | Description                                                                                      |
-| ------------ | ------ | -------- | ------------------------------------------------------------------------------------------------ |
-| `currencies` | string | No       | Comma-separated list of currency codes (default: USD,EUR,GBP,NGN). Supported: USD, EUR, GBP, NGN |
+| Parameter    | Type   | Required | Description                                                                                                                 |
+| ------------ | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `currencies` | string | No       | Comma-separated list of currency codes (default: USD,EUR,GBP,NGN,CHF,JPY,CNY). Supported: USD, EUR, GBP, NGN, CHF, JPY, CNY |
 
 #### Example Request
 
@@ -223,13 +227,20 @@ console.log(
 );
 ```
 
-### 3. Historical Exchange Rates ⏳
+### 3. Historical Exchange Rates ✅
 
-> **Status:** Coming Soon - Not yet implemented
+> **Status:** Fully Implemented
 
-Get historical exchange rate data for trend analysis.
+Get historical exchange rate data for trend analysis. The system automatically ensures today's rates are available by fetching them from Bank of Ghana when missing.
 
 **Endpoint:** `GET /exchange-rates/historical`
+
+**Features:**
+
+- Query historical rates for any date range
+- Automatic lazy-loading: if today's date is in the range and today's rates are missing, they are automatically fetched and stored
+- Automatic persistence: all current rates are automatically saved to the database when fetched
+- Historical data is stored with provider information and timestamps
 
 #### Query Parameters
 
@@ -256,21 +267,23 @@ curl -X GET "https://ghana-api.dev/v1/exchange-rates/historical?from=2024-01-01&
       "baseCurrency": "GHS",
       "targetCurrency": "USD",
       "rate": 0.082,
-      "date": "2024-01-01T00:00:00Z",
+      "date": "2025-01-01T00:00:00Z",
       "provider": "bank-of-ghana"
     },
     {
       "baseCurrency": "GHS",
       "targetCurrency": "USD",
       "rate": 0.083,
-      "date": "2024-01-02T00:00:00Z",
+      "date": "2025-01-02T00:00:00Z",
       "provider": "bank-of-ghana"
     }
   ],
   "message": "Historical rates retrieved successfully",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "timestamp": "2025-01-15T10:30:00Z"
 }
 ```
+
+**Note:** If today's date is included in the requested range and today's rates are not in the database, the system will automatically fetch them from Bank of Ghana before returning the results.
 
 #### JavaScript Example
 
@@ -295,20 +308,27 @@ const getHistoricalRates = async (fromDate, toDate, currency) => {
 
 // Usage
 const historicalRates = await getHistoricalRates(
-  "2024-01-01",
-  "2024-01-15",
+  "2025-01-01",
+  "2025-01-15",
   "USD"
 );
 historicalRates.forEach((rate) => {
   console.log(`${rate.date}: 1 GHS = ${rate.rate} USD`);
 });
+
+// The system automatically ensures today's rates are available if requested
+const ratesIncludingToday = await getHistoricalRates(
+  "2025-01-01",
+  new Date().toISOString().split("T")[0], // Today's date
+  "USD"
+);
 ```
 
-### 4. Rate Trends ⏳
+### 4. Rate Trends ✅
 
-> **Status:** Coming Soon - Not yet implemented
+> **Status:** Fully Implemented
 
-Get trend analysis for a specific currency over the last 7 days.
+Get trend analysis for a specific currency over the last 7 days using the historical endpoint.
 
 **Endpoint:** `GET /exchange-rates/{currency}/trend`
 

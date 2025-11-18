@@ -57,7 +57,8 @@ Real-time and historical currency information.
 
 - ✅ Current rates from Bank of Ghana
 - ✅ Currency conversion
-- ⏳ Historical data and trends (Coming Soon)
+- ✅ Historical data tracking with automatic persistence
+- ✅ Lazy-loading of today's rates when requested
 - ⏳ Rate analytics (Coming Soon)
 
 ### 🏛️ [Location Data](./locations)
@@ -79,24 +80,24 @@ Routing, mobility, and cost information.
 
 ## 📊 Implementation Status
 
-| Service                   | Feature                 | Status         | Notes                                           |
-| ------------------------- | ----------------------- | -------------- | ----------------------------------------------- |
-| **Address Services**      | Address Search          | ✅ Live        | Fully implemented                               |
-|                           | Reverse Geocoding       | ✅ Live        | Fully implemented                               |
-|                           | Address Validation      | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-|                           | Address Standardization | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-| **Exchange Rates**        | Current Rates           | ✅ Live        | Fully implemented                               |
-|                           | Currency Conversion     | ✅ Live        | Fully implemented                               |
-|                           | Historical Data         | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-|                           | Rate Trends             | ⏳ Coming Soon | Backend endpoint exists but not yet implemented |
-| **Location Data**         | Regions                 | ✅ Live        | Fully implemented                               |
-|                           | Districts               | ✅ Live        | Fully implemented                               |
-| **Transport & Logistics** | Transport Stops         | ✅ Live        | Bus stops, stations, and public transport hubs  |
-|                           | Route Calculation       | ✅ Live        | Optimal routing between locations               |
-|                           | Route Directions        | ✅ Live        | Turn-by-turn navigation instructions            |
-|                           | Travel Cost Estimation  | ✅ Live        | Fuel costs and fare calculations                |
-|                           | Fuel Prices             | ✅ Live        | Current petrol, diesel, and LPG prices          |
-|                           | Nearby Services         | ✅ Live        | Find transport stops within radius              |
+| Service                   | Feature                 | Status         | Notes                                                |
+| ------------------------- | ----------------------- | -------------- | ---------------------------------------------------- |
+| **Address Services**      | Address Search          | ✅ Live        | Fully implemented                                    |
+|                           | Reverse Geocoding       | ✅ Live        | Fully implemented                                    |
+|                           | Address Validation      | ⏳ Coming Soon | Backend endpoint exists but not yet implemented      |
+|                           | Address Standardization | ⏳ Coming Soon | Backend endpoint exists but not yet implemented      |
+| **Exchange Rates**        | Current Rates           | ✅ Live        | Fully implemented with automatic persistence         |
+|                           | Currency Conversion     | ✅ Live        | Fully implemented                                    |
+|                           | Historical Data         | ✅ Live        | Fully implemented with lazy-loading of today's rates |
+|                           | Rate Trends             | ✅ Live        | Available via historical endpoint                    |
+| **Location Data**         | Regions                 | ✅ Live        | Fully implemented                                    |
+|                           | Districts               | ✅ Live        | Fully implemented                                    |
+| **Transport & Logistics** | Transport Stops         | ✅ Live        | Bus stops, stations, and public transport hubs       |
+|                           | Route Calculation       | ✅ Live        | Optimal routing between locations                    |
+|                           | Route Directions        | ✅ Live        | Turn-by-turn navigation instructions                 |
+|                           | Travel Cost Estimation  | ✅ Live        | Fuel costs and fare calculations                     |
+|                           | Fuel Prices             | ✅ Live        | Current petrol, diesel, and LPG prices               |
+|                           | Nearby Services         | ✅ Live        | Find transport stops within radius                   |
 
 ### Status Legend
 

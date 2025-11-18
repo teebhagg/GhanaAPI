@@ -326,6 +326,14 @@ export const api = {
       : "";
     return http<ExchangeRateDto[]>(`/exchange-rates/current${qs}`);
   },
+  getHistoricalRates(currency: string, from: Date, to: Date) {
+    const params = new URLSearchParams({
+      currency,
+      from: from.toISOString().split("T")[0],
+      to: to.toISOString().split("T")[0],
+    });
+    return http<HistoricalRateDto[]>(`/exchange-rates/historical?${params}`);
+  },
   convertCurrency(body: ConvertCurrencyDto) {
     return http<ConversionResult>(`/exchange-rates/convert`, {
       method: "POST",

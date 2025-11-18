@@ -74,3 +74,17 @@ model School {
   @@index([category, grade])
   @@map("schools")
 }
+
+model ExchangeRateHistory {
+  id              String   @id @default(uuid())
+  baseCurrency    String
+  targetCurrency  String
+  rate            Decimal  @db.Decimal(18, 8)
+  provider        String
+  sourceTimestamp DateTime
+  createdAt       DateTime @default(now())
+
+  @@unique([baseCurrency, targetCurrency, sourceTimestamp, provider], map: "uq_exchange_rate_snapshot")
+  @@index([baseCurrency, targetCurrency, sourceTimestamp])
+  @@map("exchange_rate_history")
+}

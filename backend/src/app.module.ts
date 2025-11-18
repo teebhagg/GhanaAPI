@@ -6,6 +6,7 @@ import { AddressesModule } from './addresses/addresses.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BankingModule } from './banking/banking.module';
+import { DatabaseModule } from './common/database/database.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { LocationsModule } from './locations/locations.module';
 import { StockMarketModule } from './stock-market/stock-market.module';
@@ -17,6 +18,7 @@ import { EducationModule } from './education/education.module';
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    DatabaseModule,
     TransportModule,
     AddressesModule,
     LocationsModule,

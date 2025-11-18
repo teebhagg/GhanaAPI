@@ -5,32 +5,40 @@ Exchange rate services provide real-time and historical currency exchange data f
 ## 💱 Current Exchange Rate Features
 
 ### Implemented Features
+
 - **Current Exchange Rates** - Real-time GHS exchange rates from Bank of Ghana
-- **Historical Data** - Historical exchange rate trends and data
-- **Multiple Currencies** - Support for USD, EUR, GBP, and other major currencies
-- **Rate Trends** - 24-hour change tracking and trend indicators
+- **Historical Data** ✅ - Historical exchange rate tracking with database persistence
+- **Automatic Rate Persistence** ✅ - All fetched rates are automatically saved to database
+- **Lazy-Loading** ✅ - Today's rates automatically fetched when missing from historical queries
+- **Database Storage** ✅ - Exchange rate history stored in PostgreSQL with Prisma
+- **Multiple Currencies** - Support for USD, EUR, GBP, NGN, CHF, JPY, CNY
+- **Rate Trends** ✅ - Available via historical endpoint with 7-day trend analysis
 
 ### Feature Areas for Contribution
 
 #### 📊 Data Sources & Accuracy
+
 - Integration with additional financial data providers
 - Rate validation and cross-verification
 - Improved data freshness and reliability
 - Support for cryptocurrency exchanges
 
 #### 📈 Analytics & Trends
+
 - Advanced trend analysis algorithms
 - Predictive rate modeling
 - Volatility indicators
 - Rate change notifications
 
 #### ⚡ Performance & Caching
+
 - Intelligent caching strategies
 - Real-time rate streaming
 - Rate aggregation algorithms
 - Load balancing for high-traffic scenarios
 
 #### 🌍 Currency Support
+
 - Support for additional African currencies
 - Regional currency pairs
 - Central bank rate integration
@@ -39,48 +47,82 @@ Exchange rate services provide real-time and historical currency exchange data f
 ## 🏗️ Technical Architecture
 
 ### File Structure
+
 ```
 backend/src/
-├── controllers/
-│   └── exchangeRateController.js    # Route handlers
-├── services/
-│   ├── exchangeRateService.js       # Core business logic
-│   ├── bankOfGhanaService.js        # BOG API integration
-│   ├── currencyService.js           # Currency operations
-│   └── rateAggregatorService.js     # Multi-source aggregation
-├── models/
-│   ├── exchangeRate.js              # Rate data models
-│   └── currency.js                  # Currency definitions
-├── utils/
-│   ├── rateCalculator.js            # Rate calculations
-│   └── currencyFormatter.js        # Currency formatting
-├── jobs/
-│   └── updateRatesJob.js            # Scheduled rate updates
+├── exchange-rates/
+│   ├── exchange-rates.controller.ts    # Route handlers
+│   ├── exchange-rates.service.ts       # Core business logic with persistence
+│   ├── exchange-rates.module.ts        # Module configuration
+│   ├── dto/
+│   │   ├── exchange-rate.dto.ts        # Data transfer objects
+│   │   ├── historical-rate.dto.ts      # Historical rate DTOs
+│   │   └── convert-currency.dto.ts     # Currency conversion DTOs
+│   └── providers/
+│       ├── bank-of-ghana.provider.ts   # BOG scraping integration
+│       ├── exchangerateapi.provider.ts # ExchangeRateAPI provider
+│       └── fixer.provider.ts           # Fixer.io provider
+├── common/
+│   └── database/
+│       └── prisma.service.ts           # Shared Prisma service
+├── prisma/
+│   ├── schema.prisma                   # Database schema
+│   └── migrations/                     # Database migrations
+├── scripts/
+│   ├── import-bog-historical.ts        # CSV/JSON import script
+│   ├── convert-bog-historical.ts       # Data conversion utility
+│   └── clear-exchange-rate-history.ts  # Database cleanup script
 └── tests/
-    └── exchange-rates/              # Exchange rate tests
+    └── exchange-rates/                 # Exchange rate tests
 ```
 
 ### Key Services
 
-#### ExchangeRateService
-```javascript
-// services/exchangeRateService.js
-class ExchangeRateService {
-  async getHistoricalRates(currency, fromDate, toDate) {
-    // Get historical exchange rate data
+#### ExchangeRatesService
+
+```typescript
+// exchange-rates.service.ts
+@Injectable()
+export class ExchangeRatesService {
+  async getHistoricalRates(from: Date, to: Date, currency: string) {
+    // Get historical exchange rate data from database
+    // Automatically fetches today's rates if missing and today is in range
   }
 
-  async calculateTrends(currency, period = '24h') {
-    // Calculate rate trends and changes
+  async getCurrentRates(currencies?: string[]) {
+    // Fetch current rates and automatically persist to database
   }
 
-  async updateRatesFromSources() {
-    // Fetch and update rates from multiple sources
+  private async persistRates(rates: ExchangeRateDto[]) {
+    // Save rates to ExchangeRateHistory table
+  }
+
+  @Cron("0 */30 * * * *") // every 30 minutes
+  async updateExchangeRates() {
+    // Scheduled job to fetch and persist current rates
   }
 }
 ```
 
+**Database Schema:**
+
+```prisma
+model ExchangeRateHistory {
+  id              String   @id @default(uuid())
+  baseCurrency    String
+  targetCurrency  String
+  rate            Decimal  @db.Decimal(18, 8)
+  provider        String
+  sourceTimestamp DateTime
+  createdAt       DateTime @default(now())
+
+  @@unique([baseCurrency, targetCurrency, sourceTimestamp, provider])
+  @@index([baseCurrency, targetCurrency, sourceTimestamp])
+}
+```
+
 #### BankOfGhanaService
+
 ```javascript
 // services/bankOfGhanaService.js
 class BankOfGhanaService {
@@ -99,6 +141,7 @@ class BankOfGhanaService {
 ```
 
 #### RateAggregatorService
+
 ```javascript
 // services/rateAggregatorService.js
 class RateAggregatorService {
@@ -152,28 +195,42 @@ curl "http://localhost:3000/v1/exchange-rates/current"
 # Test specific currency rates
 curl "http://localhost:3000/v1/exchange-rates/current?currencies=USD,EUR,GBP"
 
-# Test historical rates
-curl "http://localhost:3000/v1/exchange-rates/historical?currency=USD&from=2024-01-01&to=2024-01-31"
+# Test historical rates (automatically fetches today's rates if missing)
+curl "http://localhost:3000/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-31"
+
+# Import historical data from CSV/JSON
+npm run exchange-rates:import-bog -- --file=path/to/file.csv
+
+# Clear exchange rate history
+npm run exchange-rates:clear -- --confirm
+
+# Seed exchange rates from JSON
+npm run exchange-rates:seed:from-json -- --file=data/exchange-rates-bog-historical.json
 ```
 
 ## 💡 Contributing Ideas
 
 ### Beginner-Friendly Tasks
-- [ ] Add validation for currency codes (ISO 4217)
-- [ ] Improve error handling for API timeouts
+
+- [x] Add validation for currency codes (ISO 4217) - Implemented
+- [x] Improve error handling for API timeouts - Implemented
 - [ ] Add more comprehensive rate formatting options
-- [ ] Create additional test cases for edge scenarios
-- [ ] Add support for more currency symbols and names
+- [x] Create additional test cases for edge scenarios - Enhanced coverage
+- [x] Historical data persistence - Fully implemented
 
 ### Intermediate Tasks
+
 - [ ] Implement rate change alerts and notifications
 - [ ] Add support for cryptocurrency exchange rates
 - [ ] Create rate comparison tools between sources
-- [ ] Implement rate caching with Redis
+- [x] Automatic rate persistence - Implemented with database
 - [ ] Add rate volatility calculations
 - [ ] Build rate prediction models
+- [ ] Add bulk historical data import tools
+- [ ] Implement rate analytics endpoints
 
 ### Advanced Tasks
+
 - [ ] Develop real-time rate streaming with WebSockets
 - [ ] Create machine learning models for rate forecasting
 - [ ] Build rate arbitrage detection system
@@ -200,256 +257,267 @@ npm run test:coverage -- --testPathPattern=exchange-rates
 ### Writing Exchange Rate Tests
 
 #### Unit Tests Example
+
 ```javascript
 // src/tests/services/exchangeRateService.test.js
-const ExchangeRateService = require('../../services/exchangeRateService');
+const ExchangeRateService = require("../../services/exchangeRateService");
 
-describe('ExchangeRateService', () => {
+describe("ExchangeRateService", () => {
   let exchangeRateService;
 
   beforeEach(() => {
     exchangeRateService = new ExchangeRateService();
   });
 
-  describe('getCurrentRates', () => {
-    it('should return current rates for all currencies', async () => {
+  describe("getCurrentRates", () => {
+    it("should return current rates for all currencies", async () => {
       const rates = await exchangeRateService.getCurrentRates();
-      
-      expect(rates).toHaveProperty('baseCurrency', 'GHS');
-      expect(rates).toHaveProperty('timestamp');
-      expect(rates).toHaveProperty('rates');
-      expect(rates.rates).toHaveProperty('USD');
-      expect(rates.rates.USD).toHaveProperty('rate');
-      expect(rates.rates.USD).toHaveProperty('inverseRate');
+
+      expect(rates).toHaveProperty("baseCurrency", "GHS");
+      expect(rates).toHaveProperty("timestamp");
+      expect(rates).toHaveProperty("rates");
+      expect(rates.rates).toHaveProperty("USD");
+      expect(rates.rates.USD).toHaveProperty("rate");
+      expect(rates.rates.USD).toHaveProperty("inverseRate");
     });
 
-    it('should return rates for specific currencies only', async () => {
-      const rates = await exchangeRateService.getCurrentRates(['USD', 'EUR']);
-      
-      expect(Object.keys(rates.rates)).toEqual(['USD', 'EUR']);
-      expect(rates.rates).not.toHaveProperty('GBP');
+    it("should return rates for specific currencies only", async () => {
+      const rates = await exchangeRateService.getCurrentRates(["USD", "EUR"]);
+
+      expect(Object.keys(rates.rates)).toEqual(["USD", "EUR"]);
+      expect(rates.rates).not.toHaveProperty("GBP");
     });
 
-    it('should handle invalid currency codes', async () => {
-      const rates = await exchangeRateService.getCurrentRates(['INVALID']);
-      
-      expect(rates.rates).not.toHaveProperty('INVALID');
+    it("should handle invalid currency codes", async () => {
+      const rates = await exchangeRateService.getCurrentRates(["INVALID"]);
+
+      expect(rates.rates).not.toHaveProperty("INVALID");
       expect(rates.errors).toContainEqual({
-        currency: 'INVALID',
-        error: 'UNSUPPORTED_CURRENCY'
+        currency: "INVALID",
+        error: "UNSUPPORTED_CURRENCY",
       });
     });
   });
 
-  describe('getHistoricalRates', () => {
-    it('should return historical data for valid date range', async () => {
-      const fromDate = '2024-01-01';
-      const toDate = '2024-01-31';
-      
+  describe("getHistoricalRates", () => {
+    it("should return historical data for valid date range", async () => {
+      const fromDate = "2024-01-01";
+      const toDate = "2024-01-31";
+
       const data = await exchangeRateService.getHistoricalRates(
-        'USD', 
-        fromDate, 
+        "USD",
+        fromDate,
         toDate
       );
-      
-      expect(data).toHaveProperty('currency', 'USD');
-      expect(data).toHaveProperty('baseCurrency', 'GHS');
-      expect(data).toHaveProperty('period');
+
+      expect(data).toHaveProperty("currency", "USD");
+      expect(data).toHaveProperty("baseCurrency", "GHS");
+      expect(data).toHaveProperty("period");
       expect(data.period.from).toBe(fromDate);
       expect(data.period.to).toBe(toDate);
-      expect(data).toHaveProperty('rates');
+      expect(data).toHaveProperty("rates");
       expect(Array.isArray(data.rates)).toBe(true);
     });
 
-    it('should validate date range', async () => {
+    it("should validate date range", async () => {
       await expect(
-        exchangeRateService.getHistoricalRates('USD', '2024-12-31', '2024-01-01')
-      ).rejects.toThrow('Invalid date range');
+        exchangeRateService.getHistoricalRates(
+          "USD",
+          "2024-12-31",
+          "2024-01-01"
+        )
+      ).rejects.toThrow("Invalid date range");
     });
   });
 
-  describe('calculateTrends', () => {
-    it('should calculate 24h trend correctly', async () => {
-      const trend = await exchangeRateService.calculateTrends('USD', '24h');
-      
-      expect(trend).toHaveProperty('currency', 'USD');
-      expect(trend).toHaveProperty('period', '24h');
-      expect(trend).toHaveProperty('change');
-      expect(trend).toHaveProperty('changePercent');
-      expect(trend).toHaveProperty('trend');
-      expect(['up', 'down', 'stable']).toContain(trend.trend);
+  describe("calculateTrends", () => {
+    it("should calculate 24h trend correctly", async () => {
+      const trend = await exchangeRateService.calculateTrends("USD", "24h");
+
+      expect(trend).toHaveProperty("currency", "USD");
+      expect(trend).toHaveProperty("period", "24h");
+      expect(trend).toHaveProperty("change");
+      expect(trend).toHaveProperty("changePercent");
+      expect(trend).toHaveProperty("trend");
+      expect(["up", "down", "stable"]).toContain(trend.trend);
     });
   });
 });
 ```
 
 #### Integration Tests Example
+
 ```javascript
 // src/tests/routes/exchangeRates.test.js
-const request = require('supertest');
-const app = require('../../app');
+const request = require("supertest");
+const app = require("../../app");
 
-describe('Exchange Rate API Endpoints', () => {
-  describe('GET /v1/exchange-rates/current', () => {
-    it('should return current exchange rates', async () => {
+describe("Exchange Rate API Endpoints", () => {
+  describe("GET /v1/exchange-rates/current", () => {
+    it("should return current exchange rates", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/current')
+        .get("/v1/exchange-rates/current")
         .expect(200);
 
-      expect(response.body).toHaveProperty('baseCurrency', 'GHS');
-      expect(response.body).toHaveProperty('timestamp');
-      expect(response.body).toHaveProperty('rates');
-      expect(response.body).toHaveProperty('provider');
-      expect(response.body).toHaveProperty('nextUpdate');
+      expect(response.body).toHaveProperty("baseCurrency", "GHS");
+      expect(response.body).toHaveProperty("timestamp");
+      expect(response.body).toHaveProperty("rates");
+      expect(response.body).toHaveProperty("provider");
+      expect(response.body).toHaveProperty("nextUpdate");
     });
 
-    it('should filter currencies when specified', async () => {
+    it("should filter currencies when specified", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/current?currencies=USD,EUR')
+        .get("/v1/exchange-rates/current?currencies=USD,EUR")
         .expect(200);
 
       const currencies = Object.keys(response.body.rates);
-      expect(currencies).toEqual(['USD', 'EUR']);
+      expect(currencies).toEqual(["USD", "EUR"]);
     });
 
-    it('should handle invalid currency parameters', async () => {
+    it("should handle invalid currency parameters", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/current?currencies=INVALID,USD')
+        .get("/v1/exchange-rates/current?currencies=INVALID,USD")
         .expect(200);
 
-      expect(response.body.rates).toHaveProperty('USD');
-      expect(response.body.rates).not.toHaveProperty('INVALID');
+      expect(response.body.rates).toHaveProperty("USD");
+      expect(response.body.rates).not.toHaveProperty("INVALID");
       expect(response.body.warnings).toContainEqual({
-        currency: 'INVALID',
-        message: 'Unsupported currency code'
+        currency: "INVALID",
+        message: "Unsupported currency code",
       });
     });
   });
 
-  describe('GET /v1/exchange-rates/historical', () => {
-    it('should return historical rates', async () => {
+  describe("GET /v1/exchange-rates/historical", () => {
+    it("should return historical rates", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/historical?currency=USD&from=2024-01-01&to=2024-01-07')
+        .get(
+          "/v1/exchange-rates/historical?currency=USD&from=2024-01-01&to=2024-01-07"
+        )
         .expect(200);
 
-      expect(response.body).toHaveProperty('currency', 'USD');
-      expect(response.body).toHaveProperty('rates');
+      expect(response.body).toHaveProperty("currency", "USD");
+      expect(response.body).toHaveProperty("rates");
       expect(Array.isArray(response.body.rates)).toBe(true);
       expect(response.body.rates.length).toBeGreaterThan(0);
     });
 
-    it('should return 400 for invalid date format', async () => {
+    it("should return 400 for invalid date format", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/historical?currency=USD&from=invalid-date&to=2024-01-07')
+        .get(
+          "/v1/exchange-rates/historical?currency=USD&from=invalid-date&to=2024-01-07"
+        )
         .expect(400);
 
-      expect(response.body.error.code).toBe('INVALID_DATE_FORMAT');
+      expect(response.body.error.code).toBe("INVALID_DATE_FORMAT");
     });
 
-    it('should return 400 for missing currency parameter', async () => {
+    it("should return 400 for missing currency parameter", async () => {
       const response = await request(app)
-        .get('/v1/exchange-rates/historical?from=2024-01-01&to=2024-01-07')
+        .get("/v1/exchange-rates/historical?from=2024-01-01&to=2024-01-07")
         .expect(400);
 
-      expect(response.body.error.code).toBe('MISSING_CURRENCY');
+      expect(response.body.error.code).toBe("MISSING_CURRENCY");
     });
   });
 });
 ```
 
 ### Performance Tests
+
 ```javascript
 // src/tests/performance/exchangeRates.performance.test.js
-describe('Exchange Rate Performance', () => {
-  it('should respond to current rates within 200ms', async () => {
+describe("Exchange Rate Performance", () => {
+  it("should respond to current rates within 200ms", async () => {
     const startTime = Date.now();
-    
+
     const response = await request(app)
-      .get('/v1/exchange-rates/current')
+      .get("/v1/exchange-rates/current")
       .expect(200);
-    
+
     const responseTime = Date.now() - startTime;
     expect(responseTime).toBeLessThan(200);
   });
 
-  it('should handle 100 concurrent requests', async () => {
-    const requests = Array(100).fill().map(() => 
-      request(app).get('/v1/exchange-rates/current')
-    );
-    
+  it("should handle 100 concurrent requests", async () => {
+    const requests = Array(100)
+      .fill()
+      .map(() => request(app).get("/v1/exchange-rates/current"));
+
     const responses = await Promise.all(requests);
-    
-    responses.forEach(response => {
+
+    responses.forEach((response) => {
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('rates');
+      expect(response.body).toHaveProperty("rates");
     });
   });
 });
 ```
 
+## 📊 Database and Data Persistence
+
+### Exchange Rate History Storage
+
+Exchange rates are automatically persisted to the database when fetched. The system uses:
+
+- **PostgreSQL** with Prisma ORM for data storage
+- **Automatic persistence** via `persistRates()` method
+- **Lazy-loading** of today's rates when missing from historical queries
+- **Scheduled updates** every 30 minutes via cron job
+- **Duplicate prevention** using unique constraints
+
+### Import Scripts
+
+The codebase includes utility scripts for managing historical data:
+
+- **`import-bog-historical.ts`** - Convert CSV/JSON and upsert to database (single command)
+- **`convert-bog-historical.ts`** - Convert raw BoG data to required JSON format
+- **`clear-exchange-rate-history.ts`** - Clear exchange rate history from database
+- **`update-exchange-rates-from-data.ts`** - Update database from JSON with date filtering
+
+Usage examples:
+
+```bash
+# Import and upsert historical data
+npm run exchange-rates:import-bog -- --file=Interbank\ FX\ Rates\ Historical.csv
+
+# Clear all exchange rate history
+npm run exchange-rates:clear -- --confirm
+
+# Update with specific date range
+npm run exchange-rates:update -- --json=data/exchange-rates-bog-historical.json --from=2025-01-01 --to=2025-01-31
+```
+
 ## 📊 Data Sources Integration
 
-### Bank of Ghana API Integration
-```javascript
-// services/bankOfGhanaService.js
-class BankOfGhanaService {
-  constructor() {
-    this.baseUrl = 'https://bog.gov.gh/api/v1';
-    this.apiKey = process.env.BANK_OF_GHANA_API_KEY;
+### Bank of Ghana Web Scraping
+
+```typescript
+// providers/bank-of-ghana.provider.ts
+@Injectable()
+export class BankOfGhanaProvider implements RateProvider {
+  async fetchRates(base: string, targets: string[]): Promise<RateData[]> {
+    // Scrapes Bank of Ghana website for current rates
+    // Returns rates in GHS base format (1 GHS = X target currency)
   }
 
-  async fetchCurrentRates() {
-    try {
-      const response = await fetch(`${this.baseUrl}/exchange-rates/current`, {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`BOG API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return this.normalizeRateData(data);
-    } catch (error) {
-      console.error('Failed to fetch rates from BOG:', error);
-      throw error;
-    }
+  async convertCurrency(body: ConvertCurrencyDto): Promise<ConversionResult> {
+    // Performs currency conversion using BoG rates
   }
 
-  normalizeRateData(bogData) {
-    // Convert BOG API format to our standard format
-    const rates = {};
-    
-    bogData.rates.forEach(rate => {
-      rates[rate.currency] = {
-        rate: parseFloat(rate.buying_rate),
-        inverseRate: 1 / parseFloat(rate.buying_rate),
-        sellingRate: parseFloat(rate.selling_rate),
-        change24h: parseFloat(rate.change_24h || 0),
-        trend: this.determineTrend(rate.change_24h)
-      };
-    });
-
-    return {
-      baseCurrency: 'GHS',
-      timestamp: bogData.timestamp,
-      rates,
-      provider: 'Bank of Ghana',
-      nextUpdate: bogData.next_update
-    };
-  }
-
-  determineTrend(change) {
-    if (Math.abs(change) < 0.01) return 'stable';
-    return change > 0 ? 'up' : 'down';
+  private async loadRates(): Promise<
+    Map<string, { buy: number; sell: number }>
+  > {
+    // Scrapes BOG website and caches results for 30 minutes
+    // Handles multiple URL paths for robustness
+    // Parses HTML table data to extract buying and selling rates
   }
 }
 ```
 
 ### Multiple Source Aggregation
+
 ```javascript
 // services/rateAggregatorService.js
 class RateAggregatorService {
@@ -457,21 +525,21 @@ class RateAggregatorService {
     this.sources = [
       new BankOfGhanaService(),
       new ForexAPIService(),
-      new CurrencyLayerService()
+      new CurrencyLayerService(),
     ];
   }
 
   async aggregateRates(currency) {
     const sourceResults = await Promise.allSettled(
-      this.sources.map(source => source.getCurrentRates([currency]))
+      this.sources.map((source) => source.getCurrentRates([currency]))
     );
 
     const validRates = sourceResults
-      .filter(result => result.status === 'fulfilled')
-      .map(result => result.value.rates[currency]);
+      .filter((result) => result.status === "fulfilled")
+      .map((result) => result.value.rates[currency]);
 
     if (validRates.length === 0) {
-      throw new Error('No valid rates available from any source');
+      throw new Error("No valid rates available from any source");
     }
 
     return this.calculateConsensusRate(validRates);
@@ -480,7 +548,7 @@ class RateAggregatorService {
   calculateConsensusRate(rates) {
     // Implement weighted average or median-based consensus
     const weights = [0.6, 0.3, 0.1]; // BOG gets highest weight
-    
+
     let weightedSum = 0;
     let totalWeight = 0;
 
@@ -495,18 +563,20 @@ class RateAggregatorService {
       rate: weightedSum / totalWeight,
       inverseRate: totalWeight / weightedSum,
       confidence: this.calculateConfidence(rates),
-      sources: rates.length
+      sources: rates.length,
     };
   }
 
   calculateConfidence(rates) {
     // Calculate confidence based on rate agreement between sources
-    const rateValues = rates.map(r => r.rate);
+    const rateValues = rates.map((r) => r.rate);
     const avg = rateValues.reduce((a, b) => a + b) / rateValues.length;
-    const variance = rateValues.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / rateValues.length;
-    
+    const variance =
+      rateValues.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
+      rateValues.length;
+
     // Higher confidence for lower variance
-    return Math.max(0, 1 - (variance / avg));
+    return Math.max(0, 1 - variance / avg);
   }
 }
 ```
@@ -514,10 +584,11 @@ class RateAggregatorService {
 ## 🔧 Implementation Examples
 
 ### Real-time Rate Updates with Scheduled Jobs
+
 ```javascript
 // jobs/updateRatesJob.js
-const cron = require('node-cron');
-const ExchangeRateService = require('../services/exchangeRateService');
+const cron = require("node-cron");
+const ExchangeRateService = require("../services/exchangeRateService");
 
 class UpdateRatesJob {
   constructor() {
@@ -527,34 +598,34 @@ class UpdateRatesJob {
 
   start() {
     // Update rates every 5 minutes during market hours
-    cron.schedule('*/5 * * * *', async () => {
+    cron.schedule("*/5 * * * *", async () => {
       if (this.isRunning) return;
-      
+
       this.isRunning = true;
       try {
-        console.log('Starting scheduled rate update...');
+        console.log("Starting scheduled rate update...");
         await this.updateAllRates();
-        console.log('Rate update completed successfully');
+        console.log("Rate update completed successfully");
       } catch (error) {
-        console.error('Rate update failed:', error);
+        console.error("Rate update failed:", error);
       } finally {
         this.isRunning = false;
       }
     });
 
     // Update historical data daily at midnight
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule("0 0 * * *", async () => {
       try {
         await this.updateHistoricalData();
       } catch (error) {
-        console.error('Historical data update failed:', error);
+        console.error("Historical data update failed:", error);
       }
     });
   }
 
   async updateAllRates() {
-    const currencies = ['USD', 'EUR', 'GBP', 'CNY', 'JPY', 'CAD', 'AUD'];
-    
+    const currencies = ["USD", "EUR", "GBP", "CNY", "JPY", "CAD", "AUD"];
+
     for (const currency of currencies) {
       try {
         await this.exchangeRateService.updateRateFromSources(currency);
@@ -567,7 +638,7 @@ class UpdateRatesJob {
   async updateHistoricalData() {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     await this.exchangeRateService.storeHistoricalRates(yesterday);
   }
 }
@@ -576,6 +647,7 @@ module.exports = UpdateRatesJob;
 ```
 
 ### Rate Change Notifications
+
 ```javascript
 // services/rateNotificationService.js
 class RateNotificationService {
@@ -588,7 +660,7 @@ class RateNotificationService {
     if (!this.subscribers.has(currency)) {
       this.subscribers.set(currency, new Set());
     }
-    
+
     this.subscribers.get(currency).add(userId);
     this.thresholds.set(`${userId}-${currency}`, threshold);
   }
@@ -597,10 +669,10 @@ class RateNotificationService {
     if (!this.subscribers.has(currency)) return;
 
     const changePercent = ((newRate - previousRate) / previousRate) * 100;
-    
+
     for (const userId of this.subscribers.get(currency)) {
       const threshold = this.thresholds.get(`${userId}-${currency}`);
-      
+
       if (Math.abs(changePercent) >= threshold) {
         await this.sendNotification(userId, currency, changePercent, newRate);
       }
@@ -609,11 +681,11 @@ class RateNotificationService {
 
   async sendNotification(userId, currency, changePercent, rate) {
     const message = {
-      type: 'RATE_ALERT',
+      type: "RATE_ALERT",
       currency,
       changePercent,
       currentRate: rate,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Implement your notification delivery (email, SMS, push, etc.)
@@ -623,58 +695,63 @@ class RateNotificationService {
 ```
 
 ### Advanced Rate Analytics
+
 ```javascript
 // services/rateAnalyticsService.js
 class RateAnalyticsService {
   async calculateVolatility(currency, days = 30) {
     const rates = await this.getHistoricalRates(currency, days);
     const returns = this.calculateReturns(rates);
-    
+
     const mean = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - mean, 2), 0) / returns.length;
-    
+    const variance =
+      returns.reduce((sum, ret) => sum + Math.pow(ret - mean, 2), 0) /
+      returns.length;
+
     return {
       currency,
       period: `${days} days`,
       volatility: Math.sqrt(variance),
       averageReturn: mean,
-      standardDeviation: Math.sqrt(variance)
+      standardDeviation: Math.sqrt(variance),
     };
   }
 
   calculateReturns(rates) {
     const returns = [];
     for (let i = 1; i < rates.length; i++) {
-      const returnRate = (rates[i].rate - rates[i-1].rate) / rates[i-1].rate;
+      const returnRate =
+        (rates[i].rate - rates[i - 1].rate) / rates[i - 1].rate;
       returns.push(returnRate);
     }
     return returns;
   }
 
-  async predictNextRate(currency, method = 'moving_average') {
+  async predictNextRate(currency, method = "moving_average") {
     const historicalRates = await this.getHistoricalRates(currency, 30);
-    
+
     switch (method) {
-      case 'moving_average':
+      case "moving_average":
         return this.movingAveragePrediction(historicalRates);
-      case 'linear_regression':
+      case "linear_regression":
         return this.linearRegressionPrediction(historicalRates);
-      case 'exponential_smoothing':
+      case "exponential_smoothing":
         return this.exponentialSmoothingPrediction(historicalRates);
       default:
-        throw new Error('Unsupported prediction method');
+        throw new Error("Unsupported prediction method");
     }
   }
 
   movingAveragePrediction(rates, window = 7) {
     const recentRates = rates.slice(-window);
-    const average = recentRates.reduce((sum, rate) => sum + rate.rate, 0) / window;
-    
+    const average =
+      recentRates.reduce((sum, rate) => sum + rate.rate, 0) / window;
+
     return {
       predictedRate: average,
-      method: 'moving_average',
+      method: "moving_average",
       confidence: this.calculatePredictionConfidence(rates, average),
-      window
+      window,
     };
   }
 }
@@ -683,15 +760,16 @@ class RateAnalyticsService {
 ## 📊 Caching and Performance
 
 ### Redis Caching Implementation
+
 ```javascript
 // services/rateCacheService.js
-const Redis = require('redis');
+const Redis = require("redis");
 
 class RateCacheService {
   constructor() {
     this.redis = Redis.createClient({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379
+      host: process.env.REDIS_HOST || "localhost",
+      port: process.env.REDIS_PORT || 6379,
     });
   }
 
@@ -699,36 +777,36 @@ class RateCacheService {
     try {
       if (currencies.length === 0) {
         // Get all cached rates
-        const keys = await this.redis.keys('rate:*');
+        const keys = await this.redis.keys("rate:*");
         const rates = {};
-        
+
         for (const key of keys) {
-          const currency = key.replace('rate:', '');
+          const currency = key.replace("rate:", "");
           const rateData = await this.redis.get(key);
           rates[currency] = JSON.parse(rateData);
         }
-        
+
         return rates;
       } else {
         // Get specific currencies
         const pipeline = this.redis.pipeline();
-        currencies.forEach(currency => {
+        currencies.forEach((currency) => {
           pipeline.get(`rate:${currency}`);
         });
-        
+
         const results = await pipeline.exec();
         const rates = {};
-        
+
         results.forEach((result, index) => {
           if (result[1]) {
             rates[currencies[index]] = JSON.parse(result[1]);
           }
         });
-        
+
         return rates;
       }
     } catch (error) {
-      console.error('Cache read error:', error);
+      console.error("Cache read error:", error);
       return null;
     }
   }
@@ -736,17 +814,21 @@ class RateCacheService {
   async setCachedRates(rates, ttl = 60) {
     try {
       const pipeline = this.redis.pipeline();
-      
+
       Object.entries(rates).forEach(([currency, rateData]) => {
-        pipeline.setex(`rate:${currency}`, ttl, JSON.stringify({
-          ...rateData,
-          cachedAt: Date.now()
-        }));
+        pipeline.setex(
+          `rate:${currency}`,
+          ttl,
+          JSON.stringify({
+            ...rateData,
+            cachedAt: Date.now(),
+          })
+        );
       });
-      
+
       await pipeline.exec();
     } catch (error) {
-      console.error('Cache write error:', error);
+      console.error("Cache write error:", error);
     }
   }
 
@@ -755,13 +837,13 @@ class RateCacheService {
       if (currency) {
         await this.redis.del(`rate:${currency}`);
       } else {
-        const keys = await this.redis.keys('rate:*');
+        const keys = await this.redis.keys("rate:*");
         if (keys.length > 0) {
           await this.redis.del(...keys);
         }
       }
     } catch (error) {
-      console.error('Cache invalidation error:', error);
+      console.error("Cache invalidation error:", error);
     }
   }
 }
@@ -843,42 +925,43 @@ When adding exchange rate endpoints, include comprehensive Swagger documentation
 ## 🚀 Deployment Considerations
 
 ### Health Checks for Exchange Rate Services
+
 ```javascript
 // Add to your health check endpoint
-router.get('/v1/health/exchange-rates', async (req, res) => {
+router.get("/v1/health/exchange-rates", async (req, res) => {
   try {
     const healthData = {
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
-      services: {}
+      services: {},
     };
 
     // Test rate fetching
-    const rateTest = await exchangeRateService.getCurrentRates(['USD']);
-    healthData.services.rateRetrieval = rateTest ? 'operational' : 'degraded';
+    const rateTest = await exchangeRateService.getCurrentRates(["USD"]);
+    healthData.services.rateRetrieval = rateTest ? "operational" : "degraded";
 
     // Test cache
-    const cacheTest = await rateCacheService.getCachedRates(['USD']);
-    healthData.services.cache = cacheTest ? 'operational' : 'degraded';
+    const cacheTest = await rateCacheService.getCachedRates(["USD"]);
+    healthData.services.cache = cacheTest ? "operational" : "degraded";
 
     // Test data sources
     for (const [name, service] of Object.entries(dataSources)) {
       try {
         await service.ping();
-        healthData.services[name] = 'operational';
+        healthData.services[name] = "operational";
       } catch (error) {
-        healthData.services[name] = 'degraded';
-        healthData.status = 'degraded';
+        healthData.services[name] = "degraded";
+        healthData.status = "degraded";
       }
     }
 
-    const statusCode = healthData.status === 'healthy' ? 200 : 503;
+    const statusCode = healthData.status === "healthy" ? 200 : 503;
     res.status(statusCode).json(healthData);
   } catch (error) {
     res.status(503).json({
-      status: 'unhealthy',
+      status: "unhealthy",
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -897,7 +980,7 @@ Ready to contribute to exchange rate services? Here's what you can do:
 ---
 
 **Thank you for helping make exchange rate data more accessible for Ghana!** Your contributions help businesses and developers make better financial decisions. 🇬🇭💱CurrentRates(currencies = []) {
-    // Get current exchange rates for specified currencies
-  }
+// Get current exchange rates for specified currencies
+}
 
-  async get
+async get

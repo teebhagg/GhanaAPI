@@ -22,7 +22,7 @@ export class ExchangeRatesController {
 
   @Get('historical')
   @ApiOperation({
-    summary: 'Get historical exchange rates. Not implemented yet.',
+    summary: 'Get historical exchange rates from stored snapshots',
   })
   getHistoricalRates(
     @Query('from') from: string,
@@ -38,7 +38,7 @@ export class ExchangeRatesController {
 
   @Get(':currency/trend')
   @ApiOperation({
-    summary: 'Get trend for a currency (stub). Not implemented yet.',
+    summary: 'Get 7-day exchange rate trend for a currency',
   })
   getTrend(@Param('currency') currency: string) {
     const now = new Date();

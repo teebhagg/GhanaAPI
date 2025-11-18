@@ -8,7 +8,7 @@ GhanaAPI is the definitive REST API for Ghanaian services. It unifies data that 
 - **🏠 Address & Location Services** – Ghana Post Digital Address validation (coming soon), geocoding, reverse geocoding, and location lookup
 - **🏦 Banking & ATM Locator** – Searchable directory of bank branches and ATMs with proximity search, branch metadata, and OSM enrichment
 - **📈 Stock Market Data** – Real-time Ghana Stock Exchange pricing, market summaries, sector performance, and company profiles
-- **💱 Exchange Rates** – Live GHS exchange rates, currency conversion, and provider fallbacks (historical trends planned)
+- **💱 Exchange Rates** – Live GHS exchange rates, currency conversion, historical data tracking, and provider fallbacks
 - **🚗 Transport & Logistics** – Route planning, transport stops, fuel prices, travel cost estimation, and multi-provider routing fallbacks
 - **🗺️ Location Data** – Complete Ghanaian administrative hierarchy with regions, districts, and metadata
 
@@ -34,6 +34,9 @@ curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&
 
 # Retrieve the list of Ghanaian regions
 curl "https://api.ghana-api.dev/v1/locations/regions"
+
+# Get historical exchange rates for USD (with automatic today's rate fetching)
+curl "https://api.ghana-api.dev/v1/exchange-rates/historical?from=2025-01-01&to=2025-01-31&currency=USD"
 ```
 
 ## 📖 What's Next?

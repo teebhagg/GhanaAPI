@@ -12,6 +12,7 @@ import { api, type ConversionResult, type ExchangeRateDto } from "@/lib/api";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ExchangeRateHistoryChart } from "./exchange-rate-history-chart";
 
 const AVAILABLE_CURRENCIES = ["GHS", "USD", "EUR", "GBP", "NGN"];
 
@@ -209,13 +210,19 @@ export function ExchangeRatesPanel() {
               <div className="text-sm opacity-70">No rates available.</div>
             )}
             {(() => {
-              const displayRates = (showInverted ? originalRates : rates).map((r) => ({
-                provider: r.provider,
-                timestamp: r.timestamp,
-                displayRate: showInverted ? 1 / r.rate : r.rate,
-                baseCurrency: showInverted ? r.targetCurrency : r.baseCurrency,
-                targetCurrency: showInverted ? r.baseCurrency : r.targetCurrency,
-              }));
+              const displayRates = (showInverted ? originalRates : rates).map(
+                (r) => ({
+                  provider: r.provider,
+                  timestamp: r.timestamp,
+                  displayRate: showInverted ? 1 / r.rate : r.rate,
+                  baseCurrency: showInverted
+                    ? r.targetCurrency
+                    : r.baseCurrency,
+                  targetCurrency: showInverted
+                    ? r.baseCurrency
+                    : r.targetCurrency,
+                })
+              );
               return displayRates.map((rate, idx) => (
                 <motion.div
                   key={idx}
@@ -226,7 +233,8 @@ export function ExchangeRatesPanel() {
                       {rate.provider}
                     </div>
                     <div className="text-2xl font-semibold">
-                      1 {rate.baseCurrency} = {rate.displayRate.toFixed(4)} {rate.targetCurrency}
+                      1 {rate.baseCurrency} = {rate.displayRate.toFixed(4)}{" "}
+                      {rate.targetCurrency}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {new Date(rate.timestamp).toLocaleString()}
@@ -330,6 +338,13 @@ export function ExchangeRatesPanel() {
             </motion.div>
           )}
         </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}>
+        <ExchangeRateHistoryChart />
       </motion.div>
 
       {(selectedCurrencies.length > 0 ||

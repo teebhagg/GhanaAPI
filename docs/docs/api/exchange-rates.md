@@ -50,7 +50,7 @@ Additional currencies may be added in future updates based on demand and data av
 ## 🔗 Base Endpoint
 
 ```
-https://ghana-api.dev/v1/exchange-rates
+https://api.ghana-api.dev/api/v1/exchange-rates
 ```
 
 ## 📋 Available Endpoints
@@ -70,7 +70,7 @@ Retrieve current exchange rates for specified currencies against the Ghana Cedi 
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR" \
+curl -X GET "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD,EUR" \
   -H "Accept: application/json"
 ```
 
@@ -107,7 +107,7 @@ const getCurrentRates = async (currencies = ["USD", "EUR", "GBP"]) => {
   try {
     const currencyString = currencies.join(",");
     const response = await fetch(
-      `https://ghana-api.dev/v1/exchange-rates/current?currencies=${currencyString}`
+      `https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=${currencyString}`
     );
     const result = await response.json();
 
@@ -163,7 +163,7 @@ You can convert between any of the supported currencies:
 #### Example Request
 
 ```bash
-curl -X POST "https://ghana-api.dev/v1/exchange-rates/convert" \
+curl -X POST "https://api.ghana-api.dev/api/v1/exchange-rates/convert" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -d '{
@@ -198,7 +198,7 @@ curl -X POST "https://ghana-api.dev/v1/exchange-rates/convert" \
 const convertCurrency = async (from, to, amount) => {
   try {
     const response = await fetch(
-      "https://ghana-api.dev/v1/exchange-rates/convert",
+      "https://api.ghana-api.dev/api/v1/exchange-rates/convert",
       {
         method: "POST",
         headers: {
@@ -253,7 +253,7 @@ Get historical exchange rate data for trend analysis. The system automatically e
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/exchange-rates/historical?from=2024-01-01&to=2024-01-15&currency=USD" \
+curl -X GET "https://api.ghana-api.dev/api/v1/exchange-rates/historical?from=2024-01-01&to=2024-01-15&currency=USD" \
   -H "Accept: application/json"
 ```
 
@@ -291,7 +291,7 @@ curl -X GET "https://ghana-api.dev/v1/exchange-rates/historical?from=2024-01-01&
 const getHistoricalRates = async (fromDate, toDate, currency) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/exchange-rates/historical?from=${fromDate}&to=${toDate}&currency=${currency}`
+      `https://api.ghana-api.dev/api/v1/exchange-rates/historical?from=${fromDate}&to=${toDate}&currency=${currency}`
     );
     const result = await response.json();
 
@@ -341,7 +341,7 @@ Get trend analysis for a specific currency over the last 7 days using the histor
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/exchange-rates/USD/trend" \
+curl -X GET "https://api.ghana-api.dev/api/v1/exchange-rates/USD/trend" \
   -H "Accept: application/json"
 ```
 
@@ -377,7 +377,7 @@ curl -X GET "https://ghana-api.dev/v1/exchange-rates/USD/trend" \
 const getRateTrend = async (currency) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/exchange-rates/${currency}/trend`
+      `https://api.ghana-api.dev/api/v1/exchange-rates/${currency}/trend`
     );
     const result = await response.json();
 
@@ -699,7 +699,7 @@ app.post("/convert", async (req, res) => {
     }
 
     const response = await axios.post(
-      "https://ghana-api.dev/v1/exchange-rates/convert",
+      "https://api.ghana-api.dev/api/v1/exchange-rates/convert",
       { from, to, amount }
     );
 
@@ -718,7 +718,7 @@ app.get("/rates", async (req, res) => {
     const { currencies } = req.query;
 
     const response = await axios.get(
-      `https://ghana-api.dev/v1/exchange-rates/current?currencies=${
+      `https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=${
         currencies || "USD,EUR,GBP"
       }`
     );

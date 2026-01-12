@@ -22,19 +22,19 @@ The Banking & ATM Locator API provides developers with access to a comprehensive
 ### Find Banks by Name
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/search?q=GCB&limit=10"
+curl "https://api.ghana-api.dev/api/v1/banking/search?q=GCB&limit=10"
 ```
 
 ### Find Nearest Banks
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=5"
+curl "https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=5"
 ```
 
 ### Get All ATMs
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/atms"
+curl "https://api.ghana-api.dev/api/v1/banking/atms"
 ```
 
 ---
@@ -112,7 +112,7 @@ const searchBanks = async (query, location) => {
   }
 
   const response = await fetch(
-    `https://api.ghana-api.dev/v1/banking/search?${params}`
+    `https://api.ghana-api.dev/api/v1/banking/search?${params}`
   );
 
   if (!response.ok) {
@@ -149,7 +149,7 @@ Find the nearest banking facilities to a specific location.
 #### Example
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=10&limit=5"
+curl "https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=10&limit=5"
 ```
 
 ### 3. Get All Banks
@@ -161,7 +161,7 @@ Retrieve all bank branches (excluding ATM-only locations).
 #### Example
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/banks"
+curl "https://api.ghana-api.dev/api/v1/banking/banks"
 ```
 
 ### 4. Get All ATMs
@@ -173,7 +173,7 @@ Retrieve all ATM locations.
 #### Example
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/atms"
+curl "https://api.ghana-api.dev/api/v1/banking/atms"
 ```
 
 ### 5. Get Banks by Region
@@ -191,7 +191,7 @@ Get all banking facilities in a specific region.
 #### Example
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/region/Greater%20Accra"
+curl "https://api.ghana-api.dev/api/v1/banking/region/Greater%20Accra"
 ```
 
 ### 6. Get Banks by City
@@ -209,7 +209,7 @@ Get all banking facilities in a specific city.
 #### Example
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/city/Accra"
+curl "https://api.ghana-api.dev/api/v1/banking/city/Accra"
 ```
 
 ---
@@ -315,7 +315,7 @@ const BankLocator = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.ghana-api.dev/v1/banking/search?q=${encodeURIComponent(
+        `https://api.ghana-api.dev/api/v1/banking/search?q=${encodeURIComponent(
           query
         )}&limit=10`
       );
@@ -340,7 +340,7 @@ const BankLocator = () => {
 
       try {
         const response = await fetch(
-          `https://api.ghana-api.dev/v1/banking/nearby?lat=${latitude}&lng=${longitude}&radius=5&limit=10`
+          `https://api.ghana-api.dev/api/v1/banking/nearby?lat=${latitude}&lng=${longitude}&radius=5&limit=10`
         );
         const data = await response.json();
         setBanks(data);

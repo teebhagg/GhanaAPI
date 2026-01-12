@@ -5,7 +5,7 @@
 </div>
 
 [![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://api.ghana-api.dev)
-[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
+[![Version](https://img.shields.io/badge/version-0.5.2-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
 
@@ -39,14 +39,14 @@ GhanaAPI provides developers with unified, reliable access to essential Ghanaian
 ```javascript
 // Get current USD to GHS exchange rate
 const response = await fetch(
-  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+  "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD"
 );
 const data = await response.json();
 console.log(`1 USD = ${data.rates.USD.rate} GHS`);
 
 // Get real-time stock market data
 const stocks = await fetch(
-  "https://api.ghana-api.dev/v1/stock-market/search?limit=10"
+  "https://api.ghana-api.dev/api/v1/stock-market/search?limit=10"
 );
 const stockData = await stocks.json();
 console.log(
@@ -55,14 +55,14 @@ console.log(
 
 // Validate Ghana Post Digital Address
 const address = await fetch(
-  "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+  "https://api.ghana-api.dev/api/v1/addresses/validate/GA-123-4567"
 );
 const validation = await address.json();
 console.log(`Address is ${validation.isValid ? "valid" : "invalid"}`);
 
 // Calculate route between two locations
 const route = await fetch(
-  "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
+  "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244"
 );
 const routeData = await route.json();
 console.log(
@@ -75,7 +75,7 @@ console.log(
 ### **Base URL**
 
 ```
-https://api.ghana-api.dev/v1
+https://api.ghana-api.dev/api/v1
 ```
 
 ---
@@ -93,7 +93,7 @@ GET /v1/addresses/validate/{digitalCode}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+curl "https://api.ghana-api.dev/api/v1/addresses/validate/GA-123-4567"
 ```
 
 **Response:**
@@ -121,7 +121,7 @@ GET /v1/addresses/lookup?lat={latitude}&lng={longitude}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/addresses/lookup?lat=5.6037&lng=-0.1870"
+curl "https://api.ghana-api.dev/api/v1/addresses/lookup?lat=5.6037&lng=-0.1870"
 ```
 
 #### **Address Search**
@@ -133,7 +133,7 @@ GET /v1/addresses/search?q={query}&limit={limit}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/addresses/search?q=University%20of%20Ghana&limit=5"
+curl "https://api.ghana-api.dev/api/v1/addresses/search?q=University%20of%20Ghana&limit=5"
 ```
 
 ### **🏦 Banking & ATM Locator Services**
@@ -147,13 +147,13 @@ GET /v1/banking/search?q={query}&lat={lat}&lng={lng}&radius={radius}&type={type}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/search?q=GCB&limit=10"
+curl "https://api.ghana-api.dev/api/v1/banking/search?q=GCB&limit=10"
 ```
 
 **Location-based search:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=5&limit=10"
+curl "https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6037&lng=-0.187&radius=5&limit=10"
 ```
 
 **Response:**
@@ -193,7 +193,7 @@ GET /v1/banking/region/{region}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/banking/region/Greater%20Accra"
+curl "https://api.ghana-api.dev/api/v1/banking/region/Greater%20Accra"
 ```
 
 ### **� Stock Market Data Services**
@@ -207,7 +207,7 @@ GET /v1/stock-market/search?q={query}&limit={limit}&sector={sector}&sort={sort}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/stock-market/search?limit=10&sector=Banking"
+curl "https://api.ghana-api.dev/api/v1/stock-market/search?limit=10&sector=Banking"
 ```
 
 **Response:**
@@ -243,7 +243,7 @@ GET /v1/stock-market/stocks/{symbol}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/stock-market/stocks/GCB"
+curl "https://api.ghana-api.dev/api/v1/stock-market/stocks/GCB"
 ```
 
 #### **Get Market Summary**
@@ -255,7 +255,7 @@ GET /v1/stock-market/summary
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/stock-market/summary"
+curl "https://api.ghana-api.dev/api/v1/stock-market/summary"
 ```
 
 **Response:**
@@ -286,7 +286,7 @@ GET /v1/stock-market/sectors
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/stock-market/sectors"
+curl "https://api.ghana-api.dev/api/v1/stock-market/sectors"
 ```
 
 ### **�💱 Exchange Rate Services**
@@ -300,7 +300,7 @@ GET /v1/exchange-rates/current?currencies={currencies}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR,GBP"
+curl "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD,EUR,GBP"
 ```
 
 **Response:**
@@ -337,7 +337,7 @@ GET /v1/exchange-rates/historical?currency={currency}&from={date}&to={date}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-15"
+curl "https://api.ghana-api.dev/api/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-15"
 ```
 
 ### **🌍 Location Data**
@@ -357,7 +357,7 @@ GET /v1/locations/regions/{regionId}/districts
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/locations/regions/1/districts"
+curl "https://api.ghana-api.dev/api/v1/locations/regions/1/districts"
 ```
 
 ### **🚗 Transport & Logistics**
@@ -371,7 +371,7 @@ GET /v1/transport/route-calculation?start_lat={lat}&start_lng={lng}&end_lat={lat
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
+curl "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
 ```
 
 **Response:**
@@ -406,7 +406,7 @@ GET /v1/transport/stops?city={city}&type={type}
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/transport/stops?city=accra&type=bus_stop"
+curl "https://api.ghana-api.dev/api/v1/transport/stops?city=accra&type=bus_stop"
 ```
 
 #### **Get Current Fuel Prices**
@@ -418,7 +418,7 @@ GET /v1/transport/fuel-prices
 **Example:**
 
 ```bash
-curl "https://api.ghana-api.dev/v1/transport/fuel-prices"
+curl "https://api.ghana-api.dev/api/v1/transport/fuel-prices"
 ```
 
 **Response:**

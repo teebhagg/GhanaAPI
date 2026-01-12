@@ -18,25 +18,25 @@ Each service follows the same conventions: versioned endpoints under `/api/v1`, 
 
 ```bash
 # Get current USD to GHS exchange rate (no auth required)
-curl "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+curl "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD"
 
 # Search for Senior High Schools in Ashanti region
-curl "https://api.ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A"
+curl "https://api.ghana-api.dev/api/v1/education/schools/search?region=Ashanti&grade=A"
 
 # Get Ghana Stock Exchange market summary
-curl "https://api.ghana-api.dev/v1/stock-market/market-summary"
+curl "https://api.ghana-api.dev/api/v1/stock-market/market-summary"
 
 # Find nearby banks and ATMs within 5km of Accra Mall
-curl "https://api.ghana-api.dev/v1/banking/nearby?lat=5.6373&lng=-0.1708&radius=5"
+curl "https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6373&lng=-0.1708&radius=5"
 
 # Calculate a driving route between two coordinates in Accra
-curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=5.6081&end_lng=-0.171"
+curl "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=5.6081&end_lng=-0.171"
 
 # Retrieve the list of Ghanaian regions
-curl "https://api.ghana-api.dev/v1/locations/regions"
+curl "https://api.ghana-api.dev/api/v1/locations/regions"
 
 # Get historical exchange rates for USD (with automatic today's rate fetching)
-curl "https://api.ghana-api.dev/v1/exchange-rates/historical?from=2025-01-01&to=2025-01-31&currency=USD"
+curl "https://api.ghana-api.dev/api/v1/exchange-rates/historical?from=2025-01-01&to=2025-01-31&currency=USD"
 ```
 
 ## 📖 What's Next?

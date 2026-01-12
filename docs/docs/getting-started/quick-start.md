@@ -7,7 +7,7 @@ Get up and running with GhanaAPI in just a few minutes. This guide will walk you
 All API requests are made to:
 
 ```
-https://api.ghana-api.dev/v1
+https://api.ghana-api.dev/api/v1
 ```
 
 ## Your First API Call
@@ -15,7 +15,7 @@ https://api.ghana-api.dev/v1
 Let's start with a simple request that doesn't require authentication - getting current exchange rates:
 
 ```bash
-curl "https://api.ghana-api.dev/v1/exchange-rates/current"
+curl "https://api.ghana-api.dev/api/v1/exchange-rates/current"
 ```
 
 ### Expected Response
@@ -50,7 +50,7 @@ curl "https://api.ghana-api.dev/v1/exchange-rates/current"
 ```javascript
 // Using fetch (modern browsers/Node.js 18+)
 const response = await fetch(
-  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+  "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD"
 );
 const data = await response.json();
 console.log(`1 USD = ${data.rates.USD.rate} GHS`);
@@ -58,7 +58,7 @@ console.log(`1 USD = ${data.rates.USD.rate} GHS`);
 // Using axios
 const axios = require("axios");
 const response = await axios.get(
-  "https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD"
+  "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD"
 );
 console.log(response.data);
 ```
@@ -68,7 +68,7 @@ console.log(response.data);
 ```python
 import requests
 
-response = requests.get('https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD')
+response = requests.get('https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD')
 data = response.json()
 print(f"1 USD = {data['rates']['USD']['rate']} GHS")
 ```
@@ -77,7 +77,7 @@ print(f"1 USD = {data['rates']['USD']['rate']} GHS")
 
 ```php
 <?php
-$response = file_get_contents('https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD');
+$response = file_get_contents('https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD');
 $data = json_decode($response, true);
 echo "1 USD = " . $data['rates']['USD']['rate'] . " GHS\n";
 ?>
@@ -88,7 +88,7 @@ echo "1 USD = " . $data['rates']['USD']['rate'] . " GHS\n";
 Try validating a Ghana Post Digital Address:
 
 ```bash
-curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
+curl "https://api.ghana-api.dev/api/v1/addresses/validate/GA-123-4567"
 ```
 
 ### Response
@@ -112,7 +112,7 @@ curl "https://api.ghana-api.dev/v1/addresses/validate/GA-123-4567"
 Calculate a route between two locations in Ghana:
 
 ```bash
-curl "https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
+curl "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving"
 ```
 
 ### Response

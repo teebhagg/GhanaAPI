@@ -14,7 +14,7 @@ The API provides:
 ## 🔗 Base Endpoint
 
 ```
-https://ghana-api.dev/v1/locations
+https://api.ghana-api.dev/api/v1/locations
 ```
 
 ## 📋 Available Endpoints
@@ -28,7 +28,7 @@ Retrieve information about all administrative regions in Ghana.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/locations/regions" \
+curl -X GET "https://api.ghana-api.dev/api/v1/locations/regions" \
   -H "Accept: application/json"
 ```
 
@@ -113,7 +113,9 @@ curl -X GET "https://ghana-api.dev/v1/locations/regions" \
 ```javascript
 const getRegions = async () => {
   try {
-    const response = await fetch("https://ghana-api.dev/v1/locations/regions");
+    const response = await fetch(
+      "https://api.ghana-api.dev/api/v1/locations/regions"
+    );
     const result = await response.json();
 
     if (!result.success) {
@@ -149,7 +151,7 @@ Retrieve all districts within a specific region.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/locations/districts/AR" \
+curl -X GET "https://api.ghana-api.dev/api/v1/locations/districts/AR" \
   -H "Accept: application/json"
 ```
 
@@ -207,7 +209,7 @@ curl -X GET "https://ghana-api.dev/v1/locations/districts/AR" \
 const getDistricts = async (regionId) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/locations/districts/${regionId}`
+      `https://api.ghana-api.dev/api/v1/locations/districts/${regionId}`
     );
     const result = await response.json();
 
@@ -493,7 +495,7 @@ app.use(express.json());
 app.get("/regions", async (req, res) => {
   try {
     const response = await axios.get(
-      "https://ghana-api.dev/v1/locations/regions"
+      "https://api.ghana-api.dev/api/v1/locations/regions"
     );
     res.json(response.data);
   } catch (error) {
@@ -517,7 +519,7 @@ app.get("/districts/:regionId", async (req, res) => {
     }
 
     const response = await axios.get(
-      `https://ghana-api.dev/v1/locations/districts/${regionId}`
+      `https://api.ghana-api.dev/api/v1/locations/districts/${regionId}`
     );
     res.json(response.data);
   } catch (error) {
@@ -532,14 +534,14 @@ app.get("/districts/:regionId", async (req, res) => {
 app.get("/hierarchy", async (req, res) => {
   try {
     const regionsResponse = await axios.get(
-      "https://ghana-api.dev/v1/locations/regions"
+      "https://api.ghana-api.dev/api/v1/locations/regions"
     );
 
     const regions = regionsResponse.data.data;
     const hierarchy = await Promise.all(
       regions.map(async (region) => {
         const districtsResponse = await axios.get(
-          `https://ghana-api.dev/v1/locations/districts/${region.code}`
+          `https://api.ghana-api.dev/api/v1/locations/districts/${region.code}`
         );
         return {
           ...region,

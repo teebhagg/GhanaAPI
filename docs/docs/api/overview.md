@@ -7,7 +7,7 @@ Welcome! GhanaAPI delivers a unified REST API for essential Ghanaian services. T
 ### Base URL
 
 ```
-https://api.ghana-api.dev/v1
+https://api.ghana-api.dev/api/v1
 ```
 
 All endpoints are versioned under `/v1` and return JSON responses with a consistent envelope (`success`, `data`, `message`, `timestamp`).
@@ -163,42 +163,42 @@ All responses follow a consistent JSON format:
 #### Search Addresses
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/addresses/search?q=Accra" \
+curl -X GET "https://api.ghana-api.dev/api/v1/addresses/search?q=Accra" \
   -H "Accept: application/json"
 ```
 
 #### Search Schools
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A" \
+curl -X GET "https://api.ghana-api.dev/api/v1/education/schools/search?region=Ashanti&grade=A" \
   -H "Accept: application/json"
 ```
 
 #### Get Exchange Rates
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/exchange-rates/current?currencies=USD,EUR" \
+curl -X GET "https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD,EUR" \
   -H "Accept: application/json"
 ```
 
 #### Get Regions
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/locations/regions" \
+curl -X GET "https://api.ghana-api.dev/api/v1/locations/regions" \
   -H "Accept: application/json"
 ```
 
 #### Calculate Route
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving" \
+curl -X GET "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244&mode=driving" \
   -H "Accept: application/json"
 ```
 
 #### Get Fuel Prices
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/transport/fuel-prices" \
+curl -X GET "https://api.ghana-api.dev/api/v1/transport/fuel-prices" \
   -H "Accept: application/json"
 ```
 
@@ -209,7 +209,9 @@ curl -X GET "https://ghana-api.dev/v1/transport/fuel-prices" \
 ```javascript
 const searchAddresses = async (query) => {
   const response = await fetch(
-    `https://ghana-api.dev/v1/addresses/search?q=${encodeURIComponent(query)}`
+    `https://api.ghana-api.dev/api/v1/addresses/search?q=${encodeURIComponent(
+      query
+    )}`
   );
   const result = await response.json();
   return result;
@@ -225,7 +227,7 @@ console.log(result.data); // Array of matching addresses
 ```javascript
 const convertCurrency = async (from, to, amount) => {
   const response = await fetch(
-    "https://ghana-api.dev/v1/exchange-rates/convert",
+    "https://api.ghana-api.dev/api/v1/exchange-rates/convert",
     {
       method: "POST",
       headers: {
@@ -262,7 +264,7 @@ const calculateRoute = async (
   });
 
   const response = await fetch(
-    `https://ghana-api.dev/v1/transport/route-calculation?${params}`
+    `https://api.ghana-api.dev/api/v1/transport/route-calculation?${params}`
   );
   const result = await response.json();
   return result;

@@ -20,7 +20,7 @@ Access current stock prices, market data, and analytics for all stocks listed on
 ## 🔗 Base Endpoint
 
 ```
-https://ghana-api.dev/v1/stock-market
+https://api.ghana-api.dev/api/v1/stock-market
 ```
 
 ## 📊 Available Stocks & Sectors
@@ -89,7 +89,7 @@ Search and filter stocks based on multiple criteria.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/search?sector=Banking&sortBy=marketCap&sortOrder=desc&limit=5" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/search?sector=Banking&sortBy=marketCap&sortOrder=desc&limit=5" \
   -H "Accept: application/json"
 ```
 
@@ -136,7 +136,7 @@ const searchStocks = async (filters = {}) => {
   try {
     const params = new URLSearchParams(filters);
     const response = await fetch(
-      `https://ghana-api.dev/v1/stock-market/search?${params}`
+      `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`
     );
     const result = await response.json();
 
@@ -178,7 +178,7 @@ Retrieve detailed data for a specific stock by symbol.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/stock/GCB" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/stock/GCB" \
   -H "Accept: application/json"
 ```
 
@@ -215,7 +215,7 @@ Retrieve current data for all stocks listed on GSE.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/all" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/all" \
   -H "Accept: application/json"
 ```
 
@@ -234,7 +234,7 @@ Retrieve all stocks in a specific sector.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/sector/Banking" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/sector/Banking" \
   -H "Accept: application/json"
 ```
 
@@ -247,7 +247,7 @@ Retrieve overall market statistics and GSE indices.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/market-summary" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/market-summary" \
   -H "Accept: application/json"
 ```
 
@@ -279,7 +279,7 @@ Analyze performance metrics across all sectors.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/sector-performance" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/sector-performance" \
   -H "Accept: application/json"
 ```
 
@@ -325,7 +325,7 @@ List all available stock sectors on GSE.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/stock-market/sectors" \
+curl -X GET "https://api.ghana-api.dev/api/v1/stock-market/sectors" \
   -H "Accept: application/json"
 ```
 
@@ -357,9 +357,9 @@ curl -X GET "https://ghana-api.dev/v1/stock-market/sectors" \
 const trackPortfolio = async (symbols) => {
   const stocks = await Promise.all(
     symbols.map((symbol) =>
-      fetch(`https://ghana-api.dev/v1/stock-market/stock/${symbol}`).then(
-        (res) => res.json()
-      )
+      fetch(
+        `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`
+      ).then((res) => res.json())
     )
   );
 
@@ -387,13 +387,13 @@ const portfolio = await trackPortfolio(["GCB", "MTNGH", "GOIL", "NEWMONT"]);
 ```javascript
 const createSectorDashboard = async () => {
   const [summary, sectorPerf, sectors] = await Promise.all([
-    fetch("https://ghana-api.dev/v1/stock-market/market-summary").then((r) =>
-      r.json()
-    ),
-    fetch("https://ghana-api.dev/v1/stock-market/sector-performance").then(
+    fetch("https://api.ghana-api.dev/api/v1/stock-market/market-summary").then(
       (r) => r.json()
     ),
-    fetch("https://ghana-api.dev/v1/stock-market/sectors").then((r) =>
+    fetch(
+      "https://api.ghana-api.dev/api/v1/stock-market/sector-performance"
+    ).then((r) => r.json()),
+    fetch("https://api.ghana-api.dev/api/v1/stock-market/sectors").then((r) =>
       r.json()
     ),
   ]);
@@ -423,7 +423,7 @@ const screenStocks = async (criteria) => {
   });
 
   const response = await fetch(
-    `https://ghana-api.dev/v1/stock-market/search?${params}`
+    `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`
   );
 
   return response.json();
@@ -513,7 +513,7 @@ const StockWidget = ({ symbol }) => {
     const fetchStock = async () => {
       try {
         const response = await fetch(
-          `https://ghana-api.dev/v1/stock-market/stock/${symbol}`
+          `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`
         );
         const stockData = await response.json();
         setStock(stockData);
@@ -565,7 +565,7 @@ import pandas as pd
 
 class GSEAnalyzer:
     def __init__(self):
-        self.base_url = "https://ghana-api.dev/v1/stock-market"
+        self.base_url = "https://api.ghana-api.dev/api/v1/stock-market"
 
     def get_all_stocks(self):
         response = requests.get(f"{self.base_url}/all")

@@ -17,7 +17,7 @@ Example: `GA-123-4567`
 ## 🔗 Base Endpoint
 
 ```
-https://ghana-api.dev/v1/addresses
+https://api.ghana-api.dev/api/v1/addresses
 ```
 
 ## 📋 Available Endpoints
@@ -39,7 +39,7 @@ Validates a Ghana Post Digital Address format and checks if it exists in the dat
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/addresses/validate/GA-123-4567" \
+curl -X GET "https://api.ghana-api.dev/api/v1/addresses/validate/GA-123-4567" \
   -H "Accept: application/json"
 ```
 
@@ -85,7 +85,7 @@ curl -X GET "https://ghana-api.dev/v1/addresses/validate/GA-123-4567" \
 const validateAddress = async (digitalCode) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/addresses/validate/${digitalCode}`
+      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
     );
     const result = await response.json();
 
@@ -122,7 +122,7 @@ Get address information from GPS coordinates (latitude and longitude).
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/addresses/lookup?lat=5.5600&lng=-0.2057" \
+curl -X GET "https://api.ghana-api.dev/api/v1/addresses/lookup?lat=5.5600&lng=-0.2057" \
   -H "Accept: application/json"
 ```
 
@@ -150,7 +150,7 @@ curl -X GET "https://ghana-api.dev/v1/addresses/lookup?lat=5.5600&lng=-0.2057" \
 const lookupAddress = async (lat, lng) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/addresses/lookup?lat=${lat}&lng=${lng}`
+      `https://api.ghana-api.dev/api/v1/addresses/lookup?lat=${lat}&lng=${lng}`
     );
     const result = await response.json();
 
@@ -186,7 +186,7 @@ Search for addresses by location name, description, or partial digital code.
 #### Example Request
 
 ```bash
-curl -X GET "https://ghana-api.dev/v1/addresses/search?q=Accra" \
+curl -X GET "https://api.ghana-api.dev/api/v1/addresses/search?q=Accra" \
   -H "Accept: application/json"
 ```
 
@@ -224,7 +224,9 @@ curl -X GET "https://ghana-api.dev/v1/addresses/search?q=Accra" \
 const searchAddresses = async (query) => {
   try {
     const response = await fetch(
-      `https://ghana-api.dev/v1/addresses/search?q=${encodeURIComponent(query)}`
+      `https://api.ghana-api.dev/api/v1/addresses/search?q=${encodeURIComponent(
+        query
+      )}`
     );
     const result = await response.json();
 
@@ -265,7 +267,7 @@ Standardize a raw address string to ensure consistent formatting.
 #### Example Request
 
 ```bash
-curl -X POST "https://ghana-api.dev/v1/addresses/standardize" \
+curl -X POST "https://api.ghana-api.dev/api/v1/addresses/standardize" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -d '{
@@ -295,7 +297,7 @@ curl -X POST "https://ghana-api.dev/v1/addresses/standardize" \
 const standardizeAddress = async (rawAddress) => {
   try {
     const response = await fetch(
-      "https://ghana-api.dev/v1/addresses/standardize",
+      "https://api.ghana-api.dev/api/v1/addresses/standardize",
       {
         method: "POST",
         headers: {
@@ -469,7 +471,7 @@ const AddressValidator = () => {
 
     try {
       const response = await fetch(
-        `https://ghana-api.dev/v1/addresses/validate/${digitalCode}`
+        `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
       );
       const data = await response.json();
 
@@ -526,7 +528,7 @@ app.get("/validate/:digitalCode", async (req, res) => {
     const { digitalCode } = req.params;
 
     const response = await axios.get(
-      `https://ghana-api.dev/v1/addresses/validate/${digitalCode}`
+      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
     );
 
     res.json(response.data);
@@ -551,7 +553,9 @@ app.get("/search", async (req, res) => {
     }
 
     const response = await axios.get(
-      `https://ghana-api.dev/v1/addresses/search?q=${encodeURIComponent(q)}`
+      `https://api.ghana-api.dev/api/v1/addresses/search?q=${encodeURIComponent(
+        q
+      )}`
     );
 
     res.json(response.data);

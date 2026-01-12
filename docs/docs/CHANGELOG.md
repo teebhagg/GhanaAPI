@@ -6,6 +6,128 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>📚 [0.5.2] - 2026-01-12</strong> - API Documentation Updates</summary>
+
+### Changed
+
+- **API Documentation**
+
+  - Updated all API base URLs to include `/api` in the path structure
+  - Standardized endpoint URLs to use `https://api.ghana-api.dev/api/v1/...` format
+  - Updated documentation across all API modules (locations, exchange-rates, stock-market, transport, addresses, banking)
+  - Updated README.md and all documentation examples to reflect correct API base URLs
+  - Ensured consistency with backend global prefix configuration (`api/v1`)
+
+- Bumped backend version to **0.5.2**, frontend version to **0.5.2**, and docs version to **0.5.2**
+
+### Documentation
+
+- Updated `docs/docs/api/locations.md` with corrected API base URLs
+- Updated `docs/docs/api/exchange-rates.md` with corrected API base URLs
+- Updated `docs/docs/api/stock-market.md` with corrected API base URLs
+- Updated `docs/docs/api/transport.md` with corrected API base URLs
+- Updated `docs/docs/api/addresses.md` with corrected API base URLs
+- Updated `docs/docs/api/banking.md` with corrected API base URLs
+- Updated `docs/docs/api/overview.md` with corrected API base URLs
+- Updated `README.md` with corrected API base URLs and version badge
+- Updated `docs/src/pages/index.tsx` with version number
+
+</details>
+
+<details>
+<summary><strong>💱 [0.5.1] - 2025-11-14</strong> - Exchange Rate History Tracking</summary>
+
+### Added
+
+- **Exchange Rate History Database Schema**
+
+  - Added `ExchangeRateHistory` model to Prisma schema with unique constraints and indexes
+  - Created database migration for exchange rate history table
+  - Unique constraint on `[baseCurrency, targetCurrency, sourceTimestamp, provider]`
+  - Efficient indexing for historical queries
+
+- **Historical Exchange Rates Endpoint**
+
+  - Implemented `GET /exchange-rates/historical` endpoint with full functionality
+  - Query historical rates by date range and currency
+  - Automatic lazy-loading: fetches today's rates when missing from historical queries
+  - Returns historical data from database with provider information
+
+- **Automatic Rate Persistence**
+
+  - All current rates automatically saved to database when fetched via `getCurrentRates()`
+  - Enhanced cron job (every 30 minutes) to persist rates automatically
+  - Duplicate prevention using unique constraints
+  - `persistRates()` method for saving rate data
+
+- **Database Infrastructure Improvements**
+
+  - Refactored `PrismaService` to shared `common/database/` module
+  - Created `DatabaseModule` for centralized database configuration
+  - Updated modules to use shared PrismaService for consistency
+
+- **Historical Data Import Scripts**
+
+  - `import-bog-historical.ts` - Single command to convert CSV/JSON and upsert to database
+  - `convert-bog-historical.ts` - Convert raw BoG data to required JSON format
+  - `clear-exchange-rate-history.ts` - Clear exchange rate history with confirmation
+  - `update-exchange-rates-from-data.ts` - Update database from JSON with date filtering
+
+- **Enhanced Currency Support**
+
+  - Added CHF (Swiss Franc), JPY (Japanese Yen), and CNY (Chinese Yuan) support
+  - Updated currency lists throughout the service and documentation
+
+- **Status Page**
+
+  - New `/status` endpoint providing health checks and module statistics
+  - Database connectivity monitoring
+  - Service availability tracking
+  - Record counts and last updated timestamps for all modules
+
+- **Frontend Exchange Rate History Chart**
+  - Interactive area chart displaying historical exchange rate trends
+  - Configurable time range (2-6 months)
+  - Rate reversal toggle (GHS/X ↔ X/GHS)
+  - Statistics display (current rate, gain/loss, average, min/max)
+  - Responsive design with gradient visualization
+
+### Changed
+
+- **Exchange Rates Service**
+
+  - Enhanced `getHistoricalRates()` to query database instead of returning empty array
+  - Added automatic today's rate fetching when missing from historical queries
+  - Improved error handling and logging throughout the service
+  - Updated `getCurrentRates()` to automatically persist rates to database
+  - Enhanced scheduled cron job to persist rates every 30 minutes
+
+- **API Documentation**
+
+  - Updated exchange rates API documentation to reflect historical data availability
+  - Changed historical rates status from "Coming Soon" to "Fully Implemented"
+  - Added details about lazy-loading and automatic persistence
+  - Updated supported currencies list to include CHF, JPY, CNY
+
+- **Contribution Documentation**
+
+  - Updated contributing guide with exchange rate history implementation details
+  - Added information about database schema and import scripts
+  - Documented lazy-loading and automatic persistence features
+
+- Bumped backend version to **0.5.1** and docs version to **0.5.1**
+
+### Documentation
+
+- Updated `docs/docs/api/exchange-rates.md` with full historical rates implementation
+- Updated `docs/docs/contributing/exchange-rates.md` with new features and scripts
+- Updated `docs/docs/api/overview.md` to mark historical data as Live
+- Updated `docs/docs/intro.md` with historical rates example and version bump
+- Added comprehensive examples for historical data queries
+
+</details>
+
+<details>
 <summary><strong>🎓 [0.5.0] - 2025-11-11</strong> - Education Data Platform</summary>
 
 ### Added

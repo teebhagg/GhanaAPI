@@ -190,13 +190,13 @@ echo "RATE_CACHE_TTL=60000" >> .env        # 1 minute
 npm run start:dev
 
 # Test current rates endpoint
-curl "http://localhost:3000/v1/exchange-rates/current"
+curl "http://localhost:3000/api/v1/exchange-rates/current"
 
 # Test specific currency rates
-curl "http://localhost:3000/v1/exchange-rates/current?currencies=USD,EUR,GBP"
+curl "http://localhost:3000/api/v1/exchange-rates/current?currencies=USD,EUR,GBP"
 
 # Test historical rates (automatically fetches today's rates if missing)
-curl "http://localhost:3000/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-31"
+curl "http://localhost:3000/api/v1/exchange-rates/historical?currency=USD&from=2025-01-01&to=2025-01-31"
 
 # Import historical data from CSV/JSON
 npm run exchange-rates:import-bog -- --file=path/to/file.csv

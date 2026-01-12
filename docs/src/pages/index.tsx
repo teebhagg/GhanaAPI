@@ -71,52 +71,52 @@ function HomepageHeader() {
               <pre className={styles.codeContent}>
                 <code>{`// Get exchange rates
 const rates = await fetch(
-  'https://api.ghana-api.dev/v1/exchange-rates/current?currencies=USD'
+  'https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD'
 );
 
 // Search addresses
 const addresses = await fetch(
-  'https://api.ghana-api.dev/v1/addresses/search?q=Accra'
+  'https://api.ghana-api.dev/api/v1/addresses/search?q=Accra'
 );
 
 // Get Ghana Stock Exchange data
 const stocks = await fetch(
-  'https://api.ghana-api.dev/v1/stock-market/search?sector=Banking'
+  'https://api.ghana-api.dev/api/v1/stock-market/search?sector=Banking'
 );
 
 // Search national schools directory
 const schools = await fetch(
-  'https://api.ghana-api.dev/v1/education/schools/search?region=Ashanti&grade=A'
+  'https://api.ghana-api.dev/api/v1/education/schools/search?region=Ashanti&grade=A'
 );
 
 // Find nearby banks and ATMs
 const banks = await fetch(
-  'https://api.ghana-api.dev/v1/banking/nearby?lat=5.6037&lng=-0.187'
+  'https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6037&lng=-0.187'
 );
 
 // Calculate route
 const route = await fetch(
-  'https://api.ghana-api.dev/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244'
+  'https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244'
 );
 
 // Get fuel prices
 const fuel = await fetch(
-  'https://api.ghana-api.dev/v1/transport/fuel-prices'
+  'https://api.ghana-api.dev/api/v1/transport/fuel-prices'
 );
 
 // Get regions
 const regions = await fetch(
-  'https://api.ghana-api.dev/v1/locations/regions'
+  'https://api.ghana-api.dev/api/v1/locations/regions'
 );
 
 // Reverse geocoding
 const location = await fetch(
-  'https://api.ghana-api.dev/v1/addresses/reverse?lat=5.6037&lng=-0.1870'
+  'https://api.ghana-api.dev/api/v1/addresses/reverse?lat=5.6037&lng=-0.1870'
 );
 
 // Currency conversion
 const conversion = await fetch(
-  'https://api.ghana-api.dev/v1/exchange-rates/convert?from=USD&to=GHS&amount=100'
+  'https://api.ghana-api.dev/api/v1/exchange-rates/convert?from=USD&to=GHS&amount=100'
 );`}</code>
               </pre>
             </div>

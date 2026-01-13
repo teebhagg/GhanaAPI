@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🗺️ [0.5.3] - 2026-01-16</strong> - Route Calculation OSM Integration</summary>
+
+### Changed
+
+- **Route Calculation Service**
+
+  - Updated route calculation endpoint to use OpenRouteService (OSM-based routing) as the primary provider
+  - Route calculation now leverages OpenStreetMap data for routing calculations
+  - Improved alignment with open-source routing infrastructure
+
+- Bumped backend version to **0.5.3** and docs version to **0.5.3**
+
+### Technical Implementation
+
+- Modified `routing.service.ts` to use OpenRouteService for route calculation endpoint
+- OpenRouteService provides routing based on OpenStreetMap data
+- Route directions endpoint continues to use multi-provider fallback (OpenRouteService, HERE, GraphHopper)
+
+</details>
+
+<details>
 <summary><strong>📚 [0.5.2] - 2026-01-12</strong> - API Documentation Updates</summary>
 
 ### Changed

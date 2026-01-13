@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "",
   "author": "",
   "private": true,
@@ -19,7 +19,23 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:studio": "prisma studio",
+    "schools:export": "ts-node scripts/shs-select-export.ts",
+    "schools:seed": "ts-node scripts/shs-select-seed.ts",
+    "exchange-rates:seed": "ts-node scripts/seed-exchange-rates.ts",
+    "exchange-rates:seed:current": "ts-node scripts/seed-exchange-rates.ts --current-only",
+    "exchange-rates:seed:json": "ts-node scripts/seed-from-json.ts",
+    "exchange-rates:seed:from-json": "ts-node scripts/seed-from-json.ts",
+    "exchange-rates:export": "ts-node scripts/export-exchange-rates.ts",
+    "exchange-rates:export:2022": "ts-node scripts/export-exchange-rates.ts --from=2022-01-01",
+    "exchange-rates:scrape-bog": "ts-node scripts/scrape-bog-historical.ts",
+    "exchange-rates:convert-bog": "ts-node scripts/convert-bog-historical.ts",
+    "exchange-rates:clear": "ts-node scripts/clear-exchange-rate-history.ts",
+    "exchange-rates:update": "ts-node scripts/update-exchange-rates-from-data.ts",
+    "exchange-rates:import-bog": "ts-node scripts/import-bog-historical.ts"
   },
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",

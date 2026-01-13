@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -28,13 +35,15 @@ export class RoutingService {
     end: [number, number],
     mode: string = 'driving',
   ): Promise<RouteCalculation> {
-    const routingApis = ['here', 'graphhopper'];
+    const routingApis = ['openrouteservice'];
 
     for (const api of routingApis) {
       try {
         this.logger.log(`Calculating route using ${api}`);
 
         switch (api) {
+          case 'openrouteservice':
+            return await this.calculateRouteOpenRouteService(start, end, mode);
           case 'here':
             return await this.calculateRouteHere(start, end, mode);
           case 'graphhopper':
@@ -42,9 +51,9 @@ export class RoutingService {
           default:
             continue;
         }
-      } catch (error) {
+      } catch (error: any) {
         this.logger.warn(
-          `Route calculation via ${api} failed: ${error.message}`,
+          `Route calculation via ${api} failed: ${error?.message || error}`,
         );
         continue;
       }
@@ -103,7 +112,7 @@ export class RoutingService {
         }
       } catch (error) {
         this.logger.warn(
-          `Route calculation via ${api} failed: ${error.message}`,
+          `Route calculation via ${api} failed: ${error?.message || error}`,
         );
         continue;
       }
@@ -167,6 +176,34 @@ export class RoutingService {
     );
 
     return this.parseGraphHopperRoute(response.data);
+  }
+
+  private async calculateRouteOpenRouteService(
+    start: [number, number],
+    end: [number, number],
+    mode: string,
+  ): Promise<RouteCalculation> {
+    const modeToProfileConversion: Record<string, RouteProfile> = {
+      driving: RouteProfile.DRIVING_CAR,
+      walking: RouteProfile.FOOT_WALKING,
+      cycling: RouteProfile.CYCLING_REGULAR,
+      publicTransport: RouteProfile.DRIVING_HGV,
+    };
+    const profile = modeToProfileConversion[mode];
+    const result = await this.getRouteFromOpenRouteService(
+      start,
+      end,
+      profile,
+      true,
+      true,
+    );
+
+    return {
+      distance: result.distance,
+      duration: result.duration,
+      coordinates: result.geometry || [],
+      instructions: result.steps?.map((step) => step.instruction) || [],
+    };
   }
 
   private async getRouteFromOpenRouteService(
@@ -456,7 +493,7 @@ export class RoutingService {
       // Use the @mapbox/polyline library for reliable polyline decoding
       const decoded = polyline.decode(encodedPolyline);
       // Convert from [lat, lng] to [lat, lng] format (already correct)
-      return decoded as [number, number][];
+      return decoded;
     } catch (error) {
       this.logger.warn(`Failed to decode polyline: ${error.message}`);
       // Return empty array if decoding fails

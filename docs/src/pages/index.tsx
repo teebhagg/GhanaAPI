@@ -15,7 +15,7 @@ function HomepageHeader() {
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
             <div className={styles.badge}>
-              <span>🚀 Version 0.5.3</span>
+              <span>🚀 Version 0.5.4</span>
             </div>
             <Heading as="h1" className={styles.heroTitle}>
               Ghana API

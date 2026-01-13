@@ -196,8 +196,8 @@ export class GSEApiProvider {
     const isOpen = isWeekday && isDuringMarketHours;
 
     // Calculate next market open/close
-    let nextOpen = new Date(ghanaTime);
-    let nextClose = new Date(ghanaTime);
+    const nextOpen = new Date(ghanaTime);
+    const nextClose = new Date(ghanaTime);
 
     if (isOpen) {
       // Market is open, next close is today at 3:00 PM

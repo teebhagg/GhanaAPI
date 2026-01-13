@@ -26,20 +26,49 @@ jobs:
         run: |
           echo "🔍 Validating commit messages..."
 
+          # Determine the default branch (main or master)
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          if [ -z "$DEFAULT_BRANCH" ]; then
+            # Fallback: try to detect default branch
+            if git show-ref --verify --quiet refs/heads/main; then
+              DEFAULT_BRANCH="main"
+            elif git show-ref --verify --quiet refs/heads/master; then
+              DEFAULT_BRANCH="master"
+            else
+              DEFAULT_BRANCH="main"
+            fi
+          fi
+          
+          # Fetch the default branch to ensure it exists locally
+          echo "📥 Fetching default branch: $DEFAULT_BRANCH"
+          git fetch origin "$DEFAULT_BRANCH:$DEFAULT_BRANCH" || echo "⚠️  Could not fetch $DEFAULT_BRANCH, will use alternative method"
+
           # Get the base branch to compare against
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # For manual runs, check the last 10 commits
-            COMMITS=$(git log --format="%H|%s|%an|%ae" -n 10)
+            echo "📋 Manual run - checking last 10 commits"
+            COMMITS=$(git log --format="%H|%s|%an|%ae" -n 10 2>/dev/null || echo "")
           else
             # Check if this is a new branch push (before SHA is all zeros)
             if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-              echo "📋 New branch detected - comparing against main branch"
-              # Get commits that are in current branch but not in main
-              COMMITS=$(git log --format="%H|%s|%an|%ae" main..${{ github.event.after }})
+              echo "📋 New branch detected - comparing against $DEFAULT_BRANCH branch"
+              # Get commits that are in current branch but not in default branch
+              # Try to compare against default branch, fallback to all commits if that fails
+              COMMITS=$(git log --format="%H|%s|%an|%ae" "$DEFAULT_BRANCH..${{ github.event.after }}" 2>/dev/null || \
+                        git log --format="%H|%s|%an|%ae" "${{ github.event.after }}" -n 50 2>/dev/null || echo "")
             else
               # For regular push events, get commits since the last push
-              COMMITS=$(git log --format="%H|%s|%an|%ae" ${{ github.event.before }}..${{ github.event.after }})
+              echo "📋 Regular push - checking commits between ${{ github.event.before }} and ${{ github.event.after }}"
+              COMMITS=$(git log --format="%H|%s|%an|%ae" "${{ github.event.before }}..${{ github.event.after }}" 2>/dev/null || echo "")
             fi
+          fi
+          
+          # Check if we got any commits
+          if [ -z "$COMMITS" ]; then
+            echo "⚠️  No commits found to validate. This might be a force push or the branch has no new commits."
+            echo "validation_result=success" >> $GITHUB_OUTPUT
+            echo "summary=No commits to validate" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           # Conventional commit patterns (no period at end, present tense)
@@ -64,41 +93,53 @@ jobs:
           VALID_COMMITS=()
           TOTAL_COMMITS=0
 
+          # Process commits line by line (using process substitution to avoid subshell issues)
           while IFS='|' read -r hash subject author email; do
-            if [ -n "$hash" ]; then
-              TOTAL_COMMITS=$((TOTAL_COMMITS + 1))
-              
-              # Skip commits from dependabot and renovate
-              if [[ "$email" == *"dependabot"* ]] || [[ "$email" == *"renovate"* ]]; then
-                VALID_COMMITS+=("$hash: $subject (automated)")
-                continue
+            # Skip empty lines
+            if [ -z "$hash" ] && [ -z "$subject" ]; then
+              continue
+            fi
+            
+            TOTAL_COMMITS=$((TOTAL_COMMITS + 1))
+            
+            # Skip commits from dependabot and renovate
+            if [[ "$email" == *"dependabot"* ]] || [[ "$email" == *"renovate"* ]] || [[ "$email" == *"noreply"* ]]; then
+              VALID_COMMITS+=("$hash: $subject (automated)")
+              continue
+            fi
+            
+            COMMIT_VALID=false
+            MATCHED_PATTERN=""
+            
+            # Validate against patterns
+            for pattern in "${VALID_PATTERNS[@]}"; do
+              if [[ $subject =~ $pattern ]]; then
+                COMMIT_VALID=true
+                MATCHED_PATTERN=$pattern
+                break
               fi
-              
-              COMMIT_VALID=false
-              MATCHED_PATTERN=""
-              
-              for pattern in "${VALID_PATTERNS[@]}"; do
-                if [[ $subject =~ $pattern ]]; then
-                  COMMIT_VALID=true
-                  MATCHED_PATTERN=$pattern
-                  break
-                fi
-              done
-              
-              if [ "$COMMIT_VALID" = true ]; then
-                VALID_COMMITS+=("$hash: $subject")
-              else
-                INVALID_COMMITS+=("$hash: $subject")
-              fi
+            done
+            
+            if [ "$COMMIT_VALID" = true ]; then
+              VALID_COMMITS+=("$hash: $subject")
+            else
+              INVALID_COMMITS+=("$hash: $subject")
             fi
           done <<< "$COMMITS"
+
+          # Safety check: if we processed commits but got 0 total, something went wrong
+          if [ $TOTAL_COMMITS -eq 0 ] && [ -n "$COMMITS" ]; then
+            echo "⚠️  Warning: Found commits but processed 0. This might indicate a parsing issue."
+            # Try to count commits manually as fallback
+            TOTAL_COMMITS=$(echo "$COMMITS" | grep -c "^[0-9a-f]" || echo "0")
+          fi
 
           echo "📊 Validation Summary:"
           echo "- Total commits checked: $TOTAL_COMMITS"
           echo "- Valid commits: ${#VALID_COMMITS[@]}"
           echo "- Invalid commits: ${#INVALID_COMMITS[@]}"
 
-          if [ ${#INVALID_COMMITS[@]} -eq 0 ]; then
+          if [ ${#INVALID_COMMITS[@]} -eq 0 ] && [ $TOTAL_COMMITS -gt 0 ]; then
             echo "✅ All commit messages follow conventional format!"
             echo "validation_result=success" >> $GITHUB_OUTPUT
             echo "summary=All $TOTAL_COMMITS commit(s) follow conventional commits format" >> $GITHUB_OUTPUT

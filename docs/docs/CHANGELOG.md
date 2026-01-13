@@ -6,6 +6,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🔧 [0.5.4] - 2026-01-17</strong> - Workflow Fixes & API Status Endpoint</summary>
+
+### Added
+
+- **API Status Endpoint** (`GET /status`)
+
+  - Comprehensive health check endpoint with database connectivity testing
+  - Module-level statistics (education, exchange rates, locations, banking, stock market, business verification)
+  - Service health status tracking (healthy/degraded/unhealthy)
+  - Overall system health assessment
+  - Statistics include total records, last updated timestamps, and provider-specific data
+
+- **Local Commit Validation Script**
+  - Added `scripts/test-commit-validation.sh` for local commit message validation
+  - Allows testing commit messages before pushing to GitHub
+  - Mirrors GitHub Actions workflow validation logic
+
+### Fixed
+
+- **GitHub Actions Commit Validation Workflow**
+
+  - Fixed default branch detection to dynamically detect `main` or `master` instead of hardcoding
+  - Added branch fetching before comparison to prevent "unknown revision" errors
+  - Improved error handling with fallbacks for git commands
+  - Enhanced edge case handling for empty commit lists, force pushes, and new branches
+  - Fixed subshell variable scope issues in commit processing loop
+  - Added graceful handling when no commits are found to validate
+
+- **Test Suite**
+  - Fixed failing test in `app.controller.spec.ts` by adding `PrismaService` mock
+  - Improved test setup with proper dependency injection mocking
+
+### Changed
+
+- **Exchange Rate Calculation**
+
+  - Updated GHS to foreign currency rate calculation in Bank of Ghana provider
+  - Modified rate calculation logic for improved accuracy
+
+- **Code Quality**
+
+  - Changed `let` to `const` for immutable variables in stock market provider
+  - Improved code consistency and best practices
+
+- Bumped backend version to **0.5.4** and docs version to **0.5.4**
+
+### Technical Implementation
+
+- **Status Endpoint Architecture**
+
+  - Database health check with `$queryRaw` connectivity testing
+  - Module statistics collection from Prisma models
+  - Service status determination based on database health and module availability
+  - Comprehensive error handling and logging
+
+- **Workflow Improvements**
+  - Dynamic default branch detection using `github.event.repository.default_branch`
+  - Fallback strategies for branch comparison when default branch unavailable
+  - Enhanced logging for debugging workflow issues
+  - Better error messages and validation feedback
+
+</details>
+
+<details>
 <summary><strong>🗺️ [0.5.3] - 2026-01-16</strong> - Route Calculation OSM Integration</summary>
 
 ### Changed

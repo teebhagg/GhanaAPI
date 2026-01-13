@@ -174,7 +174,7 @@ export class BankOfGhanaProvider implements RateProvider {
       const toRow = getRow(to);
       if (!toRow) throw new Error(`Unsupported currency: ${to}`);
       // GHS -> foreign: use SELL
-      rate = 1 / toRow.sell; // to per 1 GHS
+      rate = toRow.sell; // to per 1 GHS
     } else if (to === 'GHS') {
       const fromRow = getRow(from);
       if (!fromRow) throw new Error(`Unsupported currency: ${from}`);

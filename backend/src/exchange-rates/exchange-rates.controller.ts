@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ExchangeRatesService } from './exchange-rates.service';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
@@ -51,6 +59,7 @@ export class ExchangeRatesController {
   }
 
   @Post('convert')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Convert currency' })
   convertCurrency(@Body() body: ConvertCurrencyDto) {
     return this.exchangeRatesService.convertCurrency(body);

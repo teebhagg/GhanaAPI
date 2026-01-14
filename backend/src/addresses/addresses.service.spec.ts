@@ -1,4 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import axios from 'axios';
 import { AddressesService } from './addresses.service';
@@ -10,6 +11,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('AddressesService', () => {
   let service: AddressesService;
   let mockCacheManager: jest.Mocked<any>;
+  let mockConfigService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
     mockCacheManager = {
@@ -17,12 +19,25 @@ describe('AddressesService', () => {
       set: jest.fn(),
     };
 
+    mockConfigService = {
+      get: jest.fn((key: string) => {
+        if (key === 'OPEN_ROUTE_API_KEY') {
+          return undefined;
+        }
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ConfigService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddressesService,
         {
           provide: CACHE_MANAGER,
           useValue: mockCacheManager,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile();
@@ -131,13 +146,16 @@ describe('AddressesService', () => {
       );
     });
 
-    it('should handle nominatim API failures', async () => {
+    it('should handle nominatim API failures gracefully', async () => {
       mockCacheManager.get.mockResolvedValue(null);
+      // Mock axios.get to reject (Nominatim API failure)
+      // Since Promise.allSettled is used, errors are caught and method returns null
       mockedAxios.get.mockRejectedValue(new Error('API Error'));
 
-      await expect(service.lookupByCoordinates(5.6037, -0.187)).rejects.toThrow(
-        'API Error',
-      );
+      const result = await service.lookupByCoordinates(5.6037, -0.187);
+
+      // When both APIs fail, the method returns null (not throws)
+      expect(result).toBeNull();
     });
 
     it('should return null for empty nominatim response', async () => {

@@ -5,7 +5,7 @@
 </div>
 
 [![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://api.ghana-api.dev)
-[![Version](https://img.shields.io/badge/version-0.5.4-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
+[![Version](https://img.shields.io/badge/version-0.5.5-blue.svg)](https://github.com/teebhagg/ghanaapi/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen.svg)](https://codecov.io/gh/teebhagg/ghanaapi)
 

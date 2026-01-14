@@ -6,6 +6,73 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <details>
+<summary><strong>🗺️ [0.5.5] - 2026-01-XX</strong> - Enhanced Address Service with OpenRouteService Integration</summary>
+
+### Added
+
+- **OpenRouteService Geocode Integration**
+
+  - Integrated OpenRouteService (ORS) Geocode Autocomplete API alongside Nominatim for enhanced address search
+  - Added OpenRouteService reverse geocoding support for improved coordinate-to-address resolution
+  - Parallel processing of both Nominatim and OpenRouteService for comprehensive results
+  - Smart deduplication algorithm to remove duplicate addresses based on coordinates and address text
+
+- **Enhanced Address Search**
+
+  - `searchAddresses()` now combines results from both Nominatim and OpenRouteService
+  - Improved coverage and accuracy for Ghana locations
+  - Results filtered to Ghana using `boundary.country=GH` parameter
+
+- **Enhanced Reverse Geocoding**
+
+  - `lookupByCoordinates()` now uses both Nominatim and OpenRouteService reverse geocoding
+  - Returns best result from combined sources
+  - Graceful fallback if one provider fails
+
+- **Logging & Monitoring**
+  - Added Logger for better debugging and monitoring of address service operations
+  - Enhanced error tracking for provider failures
+
+### Changed
+
+- **Address Service Architecture**
+
+  - Refactored address search into separate private methods: `searchWithNominatim()` and `searchWithOpenRouteService()`
+  - Refactored reverse geocoding into separate private methods: `lookupWithNominatim()` and `lookupCoordinatesWithOpenRouteService()`
+  - Added `deduplicateAddresses()` method for removing duplicate results
+  - Enhanced error handling to ensure one provider failure doesn't break the service
+
+- **Configuration**
+
+  - Updated environment variable name from `OPENROUTESERVICE_API_KEY` to `OPEN_ROUTE_API_KEY` for consistency
+  - Service gracefully falls back to Nominatim-only if OpenRouteService API key is not configured
+
+- Bumped backend version to **0.5.5** and docs version to **0.5.5**
+
+### Technical Implementation
+
+- **Multi-Provider Architecture**
+
+  - Uses `Promise.allSettled()` for parallel provider requests
+  - Combines results from both providers before deduplication
+  - Caches combined results for 24 hours
+  - Robust error handling ensures service availability even if one provider fails
+
+- **API Endpoints Used**
+  - OpenRouteService Autocomplete: `https://api.openrouteservice.org/geocode/autocomplete`
+  - OpenRouteService Reverse: `https://api.openrouteservice.org/geocode/reverse`
+
+### Benefits
+
+- **Better Coverage**: More comprehensive address results by combining two data sources
+- **Improved Accuracy**: Multiple sources provide better address resolution
+- **Resilience**: Service continues to work even if one provider is unavailable
+- **Performance**: Parallel requests ensure fast response times
+- **No Breaking Changes**: Existing API contracts remain unchanged
+
+</details>
+
+<details>
 <summary><strong>🔧 [0.5.4] - 2026-01-17</strong> - Workflow Fixes & API Status Endpoint</summary>
 
 ### Added

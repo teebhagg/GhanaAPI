@@ -12,6 +12,7 @@ import { LocationsModule } from './locations/locations.module';
 import { StockMarketModule } from './stock-market/stock-market.module';
 import { TransportModule } from './transport/transport.module';
 import { EducationModule } from './education/education.module';
+import { CryptoModule } from './crypto/crypto.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { EducationModule } from './education/education.module';
     BankingModule,
     StockMarketModule,
     EducationModule,
+    CryptoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -86,7 +86,7 @@ export class CryptoService {
     };
 
     // Cache results for 60 seconds
-    await this.cache.set(cacheKey, responseData, 60);
+    await this.cache.set(cacheKey, responseData, 60000); // 60 seconds (cache-manager v5 uses ms)
 
     return responseData;
   }

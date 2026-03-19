@@ -465,10 +465,19 @@ cd backend
 npm install
 
 # Set up development environment
-cp .env .env.development
+# Create a .env file if it doesn't exist and add your PostgreSQL connection string
+if [ ! -f .env ]; then echo 'DATABASE_URL="postgresql://user:password@localhost:5432/ghana_api"' > .env; fi
+
+# Generate Prisma client and sync schema to database
+# (Ensure your PostgreSQL server is running and the database exists)
+npx prisma generate
+npx prisma db push
 
 # Start development server with hot reload
 npm run start:dev
+
+# Access interactive API Docs
+# Open http://localhost:3000/docs in your browser
 
 # Run tests in watch mode
 npm run test:watch

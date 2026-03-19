@@ -15,5 +15,6 @@ import { FixerProvider } from './providers/fixer.provider';
     FixerProvider,
   ],
   controllers: [ExchangeRatesController],
+  exports: [ExchangeRatesService],
 })
 export class ExchangeRatesModule {}

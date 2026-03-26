@@ -23,9 +23,9 @@ function HomepageHeader() {
             <p className={styles.heroSubtitle}>
               The definitive REST API for Ghanaian services. Access
               comprehensive data for education, addresses, banking facilities,
-              exchange rates, stock market information, transport & logistics,
-              and administrative insights with our reliable, developer-friendly
-              platform.
+              exchange rates, crypto prices, stock market information,
+              transport & logistics, and administrative insights with our
+              reliable, developer-friendly platform.
             </p>
             <div className={styles.heroStats}>
               <div className={styles.stat}>
@@ -33,7 +33,7 @@ function HomepageHeader() {
                 <span className={styles.statLabel}>API Endpoints</span>
               </div>
               <div className={styles.stat}>
-                <span className={styles.statNumber}>7</span>
+                <span className={styles.statNumber}>8</span>
                 <span className={styles.statLabel}>Core Services</span>
               </div>
               <div className={styles.stat}>
@@ -117,6 +117,11 @@ const location = await fetch(
 // Currency conversion
 const conversion = await fetch(
   'https://api.ghana-api.dev/api/v1/exchange-rates/convert?from=USD&to=GHS&amount=100'
+);
+
+// Get crypto prices
+const crypto = await fetch(
+  'https://api.ghana-api.dev/api/v1/crypto?ids=bitcoin,ethereum'
 );`}</code>
               </pre>
             </div>
@@ -169,6 +174,17 @@ function FeaturesSection() {
               providers
             </p>
             <Link to="/docs/api/exchange-rates" className={styles.featureLink}>
+              Learn More →
+            </Link>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>₿</div>
+            <h3>Crypto Prices</h3>
+            <p>
+              Live cryptocurrency pricing in USD and GHS with CoinGecko-backed
+              data, short-term caching, and fallback support
+            </p>
+            <Link to="/docs/api/crypto" className={styles.featureLink}>
               Learn More →
             </Link>
           </div>

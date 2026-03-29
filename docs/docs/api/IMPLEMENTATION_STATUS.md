@@ -10,6 +10,7 @@ This document provides a comprehensive overview of the current implementation st
 |                      | Reverse Geocoding       | ✅ Live        | ✅ Implemented     | ✅ Documented | Fully functional                 |
 |                      | Address Validation      | ⏳ Coming Soon | ❌ Not Implemented | ⏳ Documented | Endpoint exists but throws error |
 |                      | Address Standardization | ⏳ Coming Soon | ❌ Not Implemented | ⏳ Documented | Endpoint exists but throws error |
+| **Crypto**           | Real-time Crypto Prices | ✅ Live        | ✅ Implemented     | ✅ Documented | CoinGecko with cache and fallback |
 | **Exchange Rates**   | Current Rates           | ✅ Live        | ✅ Implemented     | ✅ Documented | Fully functional                 |
 |                      | Currency Conversion     | ✅ Live        | ✅ Implemented     | ✅ Documented | Fully functional                 |
 |                      | Historical Data         | ⏳ Coming Soon | ❌ Not Implemented | ⏳ Documented | Endpoint exists but throws error |
@@ -41,6 +42,17 @@ This document provides a comprehensive overview of the current implementation st
 
 - `GET /exchange-rates/current` - Get current exchange rates
 - `POST /exchange-rates/convert` - Convert currency amounts
+
+### Crypto
+
+#### ✅ Implemented Endpoints
+
+- `GET /crypto` - Get cryptocurrency prices in USD and GHS
+  - Supports comma-separated `ids` query parameter
+  - Uses CoinGecko as the primary upstream provider
+  - Caches responses for 60 seconds
+  - Falls back to simulated pricing data if upstream requests fail
+  - Uses exchange-rates service for USD to GHS conversion
 
 #### ❌ Not Yet Implemented
 
@@ -80,6 +92,7 @@ This document provides a comprehensive overview of the current implementation st
 ### Phase 1: Core Features (✅ Complete)
 
 - Address search and reverse geocoding
+- Crypto price lookup with GHS conversion
 - Current exchange rates and conversion
 - Regional and district data
 
@@ -108,6 +121,7 @@ This document provides a comprehensive overview of the current implementation st
 - All implemented endpoints have unit tests
 - Integration tests for core functionality
 - Error handling tests
+- Crypto controller and service test coverage
 
 ### ⏳ Testing Needed
 

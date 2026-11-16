@@ -22,6 +22,10 @@ export class CryptoController {
     status: 200,
     description: 'Returns cryptocurrency prices in USD and GHS',
   })
+  @ApiResponse({
+    status: 503,
+    description: 'Upstream price or currency conversion is unavailable. No estimated prices are returned.',
+  })
   async getCryptoPrices(@Query('ids') idsString?: string) {
     let ids = ['bitcoin', 'ethereum'];
     if (idsString) {

@@ -1,4 +1,9 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { HttpService } from '@nestjs/axios';
@@ -18,17 +23,16 @@ export class CryptoService {
   async getCryptoPrices(ids: string[] = ['bitcoin', 'ethereum']) {
     const idsString = ids.sort().join(',');
     const cacheKey = `crypto:prices:${idsString}`;
-    
+
     // Check cache
     const cached = await this.cache.get<any>(cacheKey);
     if (cached) {
       return cached;
     }
 
-    // Try fetching from CoinGecko
+    // Fetch from CoinGecko. On failure, throw: never substitute invented prices.
     const url = `https://api.coingecko.com/api/v3/simple/price`;
-    let coinGeckoData: any = null;
-    let fallbackUsed = false;
+    let coinGeckoData: any;
 
     try {
       const response = await firstValueFrom(
@@ -45,20 +49,19 @@ export class CryptoService {
         )
       );
       coinGeckoData = response.data;
-    } catch (error) {
-      this.logger.warn('Failed to fetch from CoinGecko, using fallback simulated data');
-      // Automatic fallback in case CoinGecko rate limits
-      fallbackUsed = true;
-      coinGeckoData = this.getFallbackData(ids);
+    } catch {
+      throw new ServiceUnavailableException(
+        'Crypto prices are temporarily unavailable from the upstream provider',
+      );
     }
 
-    // Convert USD prices to GHS using improved exchange rate service
+    // Convert USD prices to GHS. A failed conversion is an error, not an estimate.
     const results = {};
     for (const id of ids) {
       if (coinGeckoData[id] && coinGeckoData[id].usd) {
         const usdPrice = coinGeckoData[id].usd;
-        
-        let ghsPrice = 0;
+
+        let ghsPrice: number;
         try {
           const conversion = await this.exchangeRatesService.convertCurrency({
             from: 'USD',
@@ -68,8 +71,9 @@ export class CryptoService {
           ghsPrice = conversion.result;
         } catch (error) {
           this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
-          // If conversion fails, maybe use an approximate rate
-          ghsPrice = usdPrice * 15.0; // dummy fallback rate
+          throw new ServiceUnavailableException(
+            'Crypto GHS conversion is temporarily unavailable',
+          );
         }
 
         results[id] = {
@@ -80,32 +84,14 @@ export class CryptoService {
     }
 
     const responseData = {
-      source: fallbackUsed ? 'fallback' : 'coingecko',
+      source: 'coingecko',
       data: results,
       timestamp: new Date().toISOString(),
     };
 
-    // Cache results for 60 seconds
-    await this.cache.set(cacheKey, responseData, 60000); // 60 seconds (cache-manager v5 uses ms)
+    // Cache results for 60 seconds. Errors above return before this point, so they are never cached.
+    await this.cache.set(cacheKey, responseData, 60000); // cache-manager v5 uses ms
 
     return responseData;
-  }
-
-  private getFallbackData(ids: string[]) {
-    // Provide some recent realistic dummy values if API is rate limited
-    const fallbackStore: Record<string, { usd: number }> = {
-      bitcoin: { usd: 65000 },
-      ethereum: { usd: 3500 },
-      solana: { usd: 150 },
-      cardano: { usd: 0.5 },
-      binancecoin: { usd: 600 },
-      ripple: { usd: 0.6 },
-    };
-
-    const result: Record<string, { usd: number }> = {};
-    for (const id of ids) {
-      result[id] = fallbackStore[id] || { usd: 100 }; // Default dummy
-    }
-    return result;
   }
 }

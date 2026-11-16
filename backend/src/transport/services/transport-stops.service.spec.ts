@@ -49,8 +49,13 @@ describe('TransportStopsService', () => {
     const stops = await service.getTransportStops('kumasi');
 
     expect(stops).toHaveLength(2);
-    expect(stops[0]).toMatchObject({ name: 'Circle', coordinates: [5.6, -0.2] });
-    expect(mockedQuery.mock.calls[0][0]).toContain('6.6000,-1.8000,6.8000,-1.4000');
+    expect(stops[0]).toMatchObject({
+      name: 'Circle',
+      coordinates: [5.6, -0.2],
+    });
+    expect(mockedQuery.mock.calls[0][0]).toContain(
+      '6.6000,-1.8000,6.8000,-1.4000',
+    );
   });
 
   it('serves repeat requests from memory', async () => {
@@ -75,9 +80,9 @@ describe('TransportStopsService', () => {
   it('rejects a stop type that is not on the allowed list, before any query', async () => {
     const injection = 'stop_position"](0,0,0,0);node(1);out;//';
 
-    await expect(service.getTransportStops('accra', injection)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.getTransportStops('accra', injection),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(mockedQuery).not.toHaveBeenCalled();
   });
 
@@ -86,7 +91,9 @@ describe('TransportStopsService', () => {
 
     await service.getTransportStops('accra', 'platform');
 
-    expect(mockedQuery.mock.calls[0][0]).toContain('["public_transport"="platform"]');
+    expect(mockedQuery.mock.calls[0][0]).toContain(
+      '["public_transport"="platform"]',
+    );
   });
 
   it('keeps cache keys bounded: unknown cities share the default city entry', async () => {

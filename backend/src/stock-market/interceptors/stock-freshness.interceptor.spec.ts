@@ -27,7 +27,10 @@ describe('StockFreshnessInterceptor', () => {
     });
 
     expect(body).toBe('body');
-    expect(setHeader).toHaveBeenCalledWith('X-Data-As-Of', '2026-11-16T10:00:00.000Z');
+    expect(setHeader).toHaveBeenCalledWith(
+      'X-Data-As-Of',
+      '2026-11-16T10:00:00.000Z',
+    );
     expect(setHeader).toHaveBeenCalledWith('X-Data-Stale', 'false');
   });
 
@@ -43,6 +46,9 @@ describe('StockFreshnessInterceptor', () => {
   it('omits X-Data-As-Of when nothing has been fetched', async () => {
     const { setHeader } = await run({ asOf: null, stale: false });
 
-    expect(setHeader).not.toHaveBeenCalledWith('X-Data-As-Of', expect.anything());
+    expect(setHeader).not.toHaveBeenCalledWith(
+      'X-Data-As-Of',
+      expect.anything(),
+    );
   });
 });

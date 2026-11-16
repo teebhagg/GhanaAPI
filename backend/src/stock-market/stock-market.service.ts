@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import type { Cache } from 'cache-manager';
 import { LastGoodCache } from '../common/resilience/last-good-cache';
@@ -125,10 +131,23 @@ export class StockMarketService {
     try {
       this.logger.log(`Getting stock data for symbol: ${symbol}`);
 
-      const rawStock = await this.stockDataProvider.fetchStock(symbol);
+      // Look the symbol up in the cached list: one shared upstream fetch, no
+      // extra per-symbol upstream calls, and the same last-good fallback.
+      const stocks = await this.getAllStocks();
+      const rawStock = stocks.find(
+        (stock) => stock.symbol.toUpperCase() === symbol.toUpperCase(),
+      );
+      if (!rawStock) {
+        throw new NotFoundException(
+          `Stock symbol '${symbol}' not found on Ghana Stock Exchange`,
+        );
+      }
       return this.toStockDto(rawStock);
     } catch (error) {
       this.logger.error(`Error getting stock ${symbol}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(
         `Failed to get stock data for ${symbol}: ${error.message}`,
       );
@@ -195,8 +214,7 @@ export class StockMarketService {
         this.logger.log('Generating market summary');
 
         const stocks = await this.getAllStocks();
-        const indices =
-          await this.stockDataProvider.fetchMarketIndices(stocks);
+        const indices = await this.stockDataProvider.fetchMarketIndices(stocks);
         const marketStatus = this.stockDataProvider.getMarketStatus();
 
         // Calculate market statistics

@@ -52,7 +52,10 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.searchStocks(query);
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
         throw error;
       }
       this.logger.error('Error searching stocks:', error);
@@ -91,14 +94,9 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.getStock(symbol);
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      // Keeps the 404 from the service and the 503 from the data layer
+      if (error instanceof HttpException) {
         throw error;
-      }
-      if (error.message.includes('not found')) {
-        throw new HttpException(
-          `Stock symbol '${symbol}' not found on Ghana Stock Exchange`,
-          HttpStatus.NOT_FOUND,
-        );
       }
       this.logger.error(`Error getting stock ${symbol}:`, error);
       throw new HttpException(
@@ -146,7 +144,10 @@ export class StockMarketController {
         status: stock.status,
       }));
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
         throw error;
       }
       this.logger.error('Error getting all stocks:', error);
@@ -185,7 +186,10 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.getStocksBySector(sector);
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
         throw error;
       }
       this.logger.error(`Error getting stocks for sector ${sector}:`, error);
@@ -216,7 +220,10 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.getMarketSummary();
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
         throw error;
       }
       this.logger.error('Error getting market summary:', error);
@@ -247,7 +254,10 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.getSectorPerformance();
     } catch (error) {
-      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
         throw error;
       }
       this.logger.error('Error getting sector performance:', error);

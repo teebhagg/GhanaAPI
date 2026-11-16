@@ -134,12 +134,29 @@ describe('StockMarketService', () => {
   });
 
   describe('getStock', () => {
-    it('should return a specific stock', async () => {
-      const result = await service.getStock('ACCESS');
+    it('should return a specific stock from the cached list', async () => {
+      const result = await service.getStock('access');
 
       expect(result.symbol).toBe('ACCESS');
       expect(result.name).toBe('Access Bank Ghana Plc');
-      expect(gseApiProvider.fetchStock).toHaveBeenCalledWith('ACCESS');
+      // Served from the shared list, not a per-symbol upstream call
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+      expect(gseApiProvider.fetchStock).not.toHaveBeenCalled();
+    });
+
+    it('should throw 404 for a symbol that is not listed', async () => {
+      await expect(service.getStock('NOPE')).rejects.toMatchObject({
+        status: 404,
+      });
+    });
+
+    it('should throw 503 when the list is unavailable', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+      await expect(service.getStock('ACCESS')).rejects.toMatchObject({
+        status: 503,
+      });
     });
   });
 
@@ -160,7 +177,9 @@ describe('StockMarketService', () => {
     });
 
     it('should share one provider call between simultaneous requests', async () => {
-      await Promise.all(Array.from({ length: 20 }, () => service.getAllStocks()));
+      await Promise.all(
+        Array.from({ length: 20 }, () => service.getAllStocks()),
+      );
 
       expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
     });
@@ -170,7 +189,9 @@ describe('StockMarketService', () => {
         new Error('GSE API down'),
       );
 
-      await expect(service.getAllStocks()).rejects.toMatchObject({ status: 503 });
+      await expect(service.getAllStocks()).rejects.toMatchObject({
+        status: 503,
+      });
     });
 
     it('should pass the 503 through search and sector queries', async () => {
@@ -181,7 +202,9 @@ describe('StockMarketService', () => {
       await expect(service.searchStocks({} as any)).rejects.toMatchObject({
         status: 503,
       });
-      await expect(service.getStocksBySector('Financials')).rejects.toMatchObject({
+      await expect(
+        service.getStocksBySector('Financials'),
+      ).rejects.toMatchObject({
         status: 503,
       });
     });

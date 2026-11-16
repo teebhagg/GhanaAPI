@@ -38,7 +38,9 @@ describe('queryOverpass', () => {
 
   it('rejects an HTTP 200 XML error page and tries the next instance', async () => {
     mockedGet
-      .mockResolvedValueOnce({ data: '<?xml version="1.0"?><html></html>' } as any)
+      .mockResolvedValueOnce({
+        data: '<?xml version="1.0"?><html></html>',
+      } as any)
       .mockResolvedValueOnce({ data: { elements: [{ id: 2 }] } } as any);
 
     const result = await queryOverpass('q');
@@ -50,7 +52,10 @@ describe('queryOverpass', () => {
   it('rejects JSON whose remark reports a runtime error', async () => {
     mockedGet
       .mockResolvedValueOnce({
-        data: { elements: [{ id: 9 }], remark: 'runtime error: Query timed out' },
+        data: {
+          elements: [{ id: 9 }],
+          remark: 'runtime error: Query timed out',
+        },
       } as any)
       .mockResolvedValueOnce({ data: { elements: [{ id: 3 }] } } as any);
 
@@ -67,6 +72,8 @@ describe('queryOverpass', () => {
   });
 
   it('never includes the Swiss-only instance', () => {
-    expect(OVERPASS_ENDPOINTS.some((e) => e.includes('overpass.osm.ch'))).toBe(false);
+    expect(OVERPASS_ENDPOINTS.some((e) => e.includes('overpass.osm.ch'))).toBe(
+      false,
+    );
   });
 });

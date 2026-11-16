@@ -63,7 +63,9 @@ describe('GSEApiProvider upstream load', () => {
 
     expect(stocks).toHaveLength(20);
     expect(stocks[0].sector).toBe('Financials');
-    const detailCalls = get.mock.calls.filter((c) => c[0].includes('/equities/'));
+    const detailCalls = get.mock.calls.filter((c) =>
+      c[0].includes('/equities/'),
+    );
     expect(detailCalls).toHaveLength(20);
     expect(maxInFlight).toBeLessThanOrEqual(4);
   });
@@ -89,7 +91,9 @@ describe('GSEApiProvider upstream load', () => {
 
     expect(stocks).toHaveLength(20); // live prices still served
     expect(stocks[0].sector).toBe('Unknown'); // details are optional
-    const detailCalls = get.mock.calls.filter((c) => c[0].includes('/equities/'));
+    const detailCalls = get.mock.calls.filter((c) =>
+      c[0].includes('/equities/'),
+    );
     // Only the first few in-flight requests were sent before the pause kicked in
     expect(detailCalls.length).toBeLessThanOrEqual(4);
   });

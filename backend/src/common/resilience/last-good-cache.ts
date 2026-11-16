@@ -143,7 +143,9 @@ export class LastGoodCache<T> {
           return data;
         },
         (error) => {
-          this.logger.error(`${key}: refresh failed: ${(error as Error).message}`);
+          this.logger.error(
+            `${key}: refresh failed: ${(error as Error).message}`,
+          );
           entry.failedUntil = Date.now() + this.options.backoffMs;
           throw error;
         },

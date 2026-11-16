@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BankingService } from './banking.service';
 import { BankSearchQueryDto } from './dto/bank-search.dto';
@@ -89,6 +90,25 @@ describe('BankingService', () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data[0].name).toContain('GCB');
+    });
+
+    it('should not fetch ATMs for a bank-only search', async () => {
+      mockBankDataProvider.getBanks.mockResolvedValue(mockBanks);
+      mockBankDataProvider.getATMs.mockReset();
+
+      await service.searchBanks({ q: 'GCB', type: 'bank' } as BankSearchQueryDto);
+
+      expect(mockBankDataProvider.getATMs).not.toHaveBeenCalled();
+    });
+
+    it('should let a 503 from the data provider reach the caller', async () => {
+      mockBankDataProvider.getBanks.mockRejectedValue(
+        new ServiceUnavailableException('down'),
+      );
+
+      await expect(
+        service.searchBanks({ q: 'GCB', type: 'bank' } as BankSearchQueryDto),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
     });
 
     it('should search banks by location', async () => {

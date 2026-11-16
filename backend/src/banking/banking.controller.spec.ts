@@ -2,6 +2,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BankingController } from './banking.controller';
 import { BankingService } from './banking.service';
+import { BankDataProviderService } from './services/bank-data-provider.service';
 import { BankSearchResponseDto } from './dto/bank-search-response.dto';
 import { BankSearchQueryDto } from './dto/bank-search.dto';
 import { BankDto } from './dto/bank.dto';
@@ -26,6 +27,11 @@ describe('BankingController', () => {
         {
           provide: BankingService,
           useValue: mockBankingService,
+        },
+        {
+          // Needed by DataFreshnessInterceptor, which the controller uses
+          provide: BankDataProviderService,
+          useValue: { getFreshness: jest.fn() },
         },
       ],
     }).compile();

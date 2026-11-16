@@ -1,116 +1,292 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  Optional,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
+import { PrismaService } from '../../common/database/prisma.service';
 import { ATMLocation, Bank } from '../entities/bank.entity';
+
+// Official global instances, main host first. Do not add country-specific
+// instances such as overpass.osm.ch: it holds Swiss data only and returns
+// no results for Ghana.
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
+];
+const OVERPASS_USER_AGENT = 'GhanaAPI/1.0 (+https://ghana-api.dev)';
+const OVERPASS_TIMEOUT_MS = 100_000;
+
+/**
+ * Holds one dataset (banks or ATMs): the last good result, when it was
+ * fetched, a failure backoff, and the single shared in-flight refresh.
+ */
+interface DataSlot<T> {
+  key: 'banks' | 'atms';
+  data: T[] | null;
+  fetchedAt: number | null;
+  failedUntil: number;
+  inFlight: Promise<T[]> | null;
+}
+
+const newSlot = <T>(key: DataSlot<T>['key']): DataSlot<T> => ({
+  key,
+  data: null,
+  fetchedAt: null,
+  failedUntil: 0,
+  inFlight: null,
+});
+
+/** JSON turns Date fields into strings. Turn them back. */
+function reviveDates<T>(items: T[]): T[] {
+  return items.map((item) => {
+    const lastChecked = (item as { lastChecked?: unknown })?.lastChecked;
+    if (typeof lastChecked === 'string') {
+      return { ...item, lastChecked: new Date(lastChecked) };
+    }
+    return item;
+  });
+}
 
 @Injectable()
 export class BankDataProviderService {
   private readonly logger = new Logger(BankDataProviderService.name);
-  private banksCache: Bank[] | null = null;
-  private atmCache: ATMLocation[] | null = null;
-  private cacheExpiry: Date | null = null;
-  private readonly cacheValidityHours = 24;
+  private readonly banksSlot = newSlot<Bank>('banks');
+  private readonly atmsSlot = newSlot<ATMLocation>('atms');
+  private readonly cacheValidityMs = 24 * 60 * 60 * 1000;
+  // After a failed refresh, do not query upstream again for this long
+  private readonly FAILURE_BACKOFF_MS = 10 * 60 * 1000;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
   /**
-   * Get banks and ATMs from multiple data sources
+   * Restore the last saved snapshots, so a restart does not start empty.
+   * Each one still counts as stale if it is older than 24h, and is refreshed
+   * on the next request.
+   */
+  async onModuleInit(): Promise<void> {
+    await this.restore(this.banksSlot);
+    await this.restore(this.atmsSlot);
+  }
+
+  /**
+   * Daily refresh at 03:00, so users rarely wait on Overpass.
+   * Failures are logged and backed off, and the saved data keeps serving.
+   */
+  @Cron('0 0 3 * * *')
+  async refreshAll(): Promise<void> {
+    await Promise.all([
+      this.refreshSlot(this.banksSlot, 'Bank data', () => this.fetchBanks()),
+      this.refreshSlot(this.atmsSlot, 'ATM data', () => this.fetchATMs()),
+    ]);
+  }
+
+  /**
+   * Banks. Served from memory; refreshed from upstream at most once at a time.
    */
   async getBanks(): Promise<Bank[]> {
-    if (this.banksCache && this.isCacheValid()) {
-      this.logger.log('Returning cached bank data');
-      return this.banksCache;
+    return this.load(this.banksSlot, 'Bank data', () => this.fetchBanks());
+  }
+
+  /**
+   * ATM locations. Same behaviour as getBanks.
+   */
+  async getATMs(): Promise<ATMLocation[]> {
+    return this.load(this.atmsSlot, 'ATM data', () => this.fetchATMs());
+  }
+
+  /**
+   * When each dataset was last fetched, and whether it is past its 24h life.
+   * Stale data is still real data from the last successful fetch.
+   */
+  getFreshness() {
+    const describe = <T>(slot: DataSlot<T>) => ({
+      asOf: slot.fetchedAt ? new Date(slot.fetchedAt).toISOString() : null,
+      stale: slot.data !== null && !this.isFresh(slot),
+    });
+    return { banks: describe(this.banksSlot), atms: describe(this.atmsSlot) };
+  }
+
+  private isFresh<T>(slot: DataSlot<T>): boolean {
+    return (
+      slot.data !== null &&
+      slot.fetchedAt !== null &&
+      Date.now() - slot.fetchedAt < this.cacheValidityMs
+    );
+  }
+
+  /**
+   * Fresh data: return it. Older data: return it now and refresh in the
+   * background. No data: wait for the shared refresh, or fail with a 503.
+   * Concurrent callers share one upstream refresh instead of each starting one.
+   */
+  private async load<T>(
+    slot: DataSlot<T>,
+    label: string,
+    fetcher: () => Promise<T[]>,
+  ): Promise<T[]> {
+    if (slot.data && this.isFresh(slot)) {
+      return slot.data;
     }
 
-    this.logger.log('Fetching fresh bank data from multiple sources');
-    const banks: Bank[] = [];
+    const pending = this.startRefresh(slot, label, fetcher);
 
-    // Get data from multiple sources
+    if (slot.data) {
+      this.logger.warn(`${label}: serving data from the last good fetch`);
+      pending?.catch(() => undefined); // failure is logged and backed off
+      return slot.data;
+    }
+
+    if (!pending) {
+      throw new ServiceUnavailableException(`${label} is temporarily unavailable`);
+    }
     try {
-      const [bogBanks, osmBanks] = await Promise.allSettled([
-        this.getBanksFromBankOfGhana(),
-        this.getBanksFromOpenStreetMap(),
-      ]);
-
-      if (bogBanks.status === 'fulfilled') {
-        banks.push(...bogBanks.value);
-      } else {
-        this.logger.warn(
-          'Failed to get banks from Bank of Ghana:',
-          bogBanks.reason,
-        );
-      }
-
-      if (osmBanks.status === 'fulfilled') {
-        banks.push(...osmBanks.value);
-      } else {
-        this.logger.warn(
-          'Failed to get banks from OpenStreetMap:',
-          osmBanks.reason,
-        );
-      }
-
-      // Add fallback static data if no external data available
-      if (banks.length === 0) {
-        banks.push(...this.getFallbackBankData());
-      }
-
-      // Deduplicate and enrich data
-      const uniqueBanks = this.deduplicateBanks(banks);
-      this.banksCache = uniqueBanks;
-      this.cacheExpiry = new Date(
-        Date.now() + this.cacheValidityHours * 60 * 60 * 1000,
-      );
-
-      this.logger.log(
-        `Successfully loaded ${uniqueBanks.length} banking facilities`,
-      );
-      return uniqueBanks;
+      return await pending;
     } catch (error) {
-      this.logger.error('Error fetching bank data:', error);
-      return this.getFallbackBankData();
+      if (error instanceof ServiceUnavailableException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException(`${label} is temporarily unavailable`);
+    }
+  }
+
+  private refreshSlot<T>(
+    slot: DataSlot<T>,
+    label: string,
+    fetcher: () => Promise<T[]>,
+  ): Promise<void> {
+    const pending = this.startRefresh(slot, label, fetcher);
+    return pending ? pending.then(() => undefined, () => undefined) : Promise.resolve();
+  }
+
+  private async persist<T>(slot: DataSlot<T>): Promise<void> {
+    if (!this.prisma || !slot.data || slot.fetchedAt === null) return;
+    try {
+      const payload = JSON.parse(JSON.stringify(slot.data));
+      const fetchedAt = new Date(slot.fetchedAt);
+      await this.prisma.bankSnapshot.upsert({
+        where: { key: slot.key },
+        create: { key: slot.key, payload, fetchedAt },
+        update: { payload, fetchedAt },
+      });
+    } catch (error) {
+      this.logger.warn(`Could not save ${slot.key} snapshot: ${(error as Error).message}`);
+    }
+  }
+
+  private async restore<T>(slot: DataSlot<T>): Promise<void> {
+    if (!this.prisma) return;
+    try {
+      const row = await this.prisma.bankSnapshot.findUnique({
+        where: { key: slot.key },
+      });
+      if (row && Array.isArray(row.payload)) {
+        slot.data = reviveDates(row.payload as T[]);
+        slot.fetchedAt = row.fetchedAt.getTime();
+        this.logger.log(`Restored ${slot.key} snapshot from ${row.fetchedAt.toISOString()}`);
+      }
+    } catch (error) {
+      this.logger.warn(`Could not restore ${slot.key} snapshot: ${(error as Error).message}`);
     }
   }
 
   /**
-   * Get ATM locations
+   * Start a refresh unless one is running (share it) or a recent one failed
+   * (return null). Success stores the data; failure starts the backoff.
    */
-  async getATMs(): Promise<ATMLocation[]> {
-    if (this.atmCache && this.isCacheValid()) {
-      this.logger.log('Returning cached ATM data');
-      return this.atmCache;
+  private startRefresh<T>(
+    slot: DataSlot<T>,
+    label: string,
+    fetcher: () => Promise<T[]>,
+  ): Promise<T[]> | null {
+    if (slot.inFlight) {
+      return slot.inFlight;
+    }
+    if (Date.now() < slot.failedUntil) {
+      return null;
+    }
+    this.logger.log(`${label}: refreshing from upstream`);
+    slot.inFlight = fetcher()
+      .then(
+        (data) => {
+          slot.data = data;
+          slot.fetchedAt = Date.now();
+          void this.persist(slot);
+          return data;
+        },
+        (error) => {
+          this.logger.error(`${label} refresh failed:`, error);
+          slot.failedUntil = Date.now() + this.FAILURE_BACKOFF_MS;
+          throw error;
+        },
+      )
+      .finally(() => {
+        slot.inFlight = null;
+      });
+    return slot.inFlight;
+  }
+
+  private async fetchBanks(): Promise<Bank[]> {
+    const banks: Bank[] = [];
+
+    const [bogBanks, osmBanks] = await Promise.allSettled([
+      this.getBanksFromBankOfGhana(),
+      this.getBanksFromOpenStreetMap(),
+    ]);
+
+    if (bogBanks.status === 'fulfilled') {
+      banks.push(...bogBanks.value);
+    } else {
+      this.logger.warn(
+        'Failed to get banks from Bank of Ghana:',
+        bogBanks.reason,
+      );
     }
 
-    this.logger.log('Fetching fresh ATM data');
-    const atms: ATMLocation[] = [];
-
-    try {
-      const [osmATMs, staticATMs] = await Promise.allSettled([
-        this.getATMsFromOpenStreetMap(),
-        this.getFallbackATMData(),
-      ]);
-
-      if (osmATMs.status === 'fulfilled') {
-        atms.push(...osmATMs.value);
-      }
-
-      if (staticATMs.status === 'fulfilled') {
-        atms.push(...staticATMs.value);
-      }
-
-      const uniqueATMs = this.deduplicateATMs(atms);
-      this.atmCache = uniqueATMs;
-
-      this.logger.log(`Successfully loaded ${uniqueATMs.length} ATM locations`);
-      return uniqueATMs;
-    } catch (error) {
-      this.logger.error('Error fetching ATM data:', error);
-      return this.getFallbackATMData();
+    if (osmBanks.status === 'fulfilled') {
+      banks.push(...osmBanks.value);
+    } else {
+      this.logger.warn(
+        'Failed to get banks from OpenStreetMap:',
+        osmBanks.reason,
+      );
     }
+
+    // No data from any source is an outage, not an empty directory.
+    if (banks.length === 0) {
+      throw new ServiceUnavailableException(
+        'Bank data is temporarily unavailable from all sources',
+      );
+    }
+
+    const uniqueBanks = this.deduplicateBanks(banks);
+    this.logger.log(
+      `Successfully loaded ${uniqueBanks.length} banking facilities`,
+    );
+    return uniqueBanks;
+  }
+
+  private async fetchATMs(): Promise<ATMLocation[]> {
+    const atms = await this.getATMsFromOpenStreetMap();
+
+    // No data is an outage, not an empty result.
+    if (atms.length === 0) {
+      throw new ServiceUnavailableException('ATM data is temporarily unavailable');
+    }
+
+    const uniqueATMs = this.deduplicateATMs(atms);
+    this.logger.log(`Successfully loaded ${uniqueATMs.length} ATM locations`);
+    return uniqueATMs;
   }
 
   /**
@@ -129,12 +305,49 @@ export class BankDataProviderService {
   }
 
   /**
+   * Run an Overpass QL query. Tries each endpoint in turn.
+   *
+   * Sent as GET: overpass-api.de rejects the POST with text/plain (406).
+   * A 200 is not enough: an instance can return an XML error page, or JSON
+   * whose remark reports a runtime error (timeout, out of memory) alongside
+   * partial elements. Both are rejected so the next instance is tried.
+   */
+  private async queryOverpass(query: string): Promise<{ elements: any[] }> {
+    let lastError: unknown = new Error('No Overpass endpoint configured');
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+      try {
+        const response = await axios.get(endpoint, {
+          params: { data: query },
+          headers: { 'User-Agent': OVERPASS_USER_AGENT },
+          timeout: OVERPASS_TIMEOUT_MS,
+        });
+        const data = response.data;
+        const remark: string =
+          data && typeof data.remark === 'string' ? data.remark : '';
+        if (/runtime error/i.test(remark)) {
+          throw new Error(`Overpass runtime error from ${endpoint}: ${remark}`);
+        }
+        if (data && typeof data === 'object' && Array.isArray(data.elements)) {
+          return data;
+        }
+        throw new Error(`Non-JSON response from ${endpoint}`);
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(
+          `Overpass endpoint ${endpoint} failed: ${(error as Error).message}`,
+        );
+      }
+    }
+    throw lastError;
+  }
+
+  /**
    * Get banks and ATMs from OpenStreetMap Overpass API
    */
   private async getBanksFromOpenStreetMap(): Promise<Bank[]> {
     try {
       const query = `
-        [out:json][timeout:25];
+        [out:json][timeout:90];
         area["name"="Ghana"]->.searchArea;
         (
           node["amenity"="bank"](area.searchArea);
@@ -145,16 +358,7 @@ export class BankDataProviderService {
         out geom;
       `;
 
-      const response = await axios.post(
-        'https://overpass-api.de/api/interpreter',
-        query,
-        {
-          headers: { 'Content-Type': 'text/plain' },
-          timeout: 30000,
-        },
-      );
-
-      const data = response.data;
+      const data = await this.queryOverpass(query);
       const banks: Bank[] = [];
 
       for (const element of data.elements) {
@@ -169,8 +373,9 @@ export class BankDataProviderService {
       this.logger.log(`Fetched ${banks.length} facilities from OpenStreetMap`);
       return banks;
     } catch (error) {
+      // Rethrow so callers can tell a failed source from an empty one
       this.logger.warn('Failed to fetch from OpenStreetMap:', error.message);
-      return [];
+      throw error;
     }
   }
 
@@ -180,24 +385,16 @@ export class BankDataProviderService {
   private async getATMsFromOpenStreetMap(): Promise<ATMLocation[]> {
     try {
       const query = `
-        [out:json][timeout:25];
+        [out:json][timeout:90];
+        area["name"="Ghana"]->.searchArea;
         (
-          node["amenity"="atm"]["addr:country"="GH"];
-          way["amenity"="atm"]["addr:country"="GH"];
+          node["amenity"="atm"](area.searchArea);
+          way["amenity"="atm"](area.searchArea);
         );
         out geom;
       `;
 
-      const response = await axios.post(
-        'https://overpass-api.de/api/interpreter',
-        query,
-        {
-          headers: { 'Content-Type': 'text/plain' },
-          timeout: 30000,
-        },
-      );
-
-      const data = response.data;
+      const data = await this.queryOverpass(query);
       const atms: ATMLocation[] = [];
 
       for (const element of data.elements) {
@@ -212,11 +409,12 @@ export class BankDataProviderService {
       this.logger.log(`Fetched ${atms.length} ATMs from OpenStreetMap`);
       return atms;
     } catch (error) {
+      // Rethrow so callers can tell a failed source from an empty one
       this.logger.warn(
         'Failed to fetch ATMs from OpenStreetMap:',
         error.message,
       );
-      return [];
+      throw error;
     }
   }
 
@@ -464,146 +662,5 @@ export class BankDataProviderService {
 
   private toRad(value: number): number {
     return (value * Math.PI) / 180;
-  }
-
-  /**
-   * Check if cache is still valid
-   */
-  private isCacheValid(): boolean {
-    return this.cacheExpiry !== null && new Date() < this.cacheExpiry;
-  }
-
-  /**
-   * Get fallback bank data when external sources fail
-   */
-  private getFallbackBankData(): Bank[] {
-    return [
-      {
-        id: 'gcb-head-office',
-        name: 'GCB Bank Limited - Head Office',
-        type: 'bank',
-        code: 'GCB',
-        address: 'Thorpe Road, Accra',
-        city: 'Accra',
-        region: 'Greater Accra',
-        latitude: 5.6037,
-        longitude: -0.187,
-        phone: '+233302664910',
-        email: 'info@gcbbank.com.gh',
-        website: 'https://www.gcbbank.com.gh',
-        operatingHours: 'Mon-Fri: 8:00-17:00, Sat: 8:00-13:00',
-        services: [
-          'ATM',
-          'Cash Deposit',
-          'Foreign Exchange',
-          'Loans',
-          'Mobile Banking',
-        ],
-        branchInfo: {
-          branchCode: '001',
-          isHeadOffice: true,
-          hasATM: true,
-          is24Hours: false,
-        },
-      },
-      {
-        id: 'ecobank-independence',
-        name: 'Ecobank Ghana - Independence Avenue',
-        type: 'bank',
-        code: 'ETI',
-        address: 'Independence Avenue, Accra',
-        city: 'Accra',
-        region: 'Greater Accra',
-        latitude: 5.56,
-        longitude: -0.2057,
-        phone: '+233302740140',
-        website: 'https://ecobank.com',
-        operatingHours: 'Mon-Fri: 8:30-16:30, Sat: 8:30-13:00',
-        services: ['ATM', 'Cash Deposit', 'Foreign Exchange', 'Western Union'],
-        branchInfo: {
-          hasATM: true,
-          is24Hours: false,
-        },
-      },
-      {
-        id: 'stanbic-oxford-st',
-        name: 'Stanbic Bank Ghana - Oxford Street',
-        type: 'bank',
-        code: 'SBG',
-        address: 'Oxford Street, Osu, Accra',
-        city: 'Accra',
-        region: 'Greater Accra',
-        latitude: 5.5557,
-        longitude: -0.1742,
-        phone: '+233302610610',
-        website: 'https://www.stanbic.com.gh',
-        operatingHours: 'Mon-Fri: 8:30-16:00, Sat: 8:30-13:00',
-        services: [
-          'ATM',
-          'Cash Deposit',
-          'Foreign Exchange',
-          'Investment Services',
-        ],
-        branchInfo: {
-          hasATM: true,
-          is24Hours: false,
-        },
-      },
-      {
-        id: 'absa-kumasi',
-        name: 'Absa Bank Ghana - Kumasi',
-        type: 'bank',
-        code: 'ABSA',
-        address: 'Harper Road, Kumasi',
-        city: 'Kumasi',
-        region: 'Ashanti',
-        latitude: 6.6885,
-        longitude: -1.6244,
-        phone: '+233322020202',
-        website: 'https://www.absa.com.gh',
-        operatingHours: 'Mon-Fri: 8:00-16:30, Sat: 8:00-13:00',
-        services: ['ATM', 'Cash Deposit', 'Loans', 'Business Banking'],
-        branchInfo: {
-          hasATM: true,
-          is24Hours: false,
-        },
-      },
-    ];
-  }
-
-  /**
-   * Get fallback ATM data
-   */
-  private getFallbackATMData(): ATMLocation[] {
-    return [
-      {
-        id: 'gcb-atm-circle',
-        name: 'GCB ATM - Kwame Nkrumah Circle',
-        bank: 'GCB Bank',
-        address: 'Kwame Nkrumah Circle, Accra',
-        city: 'Accra',
-        region: 'Greater Accra',
-        latitude: 5.5719,
-        longitude: -0.231,
-        is24Hours: true,
-        services: ['Cash Withdrawal', 'Balance Inquiry', 'Mini Statement'],
-        network: ['Visa', 'MasterCard', 'GhIPSS'],
-        lastChecked: new Date(),
-      },
-      {
-        id: 'ecobank-atm-airport',
-        name: 'Ecobank ATM - Airport',
-        bank: 'Ecobank Ghana',
-        address: 'Kotoka International Airport, Accra',
-        city: 'Accra',
-        region: 'Greater Accra',
-        latitude: 5.6052,
-        longitude: -0.1667,
-        is24Hours: true,
-        services: ['Cash Withdrawal', 'Balance Inquiry'],
-        network: ['Visa', 'MasterCard', 'GhIPSS'],
-        lastChecked: new Date(),
-      },
-    ];
   }
 }

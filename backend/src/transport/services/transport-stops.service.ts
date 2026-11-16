@@ -1,7 +1,23 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { queryOverpass } from '../../common/overpass/overpass-client';
+import { LastGoodCache } from '../../common/resilience/last-good-cache';
+
+/** Values of the OSM public_transport tag we accept as a filter. */
+export const ALLOWED_STOP_TYPES = [
+  'stop_position',
+  'platform',
+  'station',
+  'stop_area',
+];
 
 export interface TransportStop {
   id?: string;
@@ -16,6 +32,15 @@ export class TransportStopsService {
   private readonly logger = new Logger(TransportStopsService.name);
   private readonly transportApis = ['overpass', 'gtfs'];
 
+  // Stops change rarely. Fresh for a day; if the upstream fails, the last good
+  // list is served for up to a week. Failures are not retried for 10 minutes.
+  private readonly stopsCache = new LastGoodCache<TransportStop[]>({
+    label: 'Transport stops',
+    freshMs: 24 * 60 * 60 * 1000,
+    maxStaleMs: 7 * 24 * 60 * 60 * 1000,
+    backoffMs: 10 * 60 * 1000,
+  });
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -25,13 +50,40 @@ export class TransportStopsService {
     city: string = 'accra',
     type?: string,
   ): Promise<TransportStop[]> {
+    // The type is placed inside the Overpass query, so only known values may
+    // reach it. Anything else could change the meaning of the query.
+    if (type !== undefined && !ALLOWED_STOP_TYPES.includes(type)) {
+      throw new BadRequestException(
+        `Invalid stop type. Allowed values: ${ALLOWED_STOP_TYPES.join(', ')}`,
+      );
+    }
+
+    const cityKey = this.resolveCity(city);
+    const { data } = await this.stopsCache.get(
+      `${cityKey}|${type ?? 'all'}`,
+      () => this.fetchStops(cityKey, type),
+    );
+    return data;
+  }
+
+  private async fetchStops(
+    city: string,
+    type?: string,
+  ): Promise<TransportStop[]> {
     for (const api of this.transportApis) {
       try {
         this.logger.log(`Trying to get transport stops from ${api}`);
 
         switch (api) {
-          case 'overpass':
-            return await this.getStopsFromOverpass(city, type);
+          case 'overpass': {
+            const stops = await this.getStopsFromOverpass(city, type);
+            // An empty list for a city is an outage, not an answer. Do not
+            // cache it for a day.
+            if (stops.length === 0) {
+              throw new Error('Overpass returned no stops');
+            }
+            return stops;
+          }
           case 'gtfs':
             return await this.getStopsFromGTFS(city, type);
           default:
@@ -57,7 +109,7 @@ export class TransportStopsService {
     const typeFilter = type ? `["public_transport"="${type}"]` : '';
 
     const query = `
-      [out:json][timeout:25];
+      [out:json][timeout:90];
       (
         node["public_transport"~"stop_position|platform"]${typeFilter}(${bbox});
         node["highway"="bus_stop"](${bbox});
@@ -66,15 +118,8 @@ export class TransportStopsService {
       out;
     `;
 
-    const url = 'https://overpass-api.de/api/interpreter';
-    const response = await firstValueFrom(
-      this.httpService.post(url, query, {
-        headers: { 'Content-Type': 'text/plain' },
-        timeout: 30000,
-      }),
-    );
-
-    return this.parseOverpassStops(response.data);
+    const data = await queryOverpass(query);
+    return this.parseOverpassStops(data);
   }
 
   private async getStopsFromGTFS(
@@ -145,6 +190,13 @@ export class TransportStopsService {
   }
 
   // ===== HELPER METHODS =====
+
+  /** Known city name, or the default. Keeps cache keys to a small fixed set. */
+  private resolveCity(city: string): string {
+    const known = ['accra', 'kumasi', 'tamale', 'takoradi'];
+    const name = city.toLowerCase();
+    return known.includes(name) ? name : 'accra';
+  }
 
   private getCityBoundingBox(city: string): string {
     const boxes = {

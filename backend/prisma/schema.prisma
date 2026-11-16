@@ -88,3 +88,11 @@ model ExchangeRateHistory {
   @@index([baseCurrency, targetCurrency, sourceTimestamp])
   @@map("exchange_rate_history")
 }
+
+model BankSnapshot {
+  key       String   @id
+  payload   Json
+  fetchedAt DateTime
+
+  @@map("bank_snapshot")
+}

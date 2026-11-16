@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { BankSearchResponseDto } from './dto/bank-search-response.dto';
 import { BankSearchQueryDto } from './dto/bank-search.dto';
 import { BankDto } from './dto/bank.dto';
@@ -20,7 +24,10 @@ export class BankingService {
     try {
       // Get all banking facilities
       const allBanks = await this.bankDataProvider.getBanks();
-      const allATMs = await this.bankDataProvider.getATMs();
+      // Only fetch ATMs when the search needs them: a bank-only search
+      // should not fail because the ATM query did
+      const allATMs =
+        query.type === 'bank' ? [] : await this.bankDataProvider.getATMs();
 
       // Combine and filter based on type
       let facilities: (Bank | ATMLocation)[] = [];
@@ -94,7 +101,7 @@ export class BankingService {
           type: query.type || 'both',
           limit: query.limit || 20,
         },
-        source: 'OpenStreetMap + Static Directory',
+        source: 'OpenStreetMap',
         timestamp: new Date().toISOString(),
       };
 
@@ -102,6 +109,10 @@ export class BankingService {
       return response;
     } catch (error) {
       this.logger.error('Error searching banks:', error);
+      // Keep the 503 from the data provider; wrap anything else as before
+      if (error instanceof ServiceUnavailableException) {
+        throw error;
+      }
       throw new Error(`Failed to search banks: ${error.message}`);
     }
   }

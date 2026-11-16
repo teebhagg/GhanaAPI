@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Logger } from '@nestjs/common';
+import { Logger, ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AxiosResponse } from 'axios';
 import { Cache } from 'cache-manager';
@@ -215,7 +215,7 @@ describe('FuelPriceService', () => {
       expect(result.status).toBe('success');
     });
 
-    it('should return zero values when all sources fail', async () => {
+    it('should throw 503 and record a short failure marker when all sources fail', async () => {
       cacheManager.get.mockResolvedValue(null);
 
       // Mock all sources failing
@@ -223,23 +223,20 @@ describe('FuelPriceService', () => {
         throwError(() => new Error('All sources failed')),
       );
 
-      const result = await service.getFuelPrices();
-
-      expect(result.petrol).toBe(0);
-      expect(result.diesel).toBe(0);
-      expect(result.lpg).toBe(0);
-      expect(result.currency).toBe('GHS');
-      expect(result.source).toBe('No sources available');
-      expect(result.status).toBe('failed');
-      expect(result.errorMessage).toBe(
-        'All fuel price sources returned zero or invalid values',
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
       );
 
-      // Should cache zero values for shorter period
+      // Remember the failure briefly, but never cache it as prices
       expect(cacheManager.set).toHaveBeenCalledWith(
+        'fuel_prices:failed',
+        true,
+        10 * 60 * 1000,
+      );
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
         'fuel_prices',
-        result,
-        expect.any(Number), // Using FAILURE_CACHE_TTL_MS constant
+        expect.anything(),
+        expect.anything(),
       );
     });
   });
@@ -346,42 +343,59 @@ describe('FuelPriceService', () => {
   });
 
   describe('Error handling and resilience', () => {
-    it('should handle network timeouts gracefully', async () => {
+    it('should fail fast without scraping while the failure marker is set', async () => {
+      cacheManager.get.mockImplementation(async (key: string) =>
+        key === 'fuel_prices:failed' ? true : null,
+      );
+
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(httpService.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw 503 on network timeouts', async () => {
       cacheManager.get.mockResolvedValue(null);
       httpService.get.mockReturnValue(throwError(() => new Error('TIMEOUT')));
 
-      const result = await service.getFuelPrices();
-
-      expect(result.petrol).toBe(0);
-      expect(result.diesel).toBe(0);
-      expect(result.source).toBe('No sources available');
-      expect(result.status).toBe('failed');
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
-    it('should handle malformed HTML gracefully', async () => {
+    it('should throw 503 on malformed HTML', async () => {
       cacheManager.get.mockResolvedValue(null);
       httpService.get.mockReturnValue(of(createMockResponse('<invalid html>')));
 
-      const result = await service.getFuelPrices();
-
-      expect(result.petrol).toBe(0);
-      expect(result.diesel).toBe(0);
-      expect(result.source).toBe('No sources available');
-      expect(result.status).toBe('failed');
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
-    it('should handle HTTP 404 responses gracefully', async () => {
+    it('should throw 503 on HTTP 404 responses', async () => {
       cacheManager.get.mockResolvedValue(null);
       httpService.get.mockReturnValue(
         throwError(() => ({ status: 404, message: 'Not Found' })),
       );
 
-      const result = await service.getFuelPrices();
-
-      expect(result.petrol).toBe(0);
-      expect(result.diesel).toBe(0);
-      expect(result.source).toBe('No sources available');
-      expect(result.status).toBe('failed');
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
   });
 

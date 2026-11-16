@@ -1,6 +1,11 @@
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
 import { firstValueFrom } from 'rxjs';
@@ -30,9 +35,9 @@ export class FuelPriceService {
   ];
 
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
-
-  // Cache TTL constants
-  private readonly FAILURE_CACHE_TTL_MS = 3600 * 1000; // 1 hour for failed requests
+  private readonly FAILURE_CACHE_KEY = 'fuel_prices:failed';
+  // Short failure marker so an outage does not re-scrape every source on each request
+  private readonly FAILURE_CACHE_TTL_MS = 10 * 60 * 1000;
 
   // Price validation constants (configurable)
   private readonly MIN_PETROL_PRICE = 5;
@@ -101,6 +106,16 @@ export class FuelPriceService {
       return cachedPrices;
     }
 
+    // Recent total failure: fail fast without re-scraping
+    const recentFailure = await this.cacheManager.get<boolean>(
+      this.FAILURE_CACHE_KEY,
+    );
+    if (recentFailure) {
+      throw new ServiceUnavailableException(
+        'Fuel prices are temporarily unavailable from all sources',
+      );
+    }
+
     this.logger.debug('No cached fuel prices found, fetching from APIs');
 
     let lastError: Error | null = null;
@@ -157,29 +172,17 @@ export class FuelPriceService {
       }
     }
 
-    // If we reach here, all sources failed
-    this.logger.error(
-      'All fuel price sources failed, returning default zero values',
-    );
-
-    // Return zero values as last resort
-    const zeroPrices: FuelPrice = {
-      petrol: 0,
-      diesel: 0,
-      lpg: 0,
-      currency: 'GHS',
-      lastUpdated: new Date().toISOString(),
-      source: 'No sources available',
-      status: 'failed',
-      errorMessage: 'All fuel price sources returned zero or invalid values',
-    }; // Cache zero values for a shorter period (1 hour) to avoid repeated failed requests
+    // All sources failed. Throw rather than return zero prices. Remember the
+    // failure briefly so the next requests do not re-scrape every source.
+    this.logger.error('All fuel price sources failed');
     await this.cacheManager.set(
-      this.FUEL_PRICE_CACHE_KEY,
-      zeroPrices,
+      this.FAILURE_CACHE_KEY,
+      true,
       this.FAILURE_CACHE_TTL_MS,
     );
-
-    return zeroPrices;
+    throw new ServiceUnavailableException(
+      'Fuel prices are temporarily unavailable from all sources',
+    );
   }
 
   // Helper method to validate fuel price data

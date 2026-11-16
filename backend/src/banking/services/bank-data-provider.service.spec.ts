@@ -59,6 +59,54 @@ describe('BankDataProviderService (no placeholder data)', () => {
     );
   });
 
+  it('rejects a JSON response whose remark reports a runtime error', async () => {
+    const ATM = {
+      type: 'node',
+      id: 3,
+      lat: 5.6,
+      lon: -0.2,
+      tags: { amenity: 'atm', name: 'Real ATM' },
+    };
+    mockedGet
+      .mockResolvedValueOnce({
+        data: {
+          elements: [{ ...ATM, id: 99 }],
+          remark: 'runtime error: Query timed out in "query" at line 4.',
+        },
+      } as any)
+      .mockResolvedValueOnce({ data: { elements: [ATM] } } as any);
+
+    const atms = await service.getATMs();
+
+    expect(atms).toHaveLength(1); // the partial result from instance 1 was discarded
+    expect(mockedGet).toHaveBeenCalledTimes(2);
+    expect(mockedGet).toHaveBeenNthCalledWith(
+      2,
+      'https://lz4.overpass-api.de/api/interpreter',
+      expect.anything(),
+    );
+  });
+
+  it('queries ATMs by the Ghana area, not by an addr:country tag', async () => {
+    mockedGet.mockResolvedValue(OSM_OK);
+
+    await service.getATMs().catch(() => undefined);
+
+    const query = (mockedGet.mock.calls[0][1] as any).params.data as string;
+    expect(query).toContain('area["name"="Ghana"]');
+    expect(query).toContain('(area.searchArea)');
+    expect(query).not.toContain('addr:country');
+  });
+
+  it('never uses the Swiss-only instance', async () => {
+    mockedGet.mockRejectedValue(new Error('down'));
+
+    await service.getATMs().catch(() => undefined);
+
+    const urls = mockedGet.mock.calls.map((c) => c[0] as string);
+    expect(urls.some((u) => u.includes('overpass.osm.ch'))).toBe(false);
+  });
+
   it('falls back to the second endpoint when the first fails', async () => {
     mockedGet
       .mockRejectedValueOnce(new Error('406'))
@@ -81,7 +129,7 @@ describe('BankDataProviderService (no placeholder data)', () => {
     expect(atms).toHaveLength(1);
     expect(mockedGet).toHaveBeenNthCalledWith(
       2,
-      'https://overpass.osm.ch/api/interpreter',
+      'https://lz4.overpass-api.de/api/interpreter',
       expect.anything(),
     );
   });
@@ -163,8 +211,8 @@ describe('BankDataProviderService (no placeholder data)', () => {
             r.reason instanceof ServiceUnavailableException,
         ),
       ).toBe(true);
-      // One attempt = each endpoint tried once, not once per caller
-      expect(mockedGet).toHaveBeenCalledTimes(2);
+      // One attempt = each of the 3 instances tried once, not once per caller
+      expect(mockedGet).toHaveBeenCalledTimes(3);
     });
 
     it('serves the last good data when a refresh fails after expiry', async () => {

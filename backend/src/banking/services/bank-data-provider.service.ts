@@ -12,10 +12,13 @@ import axios from 'axios';
 import { PrismaService } from '../../common/database/prisma.service';
 import { ATMLocation, Bank } from '../entities/bank.entity';
 
-// Main host first. overpass.osm.ch answered live when the main host was busy.
+// Official global instances, main host first. Do not add country-specific
+// instances such as overpass.osm.ch: it holds Swiss data only and returns
+// no results for Ghana.
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.osm.ch/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
 ];
 const OVERPASS_USER_AGENT = 'GhanaAPI/1.0 (+https://ghana-api.dev)';
 const OVERPASS_TIMEOUT_MS = 100_000;
@@ -305,8 +308,9 @@ export class BankDataProviderService {
    * Run an Overpass QL query. Tries each endpoint in turn.
    *
    * Sent as GET: overpass-api.de rejects the POST with text/plain (406).
-   * A 200 is not enough: a mirror can return an XML error page, so the body
-   * must be JSON with an elements array.
+   * A 200 is not enough: an instance can return an XML error page, or JSON
+   * whose remark reports a runtime error (timeout, out of memory) alongside
+   * partial elements. Both are rejected so the next instance is tried.
    */
   private async queryOverpass(query: string): Promise<{ elements: any[] }> {
     let lastError: unknown = new Error('No Overpass endpoint configured');
@@ -318,6 +322,11 @@ export class BankDataProviderService {
           timeout: OVERPASS_TIMEOUT_MS,
         });
         const data = response.data;
+        const remark: string =
+          data && typeof data.remark === 'string' ? data.remark : '';
+        if (/runtime error/i.test(remark)) {
+          throw new Error(`Overpass runtime error from ${endpoint}: ${remark}`);
+        }
         if (data && typeof data === 'object' && Array.isArray(data.elements)) {
           return data;
         }
@@ -377,9 +386,10 @@ export class BankDataProviderService {
     try {
       const query = `
         [out:json][timeout:90];
+        area["name"="Ghana"]->.searchArea;
         (
-          node["amenity"="atm"]["addr:country"="GH"];
-          way["amenity"="atm"]["addr:country"="GH"];
+          node["amenity"="atm"](area.searchArea);
+          way["amenity"="atm"](area.searchArea);
         );
         out geom;
       `;

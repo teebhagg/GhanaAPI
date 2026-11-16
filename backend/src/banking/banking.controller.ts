@@ -18,7 +18,10 @@ import { BankingService } from './banking.service';
 import { BankSearchResponseDto } from './dto/bank-search-response.dto';
 import { BankSearchQueryDto } from './dto/bank-search.dto';
 import { BankDto } from './dto/bank.dto';
-import { DataFreshnessInterceptor } from './interceptors/data-freshness.interceptor';
+import {
+  DataFreshnessInterceptor,
+  FreshnessDatasets,
+} from './interceptors/data-freshness.interceptor';
 
 @ApiTags('Banking & ATM Locator')
 @Controller('banking')
@@ -45,6 +48,9 @@ export class BankingController {
     status: 500,
     description: 'Internal server error',
   })
+  @FreshnessDatasets((request) =>
+    request.query?.type === 'bank' ? ['banks'] : ['banks', 'atms'],
+  )
   async searchBanks(
     @Query() query: BankSearchQueryDto,
   ): Promise<BankSearchResponseDto> {
@@ -83,6 +89,7 @@ export class BankingController {
     status: 503,
     description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
+  @FreshnessDatasets(['banks'])
   async getAllBanks(): Promise<BankDto[]> {
     try {
       return await this.bankingService.getAllBanks();
@@ -111,6 +118,7 @@ export class BankingController {
     status: 503,
     description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
+  @FreshnessDatasets(['banks', 'atms'])
   async getAllATMs(): Promise<BankDto[]> {
     try {
       return await this.bankingService.getAllATMs();
@@ -144,6 +152,7 @@ export class BankingController {
     status: 503,
     description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
+  @FreshnessDatasets(['banks'])
   async getBanksByRegion(@Param('region') region: string): Promise<BankDto[]> {
     try {
       return await this.bankingService.getBanksByRegion(region);
@@ -177,6 +186,7 @@ export class BankingController {
     status: 503,
     description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
+  @FreshnessDatasets(['banks'])
   async getBanksByCity(@Param('city') city: string): Promise<BankDto[]> {
     try {
       return await this.bankingService.getBanksByCity(city);

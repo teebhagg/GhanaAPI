@@ -3,7 +3,8 @@ import { CryptoService } from './crypto.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpService } from '@nestjs/axios';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { ServiceUnavailableException } from '@nestjs/common';
 
 describe('CryptoService', () => {
   let service: CryptoService;
@@ -52,6 +53,26 @@ describe('CryptoService', () => {
     expect(mockHttpService.get).toHaveBeenCalled();
     expect(mockExchangeRatesService.convertCurrency).toHaveBeenCalled();
     expect(mockCacheManager.set).toHaveBeenCalled();
+  });
+
+  it('should throw 503 and not cache when CoinGecko fails', async () => {
+    mockCacheManager.get.mockResolvedValue(null);
+    mockHttpService.get = jest.fn(() => throwError(() => new Error('429')));
+
+    await expect(service.getCryptoPrices(['bitcoin'])).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+    expect(mockCacheManager.set).not.toHaveBeenCalled();
+  });
+
+  it('should throw 503 and not invent a GHS rate when conversion fails', async () => {
+    mockCacheManager.get.mockResolvedValue(null);
+    mockExchangeRatesService.convertCurrency.mockRejectedValueOnce(new Error('down'));
+
+    await expect(service.getCryptoPrices(['bitcoin'])).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+    expect(mockCacheManager.set).not.toHaveBeenCalled();
   });
 
   it('should return cached data if available', async () => {

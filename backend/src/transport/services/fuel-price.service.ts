@@ -1,6 +1,11 @@
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
 import { firstValueFrom } from 'rxjs';
@@ -30,9 +35,6 @@ export class FuelPriceService {
   ];
 
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
-
-  // Cache TTL constants
-  private readonly FAILURE_CACHE_TTL_MS = 3600 * 1000; // 1 hour for failed requests
 
   // Price validation constants (configurable)
   private readonly MIN_PETROL_PRICE = 5;
@@ -157,29 +159,12 @@ export class FuelPriceService {
       }
     }
 
-    // If we reach here, all sources failed
-    this.logger.error(
-      'All fuel price sources failed, returning default zero values',
+    // All sources failed. Throw rather than return zero prices, and do not cache
+    // the failure, so the next request retries the sources.
+    this.logger.error('All fuel price sources failed');
+    throw new ServiceUnavailableException(
+      'Fuel prices are temporarily unavailable from all sources',
     );
-
-    // Return zero values as last resort
-    const zeroPrices: FuelPrice = {
-      petrol: 0,
-      diesel: 0,
-      lpg: 0,
-      currency: 'GHS',
-      lastUpdated: new Date().toISOString(),
-      source: 'No sources available',
-      status: 'failed',
-      errorMessage: 'All fuel price sources returned zero or invalid values',
-    }; // Cache zero values for a shorter period (1 hour) to avoid repeated failed requests
-    await this.cacheManager.set(
-      this.FUEL_PRICE_CACHE_KEY,
-      zeroPrices,
-      this.FAILURE_CACHE_TTL_MS,
-    );
-
-    return zeroPrices;
   }
 
   // Helper method to validate fuel price data

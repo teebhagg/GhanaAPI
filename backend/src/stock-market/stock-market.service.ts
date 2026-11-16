@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import type { Cache } from 'cache-manager';
+import { LastGoodCache } from '../common/resilience/last-good-cache';
 import { SECTORS } from './data/sectors.data';
 import { StockSearchQueryDto } from './dto/stock-search-query.dto';
 import {
@@ -17,9 +18,16 @@ import { GSEApiProvider } from './providers/gse-api.provider';
 @Injectable()
 export class StockMarketService {
   private readonly logger = new Logger(StockMarketService.name);
-  private readonly STOCKS_CACHE_KEY = 'gse_stocks_data';
+  private readonly STOCKS_KEY = 'all';
   private readonly MARKET_SUMMARY_CACHE_KEY = 'gse_market_summary';
-  private readonly CACHE_TTL = 5 * 60; // 5 minutes
+  // Prices are fresh for 5 minutes. When the upstream fails, the last good
+  // prices are served (flagged stale) for up to 24 hours, then a 503.
+  private readonly stocksCache = new LastGoodCache<RawStockData[]>({
+    label: 'Stock data',
+    freshMs: 5 * 60 * 1000,
+    maxStaleMs: 24 * 60 * 60 * 1000,
+    backoffMs: 2 * 60 * 1000,
+  });
 
   constructor(
     private readonly stockDataProvider: GSEApiProvider,
@@ -103,6 +111,9 @@ export class StockMarketService {
       return response;
     } catch (error) {
       this.logger.error('Error searching stocks:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(`Failed to search stocks: ${error.message}`);
     }
   }
@@ -125,32 +136,25 @@ export class StockMarketService {
   }
 
   /**
-   * Get all stocks
+   * Get all stocks. Served from memory; refreshed from the upstream at most
+   * once at a time. Throws 503 when there is no usable data.
    */
   async getAllStocks(): Promise<RawStockData[]> {
-    try {
-      // Try to get from cache first
-      let stocks = await this.cacheManager.get<RawStockData[]>(
-        this.STOCKS_CACHE_KEY,
-      );
+    const { data } = await this.stocksCache.get(this.STOCKS_KEY, () =>
+      this.stockDataProvider.fetchAllStocks(),
+    );
+    return data;
+  }
 
-      if (!stocks) {
-        this.logger.log('Cache miss - fetching fresh stock data');
-        stocks = await this.stockDataProvider.fetchAllStocks();
-
-        // Cache the results
-        await this.cacheManager.set(
-          this.STOCKS_CACHE_KEY,
-          stocks,
-          this.CACHE_TTL * 1000,
-        );
-      }
-
-      return stocks || [];
-    } catch (error) {
-      this.logger.error('Error getting all stocks:', error);
-      throw new Error(`Failed to get stock data: ${error.message}`);
-    }
+  /**
+   * When the stock data was last fetched, and whether it is past its 5 minute
+   * freshness. Stale data is still real data from the last successful fetch.
+   */
+  getFreshness(): { asOf: string | null; stale: boolean } {
+    const entry = this.stocksCache.peek(this.STOCKS_KEY);
+    return entry
+      ? { asOf: entry.asOf.toISOString(), stale: entry.stale }
+      : { asOf: null, stale: false };
   }
 
   /**
@@ -168,6 +172,9 @@ export class StockMarketService {
       return sectorStocks.map((stock) => this.toStockDto(stock));
     } catch (error) {
       this.logger.error(`Error getting stocks for sector ${sector}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(
         `Failed to get stocks for sector ${sector}: ${error.message}`,
       );
@@ -188,7 +195,8 @@ export class StockMarketService {
         this.logger.log('Generating market summary');
 
         const stocks = await this.getAllStocks();
-        const indices = await this.stockDataProvider.fetchMarketIndices();
+        const indices =
+          await this.stockDataProvider.fetchMarketIndices(stocks);
         const marketStatus = this.stockDataProvider.getMarketStatus();
 
         // Calculate market statistics
@@ -231,6 +239,9 @@ export class StockMarketService {
       return summary;
     } catch (error) {
       this.logger.error('Error getting market summary:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(`Failed to get market summary: ${error.message}`);
     }
   }
@@ -290,6 +301,9 @@ export class StockMarketService {
       );
     } catch (error) {
       this.logger.error('Error calculating sector performance:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(
         `Failed to calculate sector performance: ${error.message}`,
       );
@@ -315,12 +329,12 @@ export class StockMarketService {
       if (marketStatus.isOpen) {
         this.logger.log('Updating stock data cache during market hours');
 
-        // Clear cache to force fresh data
-        await this.cacheManager.del(this.STOCKS_CACHE_KEY);
+        // Refresh the stocks (shares an in-flight request, respects backoff,
+        // and keeps serving the last good data if it fails)
+        await this.stocksCache.refresh(this.STOCKS_KEY, () =>
+          this.stockDataProvider.fetchAllStocks(),
+        );
         await this.cacheManager.del(this.MARKET_SUMMARY_CACHE_KEY);
-
-        // Pre-warm cache with fresh data
-        await this.getAllStocks();
         await this.getMarketSummary();
 
         this.logger.log('Stock data cache updated successfully');

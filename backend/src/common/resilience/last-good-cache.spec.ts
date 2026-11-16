@@ -1,0 +1,133 @@
+import { HttpException, ServiceUnavailableException } from '@nestjs/common';
+import { LastGoodCache } from './last-good-cache';
+
+const HOUR = 60 * 60 * 1000;
+
+describe('LastGoodCache', () => {
+  let cache: LastGoodCache<string[]>;
+  let now: number;
+  let nowSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    now = 1_000_000;
+    nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
+    cache = new LastGoodCache<string[]>({
+      label: 'Test data',
+      freshMs: 5 * 60 * 1000,
+      maxStaleMs: 24 * HOUR,
+      backoffMs: 60 * 1000,
+    });
+  });
+
+  afterEach(() => nowSpy.mockRestore());
+
+  it('fetches once and returns fresh data without contacting upstream again', async () => {
+    const fetcher = jest.fn().mockResolvedValue(['a']);
+
+    const first = await cache.get('k', fetcher);
+    const second = await cache.get('k', fetcher);
+
+    expect(first).toMatchObject({ data: ['a'], stale: false });
+    expect(second.data).toBe(first.data);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('50 simultaneous callers share one upstream request', async () => {
+    let release!: (value: string[]) => void;
+    const fetcher = jest.fn(
+      () => new Promise<string[]>((resolve) => (release = resolve)),
+    );
+
+    const calls = Array.from({ length: 50 }, () => cache.get('k', fetcher));
+    release(['x']);
+    const results = await Promise.all(calls);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(results.every((r) => r.data[0] === 'x')).toBe(true);
+  });
+
+  it('serves older data immediately as stale and refreshes in the background', async () => {
+    await cache.get('k', jest.fn().mockResolvedValue(['old']));
+    now += 10 * 60 * 1000; // past freshMs
+    const fetcher = jest.fn(() => new Promise<string[]>(() => undefined)); // never settles
+
+    const result = await cache.get('k', fetcher); // must not hang
+
+    expect(result).toMatchObject({ data: ['old'], stale: true });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps serving the last good data when the refresh fails', async () => {
+    await cache.get('k', jest.fn().mockResolvedValue(['good']));
+    now += 10 * 60 * 1000;
+
+    const result = await cache.get(
+      'k',
+      jest.fn().mockRejectedValue(new Error('upstream down')),
+    );
+    await new Promise((r) => setImmediate(r));
+
+    expect(result).toMatchObject({ data: ['good'], stale: true });
+    expect(cache.peek('k')?.stale).toBe(true);
+  });
+
+  it('throws 503 when there is no data and upstream fails', async () => {
+    await expect(
+      cache.get('k', jest.fn().mockRejectedValue(new Error('down'))),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('keeps an HttpException from the fetcher as it is', async () => {
+    const original = new HttpException('upstream 503', 503);
+
+    await expect(
+      cache.get('k', jest.fn().mockRejectedValue(original)),
+    ).rejects.toBe(original);
+  });
+
+  it('does not contact upstream during the backoff window, then retries', async () => {
+    const fetcher = jest.fn().mockRejectedValue(new Error('down'));
+    await expect(cache.get('k', fetcher)).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+
+    now += 30 * 1000; // inside the 60 s backoff
+    await expect(cache.get('k', fetcher)).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+
+    now += 31 * 1000; // backoff over
+    await expect(cache.get('k', fetcher)).rejects.toBeInstanceOf(
+      ServiceUnavailableException,
+    );
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not serve data older than maxStaleMs', async () => {
+    await cache.get('k', jest.fn().mockResolvedValue(['ancient']));
+    now += 25 * HOUR;
+
+    await expect(
+      cache.get('k', jest.fn().mockRejectedValue(new Error('down'))),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
+
+  it('keeps keys independent', async () => {
+    await cache.get('a', jest.fn().mockResolvedValue(['A']));
+    const b = await cache.get('b', jest.fn().mockResolvedValue(['B']));
+
+    expect(b.data).toEqual(['B']);
+    expect(cache.peek('a')?.stale).toBe(false);
+    expect(cache.peek('missing')).toBeNull();
+  });
+
+  it('refresh() warms the cache and never throws', async () => {
+    await cache.refresh('k', jest.fn().mockResolvedValue(['warm']));
+    expect(cache.peek('k')?.stale).toBe(false);
+
+    await expect(
+      cache.refresh('other', jest.fn().mockRejectedValue(new Error('down'))),
+    ).resolves.toBeUndefined();
+  });
+});

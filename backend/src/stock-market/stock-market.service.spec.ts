@@ -144,24 +144,56 @@ describe('StockMarketService', () => {
   });
 
   describe('getAllStocks', () => {
-    it('should return cached stocks if available', async () => {
-      mockCacheManager.get.mockResolvedValueOnce([mockRawStockData]);
-
+    it('should fetch stocks from the provider on first use', async () => {
       const result = await service.getAllStocks();
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(mockRawStockData);
-      expect(gseApiProvider.fetchAllStocks).not.toHaveBeenCalled();
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
     });
 
-    it('should fetch and cache stocks if not in cache', async () => {
-      mockCacheManager.get.mockResolvedValueOnce(null); // Cache miss
-
+    it('should serve a second call from memory without calling the provider', async () => {
+      await service.getAllStocks();
       const result = await service.getAllStocks();
 
-      expect(result).toHaveLength(1);
-      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalled();
-      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(result[0]).toEqual(mockRawStockData);
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('should share one provider call between simultaneous requests', async () => {
+      await Promise.all(Array.from({ length: 20 }, () => service.getAllStocks()));
+
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw 503 (not 500) when there is no data and the provider fails', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValueOnce(
+        new Error('GSE API down'),
+      );
+
+      await expect(service.getAllStocks()).rejects.toMatchObject({ status: 503 });
+    });
+
+    it('should pass the 503 through search and sector queries', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('GSE API down'),
+      );
+
+      await expect(service.searchStocks({} as any)).rejects.toMatchObject({
+        status: 503,
+      });
+      await expect(service.getStocksBySector('Financials')).rejects.toMatchObject({
+        status: 503,
+      });
+    });
+
+    it('should report freshness of the stored data', async () => {
+      expect(service.getFreshness()).toEqual({ asOf: null, stale: false });
+
+      await service.getAllStocks();
+
+      const freshness = service.getFreshness();
+      expect(freshness.asOf).toEqual(expect.any(String));
+      expect(freshness.stale).toBe(false);
     });
   });
 

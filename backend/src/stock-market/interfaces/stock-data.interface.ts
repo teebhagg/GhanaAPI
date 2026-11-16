@@ -55,7 +55,9 @@ export interface StockDataProvider {
   name: string;
   fetchAllStocks(): Promise<RawStockData[]>;
   fetchStock(symbol: string): Promise<RawStockData>;
-  fetchMarketIndices(): Promise<MarketIndices>;
+  fetchMarketIndices(
+    stocks?: Array<{ price: number; change: number }>,
+  ): Promise<MarketIndices>;
   getMarketStatus(): Promise<MarketStatus>;
   isHealthy(): Promise<boolean>;
 }

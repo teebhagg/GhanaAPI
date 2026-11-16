@@ -6,8 +6,10 @@ import {
   Logger,
   Param,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { StockFreshnessInterceptor } from './interceptors/stock-freshness.interceptor';
 import { StockSearchQueryDto } from './dto/stock-search-query.dto';
 import {
   MarketSummaryDto,
@@ -43,12 +45,16 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async searchStocks(
     @Query() query: StockSearchQueryDto,
   ): Promise<StockSearchResponseDto> {
     try {
       return await this.stockMarketService.searchStocks(query);
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       this.logger.error('Error searching stocks:', error);
       throw new HttpException(
         'Failed to search stocks',
@@ -85,6 +91,9 @@ export class StockMarketController {
     try {
       return await this.stockMarketService.getStock(symbol);
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       if (error.message.includes('not found')) {
         throw new HttpException(
           `Stock symbol '${symbol}' not found on Ghana Stock Exchange`,
@@ -113,6 +122,7 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async getAllStocks(): Promise<StockDto[]> {
     try {
       const rawStocks = await this.stockMarketService.getAllStocks();
@@ -136,6 +146,9 @@ export class StockMarketController {
         status: stock.status,
       }));
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       this.logger.error('Error getting all stocks:', error);
       throw new HttpException(
         'Failed to retrieve stock data',
@@ -165,12 +178,16 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async getStocksBySector(
     @Param('sector') sector: string,
   ): Promise<StockDto[]> {
     try {
       return await this.stockMarketService.getStocksBySector(sector);
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       this.logger.error(`Error getting stocks for sector ${sector}:`, error);
       throw new HttpException(
         `Failed to retrieve stocks for sector: ${sector}`,
@@ -194,10 +211,14 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async getMarketSummary(): Promise<MarketSummaryDto> {
     try {
       return await this.stockMarketService.getMarketSummary();
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       this.logger.error('Error getting market summary:', error);
       throw new HttpException(
         'Failed to retrieve market summary',
@@ -221,10 +242,14 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async getSectorPerformance(): Promise<SectorPerformanceDto[]> {
     try {
       return await this.stockMarketService.getSectorPerformance();
     } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.SERVICE_UNAVAILABLE) {
+        throw error;
+      }
       this.logger.error('Error getting sector performance:', error);
       throw new HttpException(
         'Failed to retrieve sector performance data',

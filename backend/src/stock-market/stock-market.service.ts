@@ -27,11 +27,12 @@ export class StockMarketService {
   private readonly STOCKS_KEY = 'all';
   private readonly MARKET_SUMMARY_CACHE_KEY = 'gse_market_summary';
   // Prices are fresh for 5 minutes. When the upstream fails, the last good
-  // prices are served (flagged stale) for up to 24 hours, then a 503.
+  // prices are served (flagged stale) for up to 3 days, which covers a weekend
+  // and a public holiday after Friday's close, then a 503.
   private readonly stocksCache = new LastGoodCache<RawStockData[]>({
     label: 'Stock data',
     freshMs: 5 * 60 * 1000,
-    maxStaleMs: 24 * 60 * 60 * 1000,
+    maxStaleMs: 3 * 24 * 60 * 60 * 1000,
     backoffMs: 2 * 60 * 1000,
   });
 
@@ -241,7 +242,8 @@ export class StockMarketService {
           declining,
           unchanged,
           marketStatus: marketStatus.isOpen ? 'OPEN' : 'CLOSED',
-          lastUpdated: new Date().toISOString(),
+          // When the prices were fetched, not when this summary was built
+          lastUpdated: this.getFreshness().asOf ?? new Date().toISOString(),
           nextMarketOpen: marketStatus.nextOpen.toISOString(),
           marketClose: marketStatus.nextClose.toISOString(),
         };

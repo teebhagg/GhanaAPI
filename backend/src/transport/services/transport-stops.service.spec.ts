@@ -18,6 +18,13 @@ const ELEMENTS = {
     },
     {
       type: 'node',
+      id: 3,
+      lat: 5.62,
+      lon: -0.22,
+      tags: { name: 'Lapaz', public_transport: 'platform' },
+    },
+    {
+      type: 'node',
       id: 2,
       lat: 5.61,
       lon: -0.21,
@@ -48,7 +55,7 @@ describe('TransportStopsService', () => {
 
     const stops = await service.getTransportStops('kumasi');
 
-    expect(stops).toHaveLength(2);
+    expect(stops).toHaveLength(3);
     expect(stops[0]).toMatchObject({
       name: 'Circle',
       coordinates: [5.6, -0.2],
@@ -86,14 +93,38 @@ describe('TransportStopsService', () => {
     expect(mockedQuery).not.toHaveBeenCalled();
   });
 
-  it('accepts an allowed stop type and puts it in the query', async () => {
+  it('filters by stop type in code and never sends the type to Overpass', async () => {
     mockedQuery.mockResolvedValue(ELEMENTS);
 
-    await service.getTransportStops('accra', 'platform');
+    const platforms = await service.getTransportStops('accra', 'platform');
+    const busStops = await service.getTransportStops('accra', 'bus_stop');
+    const stations = await service.getTransportStops('accra', 'station');
 
-    expect(mockedQuery.mock.calls[0][0]).toContain(
-      '["public_transport"="platform"]',
-    );
+    expect(platforms.map((s) => s.name)).toEqual(['Lapaz']);
+    expect(busStops.map((s) => s.name)).toEqual(['Kaneshie']);
+    expect(stations).toEqual([]);
+    expect(mockedQuery.mock.calls[0][0]).not.toContain('"platform"]');
+  });
+
+  it('shares one Overpass query per city across all types', async () => {
+    mockedQuery.mockResolvedValue(ELEMENTS);
+
+    await Promise.all([
+      service.getTransportStops('accra'),
+      service.getTransportStops('accra', 'platform'),
+      service.getTransportStops('accra', 'bus_stop'),
+      service.getTransportStops('accra', 'stop_position'),
+    ]);
+
+    expect(mockedQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not treat an empty type filter result as an outage', async () => {
+    mockedQuery.mockResolvedValue(ELEMENTS);
+
+    await expect(
+      service.getTransportStops('accra', 'station'),
+    ).resolves.toEqual([]);
   });
 
   it('keeps cache keys bounded: unknown cities share the default city entry', async () => {
@@ -123,7 +154,7 @@ describe('TransportStopsService', () => {
 
     now += 11 * 60 * 1000; // past the 10 minute backoff
     mockedQuery.mockResolvedValue(ELEMENTS);
-    await expect(service.getTransportStops('accra')).resolves.toHaveLength(2);
+    await expect(service.getTransportStops('accra')).resolves.toHaveLength(3);
   });
 
   it('keeps serving the last good stops when a later refresh fails', async () => {

@@ -90,6 +90,7 @@ export class StockMarketController {
     status: 500,
     description: 'Internal server error',
   })
+  @UseInterceptors(StockFreshnessInterceptor)
   async getStock(@Param('symbol') symbol: string): Promise<StockDto> {
     try {
       return await this.stockMarketService.getStock(symbol);

@@ -11,12 +11,16 @@ import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { LastGoodCache } from '../../common/resilience/last-good-cache';
 
-/** Values of the OSM public_transport tag we accept as a filter. */
+/**
+ * Stop types a caller may filter by. These are the types that can occur in the
+ * data we fetch: the value of the OSM public_transport tag, or 'bus_stop' for
+ * a plain highway=bus_stop node.
+ */
 export const ALLOWED_STOP_TYPES = [
+  'bus_stop',
   'stop_position',
   'platform',
   'station',
-  'stop_area',
 ];
 
 export interface TransportStop {
@@ -50,33 +54,32 @@ export class TransportStopsService {
     city: string = 'accra',
     type?: string,
   ): Promise<TransportStop[]> {
-    // The type is placed inside the Overpass query, so only known values may
-    // reach it. Anything else could change the meaning of the query.
+    // Reject unknown types instead of silently returning nothing. The type is
+    // never placed in the Overpass query.
     if (type !== undefined && !ALLOWED_STOP_TYPES.includes(type)) {
       throw new BadRequestException(
         `Invalid stop type. Allowed values: ${ALLOWED_STOP_TYPES.join(', ')}`,
       );
     }
 
+    // One cached list per city. The type is applied here, never sent to
+    // Overpass, so 4 cities mean at most 4 upstream queries however many
+    // types are requested.
     const cityKey = this.resolveCity(city);
-    const { data } = await this.stopsCache.get(
-      `${cityKey}|${type ?? 'all'}`,
-      () => this.fetchStops(cityKey, type),
+    const { data } = await this.stopsCache.get(cityKey, () =>
+      this.fetchStops(cityKey),
     );
-    return data;
+    return type ? data.filter((stop) => stop.type === type) : data;
   }
 
-  private async fetchStops(
-    city: string,
-    type?: string,
-  ): Promise<TransportStop[]> {
+  private async fetchStops(city: string): Promise<TransportStop[]> {
     for (const api of this.transportApis) {
       try {
         this.logger.log(`Trying to get transport stops from ${api}`);
 
         switch (api) {
           case 'overpass': {
-            const stops = await this.getStopsFromOverpass(city, type);
+            const stops = await this.getStopsFromOverpass(city);
             // An empty list for a city is an outage, not an answer. Do not
             // cache it for a day.
             if (stops.length === 0) {
@@ -85,7 +88,7 @@ export class TransportStopsService {
             return stops;
           }
           case 'gtfs':
-            return await this.getStopsFromGTFS(city, type);
+            return await this.getStopsFromGTFS(city);
           default:
             continue;
         }
@@ -101,17 +104,13 @@ export class TransportStopsService {
     );
   }
 
-  private async getStopsFromOverpass(
-    city: string,
-    type?: string,
-  ): Promise<TransportStop[]> {
+  private async getStopsFromOverpass(city: string): Promise<TransportStop[]> {
     const bbox = this.getCityBoundingBox(city);
-    const typeFilter = type ? `["public_transport"="${type}"]` : '';
 
     const query = `
       [out:json][timeout:90];
       (
-        node["public_transport"~"stop_position|platform"]${typeFilter}(${bbox});
+        node["public_transport"~"stop_position|platform|station"](${bbox});
         node["highway"="bus_stop"](${bbox});
         node["amenity"="bus_station"](${bbox});
       );
@@ -122,10 +121,7 @@ export class TransportStopsService {
     return this.parseOverpassStops(data);
   }
 
-  private async getStopsFromGTFS(
-    city: string,
-    type?: string,
-  ): Promise<TransportStop[]> {
+  private async getStopsFromGTFS(city: string): Promise<TransportStop[]> {
     const gtfsUrl = this.configService.get<string>('GHANA_GTFS_URL');
     if (!gtfsUrl) {
       throw new Error('No GTFS data available for Ghana');
@@ -135,7 +131,7 @@ export class TransportStopsService {
       this.httpService.get(`${gtfsUrl}/stops.txt`, { timeout: 15000 }),
     );
 
-    return this.parseGTFSStops(response.data, type);
+    return this.parseGTFSStops(response.data);
   }
 
   // ===== PARSING METHODS =====
@@ -164,7 +160,7 @@ export class TransportStopsService {
     return stops;
   }
 
-  private parseGTFSStops(data: string, type?: string): TransportStop[] {
+  private parseGTFSStops(data: string): TransportStop[] {
     const lines = data.split('\n');
     const headers = lines[0].split(',');
     const stops: TransportStop[] = [];
@@ -172,17 +168,12 @@ export class TransportStopsService {
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',');
       if (values.length >= headers.length) {
-        const stop: TransportStop = {
+        stops.push({
           id: values[0], // stop_id
           name: values[2], // stop_name
           coordinates: [parseFloat(values[4]), parseFloat(values[5])], // stop_lat, stop_lon
           type: 'bus_stop',
-        };
-
-        // Filter by type if specified
-        if (!type || stop.type === type) {
-          stops.push(stop);
-        }
+        });
       }
     }
 

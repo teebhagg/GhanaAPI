@@ -49,7 +49,7 @@ export class CryptoService {
         )
       );
       coinGeckoData = response.data;
-    } catch (error) {
+    } catch {
       throw new ServiceUnavailableException(
         'Crypto prices are temporarily unavailable from the upstream provider',
       );

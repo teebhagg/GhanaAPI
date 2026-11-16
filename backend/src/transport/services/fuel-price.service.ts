@@ -35,6 +35,9 @@ export class FuelPriceService {
   ];
 
   private readonly FUEL_PRICE_CACHE_KEY = 'fuel_prices';
+  private readonly FAILURE_CACHE_KEY = 'fuel_prices:failed';
+  // Short failure marker so an outage does not re-scrape every source on each request
+  private readonly FAILURE_CACHE_TTL_MS = 10 * 60 * 1000;
 
   // Price validation constants (configurable)
   private readonly MIN_PETROL_PRICE = 5;
@@ -103,6 +106,16 @@ export class FuelPriceService {
       return cachedPrices;
     }
 
+    // Recent total failure: fail fast without re-scraping
+    const recentFailure = await this.cacheManager.get<boolean>(
+      this.FAILURE_CACHE_KEY,
+    );
+    if (recentFailure) {
+      throw new ServiceUnavailableException(
+        'Fuel prices are temporarily unavailable from all sources',
+      );
+    }
+
     this.logger.debug('No cached fuel prices found, fetching from APIs');
 
     let lastError: Error | null = null;
@@ -159,9 +172,14 @@ export class FuelPriceService {
       }
     }
 
-    // All sources failed. Throw rather than return zero prices, and do not cache
-    // the failure, so the next request retries the sources.
+    // All sources failed. Throw rather than return zero prices. Remember the
+    // failure briefly so the next requests do not re-scrape every source.
     this.logger.error('All fuel price sources failed');
+    await this.cacheManager.set(
+      this.FAILURE_CACHE_KEY,
+      true,
+      this.FAILURE_CACHE_TTL_MS,
+    );
     throw new ServiceUnavailableException(
       'Fuel prices are temporarily unavailable from all sources',
     );

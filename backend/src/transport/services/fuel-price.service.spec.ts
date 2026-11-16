@@ -215,7 +215,7 @@ describe('FuelPriceService', () => {
       expect(result.status).toBe('success');
     });
 
-    it('should throw 503 and not cache when all sources fail', async () => {
+    it('should throw 503 and record a short failure marker when all sources fail', async () => {
       cacheManager.get.mockResolvedValue(null);
 
       // Mock all sources failing
@@ -227,8 +227,17 @@ describe('FuelPriceService', () => {
         ServiceUnavailableException,
       );
 
-      // A failure must not be cached, so the next request retries
-      expect(cacheManager.set).not.toHaveBeenCalled();
+      // Remember the failure briefly, but never cache it as prices
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'fuel_prices:failed',
+        true,
+        10 * 60 * 1000,
+      );
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
   });
 
@@ -334,6 +343,17 @@ describe('FuelPriceService', () => {
   });
 
   describe('Error handling and resilience', () => {
+    it('should fail fast without scraping while the failure marker is set', async () => {
+      cacheManager.get.mockImplementation(async (key: string) =>
+        key === 'fuel_prices:failed' ? true : null,
+      );
+
+      await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      expect(httpService.get).not.toHaveBeenCalled();
+    });
+
     it('should throw 503 on network timeouts', async () => {
       cacheManager.get.mockResolvedValue(null);
       httpService.get.mockReturnValue(throwError(() => new Error('TIMEOUT')));
@@ -341,7 +361,11 @@ describe('FuelPriceService', () => {
       await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
         ServiceUnavailableException,
       );
-      expect(cacheManager.set).not.toHaveBeenCalled();
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
     it('should throw 503 on malformed HTML', async () => {
@@ -351,7 +375,11 @@ describe('FuelPriceService', () => {
       await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
         ServiceUnavailableException,
       );
-      expect(cacheManager.set).not.toHaveBeenCalled();
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
     it('should throw 503 on HTTP 404 responses', async () => {
@@ -363,7 +391,11 @@ describe('FuelPriceService', () => {
       await expect(service.getFuelPrices()).rejects.toBeInstanceOf(
         ServiceUnavailableException,
       );
-      expect(cacheManager.set).not.toHaveBeenCalled();
+      expect(cacheManager.set).not.toHaveBeenCalledWith(
+        'fuel_prices',
+        expect.anything(),
+        expect.anything(),
+      );
     });
   });
 

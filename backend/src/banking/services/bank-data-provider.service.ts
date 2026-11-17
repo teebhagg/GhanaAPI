@@ -138,7 +138,7 @@ export class BankDataProviderService {
     const fetched = slots
       .map((slot) => slot.fetchedAt)
       .filter((at): at is number => at !== null);
-    const asOf = fetched.length ? new Date(Math.min(...fetched)) : null;
+    const asOf = fetched.length ? new Date(Math.max(...fetched)) : null;
 
     return {
       status,

@@ -261,6 +261,19 @@ describe('FuelPriceService', () => {
       expect(health.status).toBe('healthy');
       expect(health.asOf).not.toBeNull();
     });
+
+    it('is degraded when a later fetch fails while the cached prices are still usable', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      httpService.get
+        .mockReturnValueOnce(of(createMockResponse(mockNpaHtml)))
+        .mockReturnValueOnce(of(createMockResponse(mockNpaArticleHtml)));
+      await service.getFuelPrices();
+
+      httpService.get.mockReturnValue(throwError(() => new Error('down')));
+      await service.getFuelPrices().catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('degraded');
+    });
   });
 
   describe('isValidFuelPriceData', () => {

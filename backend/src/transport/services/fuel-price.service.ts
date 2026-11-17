@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
-import { ServiceHealth } from '../../common/health/service-health';
+import { HealthState, ServiceHealth } from '../../common/health/service-health';
 import { firstValueFrom } from 'rxjs';
 
 export interface FuelPrice {
@@ -71,6 +71,8 @@ export class FuelPriceService {
   // because the cache entries above expire and would forget an outage.
   private lastFetchFailed = false;
   private lastFetchedAt: number | null = null;
+  // When the prices cached by the last successful fetch expire
+  private cachedPricesUntil: number | null = null;
 
   constructor(
     private readonly httpService: HttpService,
@@ -79,16 +81,29 @@ export class FuelPriceService {
 
   /** For the /status endpoint. Never scrapes anything. */
   getHealth(): ServiceHealth {
+    // An overlapping request can fail after another cached the prices. Those
+    // prices stay usable until they expire, so the outage is only degraded.
+    const cachedPricesUsable =
+      this.cachedPricesUntil !== null && Date.now() < this.cachedPricesUntil;
+    const status: HealthState = !this.lastFetchFailed
+      ? 'healthy'
+      : cachedPricesUsable
+        ? 'degraded'
+        : 'unhealthy';
+
     return {
-      status: this.lastFetchFailed ? 'unhealthy' : 'healthy',
+      status,
       asOf: this.lastFetchedAt
         ? new Date(this.lastFetchedAt).toISOString()
         : null,
-      detail: this.lastFetchFailed
-        ? 'All fuel price sources failed on the last attempt'
-        : this.lastFetchedAt
-          ? undefined
-          : 'No fuel prices requested since the server started',
+      detail:
+        status === 'degraded'
+          ? 'The last fuel price fetch failed; serving cached prices'
+          : status === 'unhealthy'
+            ? 'All fuel price sources failed on the last attempt'
+            : this.lastFetchedAt
+              ? undefined
+              : 'No fuel prices requested since the server started',
     };
   }
 
@@ -177,6 +192,7 @@ export class FuelPriceService {
           );
           this.lastFetchFailed = false;
           this.lastFetchedAt = Date.now();
+          this.cachedPricesUntil = this.lastFetchedAt + ttl * 1000;
           this.logger.log(
             `Successfully fetched and cached fuel prices from ${api}`,
           );

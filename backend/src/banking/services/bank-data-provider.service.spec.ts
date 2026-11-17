@@ -409,5 +409,33 @@ describe('BankDataProviderService (no placeholder data)', () => {
       expect(health.status).toBe('healthy');
       expect(health.asOf).not.toBeNull();
     });
+
+    it('reports the later of the bank and ATM fetch times', async () => {
+      mockedGet.mockResolvedValue({
+        data: {
+          elements: [
+            BANK,
+            {
+              type: 'node',
+              id: 8,
+              lat: 5.6,
+              lon: -0.2,
+              tags: { amenity: 'atm', name: 'Test ATM' },
+            },
+          ],
+        },
+      } as any);
+      const now = jest.spyOn(Date, 'now');
+      try {
+        now.mockReturnValue(Date.parse('2026-11-16T10:00:00Z'));
+        await service.getBanks();
+        now.mockReturnValue(Date.parse('2026-11-16T11:00:00Z'));
+        await service.getATMs();
+      } finally {
+        now.mockRestore();
+      }
+
+      expect(service.getHealth().asOf).toBe('2026-11-16T11:00:00.000Z');
+    });
   });
 });

@@ -6,11 +6,13 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ExchangeRatesService } from './exchange-rates.service';
 import { HistoricalQueryDto } from './dto/historical-query.dto';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
+import { HistoricalRateLimitGuard } from './guards/historical-rate-limit.guard';
 import { ConvertCurrencyDto } from './dto/convert-currency.dto';
 
 @Controller('exchange-rates')
@@ -30,6 +32,7 @@ export class ExchangeRatesController {
   }
 
   @Get('historical')
+  @UseGuards(HistoricalRateLimitGuard)
   @ApiOperation({
     summary: 'Get historical exchange rates from stored snapshots',
   })
@@ -43,6 +46,7 @@ export class ExchangeRatesController {
   }
 
   @Get(':currency/trend')
+  @UseGuards(HistoricalRateLimitGuard)
   @ApiOperation({
     summary: 'Get 7-day exchange rate trend for a currency',
   })

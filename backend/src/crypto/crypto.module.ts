@@ -13,5 +13,6 @@ import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
   ],
   controllers: [CryptoController],
   providers: [CryptoService],
+  exports: [CryptoService],
 })
 export class CryptoModule {}

@@ -3,6 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { HealthState } from '../health/service-health';
 
 export interface LastGoodCacheOptions {
   /** Shown in logs and error messages, e.g. "Stock data" */
@@ -27,6 +28,8 @@ interface Entry<T> {
   data: T | null;
   fetchedAt: number | null;
   failedUntil: number;
+  /** True from a failed refresh until the next successful one */
+  lastRefreshFailed: boolean;
   inFlight: Promise<T> | null;
 }
 
@@ -97,10 +100,47 @@ export class LastGoodCache<T> {
     };
   }
 
+  /**
+   * Health across all keys, without contacting upstream. An entry whose last
+   * refresh failed is unhealthy if it has nothing usable (no data, or data
+   * older than maxStaleMs) and degraded if it still serves older real data.
+   * Entries that were never fetched, or whose last refresh worked, are healthy.
+   */
+  health(): { status: HealthState; asOf: Date | null } {
+    let status: HealthState = 'healthy';
+    let newest: number | null = null;
+
+    for (const entry of this.entries.values()) {
+      if (
+        entry.fetchedAt !== null &&
+        (newest === null || entry.fetchedAt > newest)
+      ) {
+        newest = entry.fetchedAt;
+      }
+      if (!entry.lastRefreshFailed) {
+        continue;
+      }
+      const usable =
+        entry.data !== null && this.ageOf(entry) < this.options.maxStaleMs;
+      if (!usable) {
+        status = 'unhealthy';
+      } else if (status === 'healthy') {
+        status = 'degraded';
+      }
+    }
+    return { status, asOf: newest === null ? null : new Date(newest) };
+  }
+
   private entryFor(key: string): Entry<T> {
     let entry = this.entries.get(key);
     if (!entry) {
-      entry = { data: null, fetchedAt: null, failedUntil: 0, inFlight: null };
+      entry = {
+        data: null,
+        fetchedAt: null,
+        failedUntil: 0,
+        lastRefreshFailed: false,
+        inFlight: null,
+      };
       this.entries.set(key, entry);
     }
     return entry;
@@ -141,6 +181,7 @@ export class LastGoodCache<T> {
         (data) => {
           entry.data = data;
           entry.fetchedAt = Date.now();
+          entry.lastRefreshFailed = false;
           return data;
         },
         (error) => {
@@ -148,6 +189,7 @@ export class LastGoodCache<T> {
             `${key}: refresh failed: ${(error as Error).message}`,
           );
           entry.failedUntil = Date.now() + this.options.backoffMs;
+          entry.lastRefreshFailed = true;
           throw error;
         },
       )

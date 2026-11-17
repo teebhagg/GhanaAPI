@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
+import { HealthState, ServiceHealth } from '../../common/health/service-health';
 import { firstValueFrom } from 'rxjs';
 
 export interface FuelPrice {
@@ -66,10 +67,45 @@ export class FuelPriceService {
     lpg: /(?:lpg|liquefied petroleum gas|gas).*?(?:gh¢|ghs|cedi)?\s*(\d+\.?\d*)/gi,
   };
 
+  // What the last real fetch did, for the /status endpoint. Kept in memory
+  // because the cache entries above expire and would forget an outage.
+  private lastFetchFailed = false;
+  private lastFetchedAt: number | null = null;
+  // When the prices cached by the last successful fetch expire
+  private cachedPricesUntil: number | null = null;
+
   constructor(
     private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
+
+  /** For the /status endpoint. Never scrapes anything. */
+  getHealth(): ServiceHealth {
+    // An overlapping request can fail after another cached the prices. Those
+    // prices stay usable until they expire, so the outage is only degraded.
+    const cachedPricesUsable =
+      this.cachedPricesUntil !== null && Date.now() < this.cachedPricesUntil;
+    const status: HealthState = !this.lastFetchFailed
+      ? 'healthy'
+      : cachedPricesUsable
+        ? 'degraded'
+        : 'unhealthy';
+
+    return {
+      status,
+      asOf: this.lastFetchedAt
+        ? new Date(this.lastFetchedAt).toISOString()
+        : null,
+      detail:
+        status === 'degraded'
+          ? 'The last fuel price fetch failed; serving cached prices'
+          : status === 'unhealthy'
+            ? 'All fuel price sources failed on the last attempt'
+            : this.lastFetchedAt
+              ? undefined
+              : 'No fuel prices requested since the server started',
+    };
+  }
 
   /**
    * Calculate TTL (time-to-live) in seconds until 11:59 PM today
@@ -154,6 +190,9 @@ export class FuelPriceService {
             fuelPrices,
             ttl * 1000,
           );
+          this.lastFetchFailed = false;
+          this.lastFetchedAt = Date.now();
+          this.cachedPricesUntil = this.lastFetchedAt + ttl * 1000;
           this.logger.log(
             `Successfully fetched and cached fuel prices from ${api}`,
           );
@@ -175,6 +214,7 @@ export class FuelPriceService {
     // All sources failed. Throw rather than return zero prices. Remember the
     // failure briefly so the next requests do not re-scrape every source.
     this.logger.error('All fuel price sources failed');
+    this.lastFetchFailed = true;
     await this.cacheManager.set(
       this.FAILURE_CACHE_KEY,
       true,

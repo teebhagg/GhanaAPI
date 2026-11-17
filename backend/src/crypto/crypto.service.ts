@@ -8,17 +8,55 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
+import { HealthState, ServiceHealth } from '../common/health/service-health';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+
+// How long a price set stays in the cache (cache-manager v5 uses ms)
+const CACHE_TTL_MS = 60_000;
 
 @Injectable()
 export class CryptoService {
   private readonly logger = new Logger(CryptoService.name);
+
+  // What the last real upstream attempt did, for the /status endpoint. The
+  // price cache only lasts 60 s and would forget an outage.
+  private lastUpstreamFailed = false;
+  private lastUpstreamOkAt: number | null = null;
 
   constructor(
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly httpService: HttpService,
     private readonly exchangeRatesService: ExchangeRatesService,
   ) {}
+
+  /** For the /status endpoint. Never calls CoinGecko. */
+  getHealth(): ServiceHealth {
+    // A failed request can overlap one that cached prices. Those prices stay
+    // usable until the cache entry expires, so the outage is only degraded.
+    const cachedPricesUsable =
+      this.lastUpstreamOkAt !== null &&
+      Date.now() - this.lastUpstreamOkAt < CACHE_TTL_MS;
+    const status: HealthState = !this.lastUpstreamFailed
+      ? 'healthy'
+      : cachedPricesUsable
+        ? 'degraded'
+        : 'unhealthy';
+
+    return {
+      status,
+      asOf: this.lastUpstreamOkAt
+        ? new Date(this.lastUpstreamOkAt).toISOString()
+        : null,
+      detail:
+        status === 'degraded'
+          ? 'The last attempt to get crypto prices failed; serving cached prices'
+          : status === 'unhealthy'
+            ? 'The last attempt to get crypto prices failed'
+            : this.lastUpstreamOkAt
+              ? undefined
+              : 'No crypto prices requested since the server started',
+    };
+  }
 
   async getCryptoPrices(ids: string[] = ['bitcoin', 'ethereum']) {
     const idsString = ids.sort().join(',');
@@ -50,6 +88,7 @@ export class CryptoService {
       );
       coinGeckoData = response.data;
     } catch {
+      this.lastUpstreamFailed = true;
       throw new ServiceUnavailableException(
         'Crypto prices are temporarily unavailable from the upstream provider',
       );
@@ -71,6 +110,7 @@ export class CryptoService {
           ghsPrice = conversion.result;
         } catch (error) {
           this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
+          this.lastUpstreamFailed = true;
           throw new ServiceUnavailableException(
             'Crypto GHS conversion is temporarily unavailable',
           );
@@ -89,8 +129,11 @@ export class CryptoService {
       timestamp: new Date().toISOString(),
     };
 
+    this.lastUpstreamFailed = false;
+    this.lastUpstreamOkAt = Date.now();
+
     // Cache results for 60 seconds. Errors above return before this point, so they are never cached.
-    await this.cache.set(cacheKey, responseData, 60000); // cache-manager v5 uses ms
+    await this.cache.set(cacheKey, responseData, CACHE_TTL_MS);
 
     return responseData;
   }

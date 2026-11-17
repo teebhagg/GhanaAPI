@@ -3,7 +3,7 @@ import { CryptoService } from './crypto.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpService } from '@nestjs/axios';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { ServiceUnavailableException } from '@nestjs/common';
 
 describe('CryptoService', () => {
@@ -83,5 +83,75 @@ describe('CryptoService', () => {
 
     expect(result).toEqual(cachedData);
     expect(mockHttpService.get).not.toHaveBeenCalled();
+  });
+
+  describe('getHealth', () => {
+    it('is healthy before any request', () => {
+      expect(service.getHealth()).toMatchObject({
+        status: 'healthy',
+        asOf: null,
+      });
+    });
+
+    it('is unhealthy after a failed attempt and healthy after a later success', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      mockHttpService.get = jest.fn(() => throwError(() => new Error('429')));
+      await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+      expect(service.getHealth().status).toBe('unhealthy');
+
+      mockHttpService.get = jest.fn(() =>
+        of({ data: { bitcoin: { usd: 60000 } } }),
+      );
+      await service.getCryptoPrices(['bitcoin']);
+      const health = service.getHealth();
+      expect(health.status).toBe('healthy');
+      expect(health.asOf).not.toBeNull();
+    });
+
+    it('is degraded when an overlapping request fails after another cached prices', async () => {
+      mockCacheManager.get.mockResolvedValue(null); // both requests miss the cache
+      mockHttpService.get = jest
+        .fn()
+        .mockReturnValueOnce(of({ data: { bitcoin: { usd: 60000 } } }))
+        .mockReturnValueOnce(
+          new Observable((subscriber) => {
+            setTimeout(() => subscriber.error(new Error('429')), 5);
+          }),
+        );
+
+      await Promise.all([
+        service.getCryptoPrices(['bitcoin']),
+        service.getCryptoPrices(['bitcoin']).catch(() => undefined),
+      ]);
+
+      expect(mockCacheManager.set).toHaveBeenCalledTimes(1);
+      expect(service.getHealth().status).toBe('degraded');
+    });
+
+    it('is unhealthy once the last good prices have expired', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      await service.getCryptoPrices(['bitcoin']);
+
+      const now = jest.spyOn(Date, 'now');
+      try {
+        now.mockReturnValue(Date.now() + 61_000);
+        mockHttpService.get = jest.fn(() => throwError(() => new Error('429')));
+        await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+
+        expect(service.getHealth().status).toBe('unhealthy');
+      } finally {
+        now.mockRestore();
+      }
+    });
+
+    it('is unhealthy when the GHS conversion fails', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      mockExchangeRatesService.convertCurrency.mockRejectedValueOnce(
+        new Error('down'),
+      );
+      await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
   });
 });

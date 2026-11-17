@@ -160,6 +160,42 @@ describe('StockMarketService', () => {
     });
   });
 
+  describe('getHealth', () => {
+    it('is healthy and says nothing was requested before the first fetch', () => {
+      expect(service.getHealth()).toMatchObject({
+        status: 'healthy',
+        asOf: null,
+      });
+    });
+
+    it('is unhealthy when the upstream fails and nothing is stored', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+      await service.getAllStocks().catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('is degraded when a refresh fails but the last good prices are served', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      await service.getAllStocks();
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+      nowSpy.mockReturnValue(t0 + 10 * 60 * 1000);
+      await service.getAllStocks();
+      await new Promise((resolve) => setImmediate(resolve)); // let the background refresh fail
+
+      expect(service.getHealth()).toMatchObject({
+        status: 'degraded',
+        asOf: new Date(t0).toISOString(),
+      });
+      nowSpy.mockRestore();
+    });
+  });
+
   describe('getAllStocks', () => {
     it('keeps serving the last good prices over a weekend, then gives up', async () => {
       const t0 = 1_700_000_000_000;

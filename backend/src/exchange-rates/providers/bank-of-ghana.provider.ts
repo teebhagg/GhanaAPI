@@ -35,11 +35,11 @@ export class BankOfGhanaProvider implements RateProvider {
     return null;
   }
 
-  private async loadRates(): Promise<
-    Map<string, { buy: number; sell: number }>
-  > {
+  private async loadRates(
+    refresh = false,
+  ): Promise<Map<string, { buy: number; sell: number }>> {
     const now = Date.now();
-    if (this.cache && now - this.cache.ts < this.ttlMs) {
+    if (!refresh && this.cache && now - this.cache.ts < this.ttlMs) {
       return this.cache.rates;
     }
 
@@ -121,10 +121,14 @@ export class BankOfGhanaProvider implements RateProvider {
     return rates;
   }
 
-  async fetchRates(base: string, targets: string[]): Promise<RateData[]> {
+  async fetchRates(
+    base: string,
+    targets: string[],
+    options: { refresh?: boolean } = {},
+  ): Promise<RateData[]> {
     if (base !== 'GHS') throw new Error('Base must be GHS for this provider');
 
-    const rates = await this.loadRates();
+    const rates = await this.loadRates(options.refresh);
     const now = new Date();
     const out: RateData[] = [];
 

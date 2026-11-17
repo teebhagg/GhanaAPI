@@ -124,7 +124,11 @@ describe('ExchangeRatesService', () => {
       const result = await service.getCurrentRates(['USD']);
 
       expect(result).toEqual(mockRates);
-      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith('GHS', ['USD']);
+      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith(
+        'GHS',
+        ['USD'],
+        {},
+      );
       expect(mockCacheManager.set).toHaveBeenCalledWith(
         'fx:current:USD',
         expect.arrayContaining([
@@ -133,7 +137,7 @@ describe('ExchangeRatesService', () => {
             provider: 'BOG',
           }),
         ]),
-        30 * 60,
+        30 * 60 * 1000,
       );
       expect(
         mockPrismaService.exchangeRateHistory.createMany,
@@ -149,6 +153,124 @@ describe('ExchangeRatesService', () => {
           skipDuplicates: true,
         }),
       );
+    });
+
+    it('should not store the same rate again on a later uncached read', async () => {
+      const rates = () => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates.mockImplementation(async () => rates());
+
+      await service.getCurrentRates(['USD']);
+      await service.getCurrentRates(['USD']);
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('should store a rate again when it has changed', async () => {
+      const at = (rate: number) => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates
+        .mockResolvedValueOnce(at(12.5))
+        .mockResolvedValueOnce(at(12.6));
+
+      await service.getCurrentRates(['USD']);
+      await service.getCurrentRates(['USD']);
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should store an unchanged rate again on a new day', async () => {
+      const rates = () => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates.mockImplementation(async () => rates());
+
+      jest.useFakeTimers().setSystemTime(new Date('2026-11-16T10:00:00Z'));
+      try {
+        await service.getCurrentRates(['USD']);
+        jest.setSystemTime(new Date('2026-11-17T10:00:00Z'));
+        await service.getCurrentRates(['USD']);
+      } finally {
+        jest.useRealTimers();
+      }
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should store once when two uncached reads overlap', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates.mockImplementation(async () => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ]);
+      (
+        mockPrismaService.exchangeRateHistory.createMany as jest.Mock
+      ).mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 10)),
+      );
+
+      await Promise.all([
+        service.getCurrentRates(['USD']),
+        service.getCurrentRates(['USD']),
+      ]);
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip the cache when refresh is requested', async () => {
+      mockCacheManager.get.mockResolvedValue([{ rate: 1 }]);
+      mockBogProvider.fetchRates.mockResolvedValue([
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ]);
+
+      await service.getCurrentRates(['USD'], { refresh: true });
+
+      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith('GHS', ['USD'], {
+        refresh: true,
+      });
+      expect(mockCacheManager.set).toHaveBeenCalled();
     });
 
     it('should fallback to ExchangeRateAPI when Bank of Ghana fails', async () => {
@@ -263,15 +385,11 @@ describe('ExchangeRatesService', () => {
 
       const result = await service.getCurrentRates();
 
-      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith('GHS', [
-        'USD',
-        'EUR',
-        'GBP',
-        'NGN',
-        'CHF',
-        'JPY',
-        'CNY',
-      ]);
+      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith(
+        'GHS',
+        ['USD', 'EUR', 'GBP', 'NGN', 'CHF', 'JPY', 'CNY'],
+        {},
+      );
       expect(result).toEqual(mockRates);
       expect(
         mockPrismaService.exchangeRateHistory.createMany,
@@ -294,10 +412,11 @@ describe('ExchangeRatesService', () => {
 
       await service.getCurrentRates(['usd', 'eur']);
 
-      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith('GHS', [
-        'USD',
-        'EUR',
-      ]);
+      expect(mockBogProvider.fetchRates).toHaveBeenCalledWith(
+        'GHS',
+        ['USD', 'EUR'],
+        {},
+      );
       expect(
         mockPrismaService.exchangeRateHistory.createMany,
       ).toHaveBeenCalled();
@@ -349,7 +468,11 @@ describe('ExchangeRatesService', () => {
       expect((mockBogProvider as any).convertCurrency).toHaveBeenCalledWith(
         body,
       );
-      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        'fx:convert:USD:GHS:100',
+        mockConversion,
+        30 * 60 * 1000,
+      );
     });
 
     it('should fallback to other providers when BOG fails', async () => {
@@ -479,7 +602,7 @@ describe('ExchangeRatesService', () => {
 
       await service.updateExchangeRates();
 
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledWith(undefined, { refresh: true });
       spy.mockRestore();
     });
   });

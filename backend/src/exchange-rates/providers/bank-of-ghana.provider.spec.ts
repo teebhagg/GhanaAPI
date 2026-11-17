@@ -25,6 +25,18 @@ describe('BankOfGhanaProvider', () => {
     expect(rates[0].rate).toBeCloseTo(12.5, 5);
   });
 
+  it('should bypass its own cache when a refresh is requested', async () => {
+    const load = jest
+      .spyOn(provider as any, 'loadRates')
+      .mockResolvedValue(new Map([['NGN', { buy: 0.075, sell: 0.08 }]]) as any);
+
+    await provider.fetchRates('GHS', ['NGN'], { refresh: true });
+    await provider.fetchRates('GHS', ['NGN']);
+
+    expect(load).toHaveBeenNthCalledWith(1, true);
+    expect(load).toHaveBeenNthCalledWith(2, undefined);
+  });
+
   it('should map new currency labels to ISO codes', () => {
     const normalize = (label: string) =>
       (provider as any).normalizeCode(label) as string | null;

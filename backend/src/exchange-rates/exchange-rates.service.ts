@@ -62,7 +62,7 @@ export class ExchangeRatesService {
     }
 
     const providers = [
-      () => this.bog.fetchRates(this.base, list),
+      () => this.bog.fetchRates(this.base, list, options),
       () => this.exchangeRateApi.fetchRates(this.base, list),
       () => this.fixer.fetchRates(this.base, list),
     ];
@@ -244,7 +244,18 @@ export class ExchangeRatesService {
       });
   }
 
-  private async persistRates(rates: ExchangeRateDto[]) {
+  // Overlapping reads must not both pass the "already stored" check before
+  // either insert finishes, so persistence runs one batch at a time.
+  private persistQueue: Promise<void> = Promise.resolve();
+
+  private persistRates(rates: ExchangeRateDto[]): Promise<void> {
+    this.persistQueue = this.persistQueue.then(() =>
+      this.persistRatesNow(rates),
+    );
+    return this.persistQueue;
+  }
+
+  private async persistRatesNow(rates: ExchangeRateDto[]) {
     // Providers without their own timestamp are stamped "now", so the unique
     // constraint cannot dedupe them. Store a rate once per day unless it changed.
     const day = new Date().toISOString().slice(0, 10);

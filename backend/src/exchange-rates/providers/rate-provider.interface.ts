@@ -20,7 +20,11 @@ export type ConversionResult = {
 
 export interface RateProvider {
   name: string;
-  fetchRates(base: string, targets: string[]): Promise<RateData[]>;
+  fetchRates(
+    base: string,
+    targets: string[],
+    options?: { refresh?: boolean },
+  ): Promise<RateData[]>;
   convertCurrency?(body: ConvertCurrencyDto): Promise<ConversionResult>;
 }
 

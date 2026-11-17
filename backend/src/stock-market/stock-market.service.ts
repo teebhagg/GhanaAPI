@@ -9,7 +9,10 @@ import {
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import type { Cache } from 'cache-manager';
-import { LastGoodCache } from '../common/resilience/last-good-cache';
+import {
+  CacheResult,
+  LastGoodCache,
+} from '../common/resilience/last-good-cache';
 import { SECTORS } from './data/sectors.data';
 import { StockSearchQueryDto } from './dto/stock-search-query.dto';
 import {
@@ -29,10 +32,12 @@ export class StockMarketService {
   // Prices are fresh for 5 minutes. When the upstream fails, the last good
   // prices are served (flagged stale) for up to 3 days, which covers a weekend
   // and a public holiday after Friday's close, then a 503.
+  private readonly STOCKS_FRESH_MS = 5 * 60 * 1000;
+  private readonly STOCKS_MAX_STALE_MS = 3 * 24 * 60 * 60 * 1000;
   private readonly stocksCache = new LastGoodCache<RawStockData[]>({
     label: 'Stock data',
-    freshMs: 5 * 60 * 1000,
-    maxStaleMs: 3 * 24 * 60 * 60 * 1000,
+    freshMs: this.STOCKS_FRESH_MS,
+    maxStaleMs: this.STOCKS_MAX_STALE_MS,
     backoffMs: 2 * 60 * 1000,
   });
 
@@ -160,10 +165,22 @@ export class StockMarketService {
    * once at a time. Throws 503 when there is no usable data.
    */
   async getAllStocks(): Promise<RawStockData[]> {
-    const { data } = await this.stocksCache.get(this.STOCKS_KEY, () =>
+    return (await this.loadStocks()).data;
+  }
+
+  /** The stocks together with when they were fetched, from one cache read */
+  private loadStocks(): Promise<CacheResult<RawStockData[]>> {
+    return this.stocksCache.get(this.STOCKS_KEY, () =>
       this.stockDataProvider.fetchAllStocks(),
     );
-    return data;
+  }
+
+  /** Freshness of stock data fetched at a known time (for a stored summary) */
+  freshnessAt(asOf: string): { asOf: string; stale: boolean } {
+    return {
+      asOf,
+      stale: Date.now() - Date.parse(asOf) >= this.STOCKS_FRESH_MS,
+    };
   }
 
   /**
@@ -211,10 +228,18 @@ export class StockMarketService {
         this.MARKET_SUMMARY_CACHE_KEY,
       );
 
+      // A stored summary must not outlive the prices it was built from
+      if (
+        summary &&
+        Date.now() - Date.parse(summary.lastUpdated) >= this.STOCKS_MAX_STALE_MS
+      ) {
+        summary = undefined;
+      }
+
       if (!summary) {
         this.logger.log('Generating market summary');
 
-        const stocks = await this.getAllStocks();
+        const { data: stocks, asOf } = await this.loadStocks();
         const indices = await this.stockDataProvider.fetchMarketIndices(stocks);
         const marketStatus = this.stockDataProvider.getMarketStatus();
 
@@ -242,8 +267,8 @@ export class StockMarketService {
           declining,
           unchanged,
           marketStatus: marketStatus.isOpen ? 'OPEN' : 'CLOSED',
-          // When the prices were fetched, not when this summary was built
-          lastUpdated: this.getFreshness().asOf ?? new Date().toISOString(),
+          // When these prices were fetched, not when this summary was built
+          lastUpdated: asOf.toISOString(),
           nextMarketOpen: marketStatus.nextOpen.toISOString(),
           marketClose: marketStatus.nextClose.toISOString(),
         };

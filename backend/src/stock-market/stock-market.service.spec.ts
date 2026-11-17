@@ -263,6 +263,44 @@ describe('StockMarketService', () => {
       expect(result.marketStatus).toBe('OPEN');
     });
 
+    it('uses the snapshot it summarised even if a refresh lands meanwhile', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      mockCacheManager.get.mockResolvedValue(null);
+      (gseApiProvider.fetchMarketIndices as jest.Mock).mockImplementationOnce(
+        async () => {
+          // A refresh finishes while the summary is being built
+          nowSpy.mockReturnValue(t0 + 10 * 60 * 1000);
+          await (service as any).stocksCache.refresh('all', () =>
+            Promise.resolve([{ ...mockRawStockData, price: 99 }]),
+          );
+          return mockMarketIndices;
+        },
+      );
+
+      const result = await service.getMarketSummary();
+
+      expect(result.lastUpdated).toBe(new Date(t0).toISOString());
+      nowSpy.mockRestore();
+    });
+
+    it('does not serve a stored summary older than the 3 day limit', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      mockCacheManager.get.mockResolvedValue({
+        indexValue: 1,
+        lastUpdated: new Date(t0 - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+
+      await expect(service.getMarketSummary()).rejects.toMatchObject({
+        status: 503,
+      });
+      nowSpy.mockRestore();
+    });
+
     it('reports when the prices were fetched, not when the summary was built', async () => {
       const t0 = 1_700_000_000_000;
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);

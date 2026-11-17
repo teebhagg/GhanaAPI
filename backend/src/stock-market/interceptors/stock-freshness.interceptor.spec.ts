@@ -4,15 +4,19 @@ import { StockMarketService } from '../stock-market.service';
 import { StockFreshnessInterceptor } from './stock-freshness.interceptor';
 
 describe('StockFreshnessInterceptor', () => {
-  const run = async (freshness: { asOf: string | null; stale: boolean }) => {
+  const run = async (
+    freshness: { asOf: string | null; stale: boolean },
+    responseBody: unknown = 'body',
+  ) => {
     const setHeader = jest.fn();
     const service = {
       getFreshness: jest.fn().mockReturnValue(freshness),
+      freshnessAt: jest.fn((asOf: string) => ({ asOf, stale: true })),
     } as unknown as StockMarketService;
     const context = {
       switchToHttp: () => ({ getResponse: () => ({ setHeader }) }),
     } as unknown as ExecutionContext;
-    const next: CallHandler = { handle: () => of('body') };
+    const next: CallHandler = { handle: () => of(responseBody) };
 
     const body = await lastValueFrom(
       new StockFreshnessInterceptor(service).intercept(context, next),
@@ -50,5 +54,18 @@ describe('StockFreshnessInterceptor', () => {
       'X-Data-As-Of',
       expect.anything(),
     );
+  });
+
+  it('describes a market summary by its own lastUpdated, not the newer cache', async () => {
+    const { setHeader } = await run(
+      { asOf: '2026-11-16T12:00:00.000Z', stale: false }, // a refresh since
+      { indexValue: 3000, lastUpdated: '2026-11-16T10:00:00.000Z' },
+    );
+
+    expect(setHeader).toHaveBeenCalledWith(
+      'X-Data-As-Of',
+      '2026-11-16T10:00:00.000Z',
+    );
+    expect(setHeader).toHaveBeenCalledWith('X-Data-Stale', 'true');
   });
 });

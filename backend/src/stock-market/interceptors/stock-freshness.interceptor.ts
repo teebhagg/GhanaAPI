@@ -22,14 +22,27 @@ export class StockFreshnessInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      tap(() => {
+      tap((body) => {
         const res = context.switchToHttp().getResponse<Response>();
-        const { asOf, stale } = this.stockMarketService.getFreshness();
+        // A market summary says when its own prices were fetched; use that so
+        // the headers match the body even if a refresh finished since.
+        const { asOf, stale } = this.isSummary(body)
+          ? this.stockMarketService.freshnessAt(body.lastUpdated)
+          : this.stockMarketService.getFreshness();
         if (asOf) {
           res.setHeader('X-Data-As-Of', asOf);
         }
         res.setHeader('X-Data-Stale', String(stale));
       }),
+    );
+  }
+
+  private isSummary(body: unknown): body is { lastUpdated: string } {
+    return (
+      typeof body === 'object' &&
+      body !== null &&
+      'indexValue' in body &&
+      typeof (body as { lastUpdated?: unknown }).lastUpdated === 'string'
     );
   }
 }

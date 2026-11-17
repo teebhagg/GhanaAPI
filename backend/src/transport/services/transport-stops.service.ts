@@ -77,21 +77,23 @@ export class TransportStopsService {
       try {
         this.logger.log(`Trying to get transport stops from ${api}`);
 
+        let stops: TransportStop[];
         switch (api) {
-          case 'overpass': {
-            const stops = await this.getStopsFromOverpass(city);
-            // An empty list for a city is an outage, not an answer. Do not
-            // cache it for a day.
-            if (stops.length === 0) {
-              throw new Error('Overpass returned no stops');
-            }
-            return stops;
-          }
+          case 'overpass':
+            stops = await this.getStopsFromOverpass(city);
+            break;
           case 'gtfs':
-            return await this.getStopsFromGTFS(city);
+            stops = await this.getStopsFromGTFS(city);
+            break;
           default:
             continue;
         }
+        // An empty list for a city is an outage, not an answer. Do not cache
+        // it for a day or let it replace the last good list.
+        if (stops.length === 0) {
+          throw new Error(`${api} returned no stops`);
+        }
+        return stops;
       } catch (error) {
         this.logger.warn(`${api} failed: ${error.message}`);
         continue;

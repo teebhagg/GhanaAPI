@@ -130,4 +130,33 @@ describe('LastGoodCache', () => {
       cache.refresh('other', jest.fn().mockRejectedValue(new Error('down'))),
     ).resolves.toBeUndefined();
   });
+
+  describe('a fetcher that throws before returning a promise', () => {
+    const throwsSync = () => {
+      throw new Error('boom');
+    };
+
+    it('is a failed refresh: 503, then backoff without retrying', async () => {
+      const fetcher = jest.fn(throwsSync);
+
+      await expect(cache.get('k', fetcher)).rejects.toMatchObject({
+        status: 503,
+      });
+      await expect(cache.get('k', fetcher)).rejects.toMatchObject({
+        status: 503,
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps serving the last good data and refresh() does not throw', async () => {
+      await cache.get('k', jest.fn().mockResolvedValue(['a']));
+      now += 10 * 60 * 1000; // stale
+
+      const stale = await cache.get('k', throwsSync);
+      expect(stale).toMatchObject({ data: ['a'], stale: true });
+
+      now += 2 * 60 * 1000; // past the backoff
+      await expect(cache.refresh('k', throwsSync)).resolves.toBeUndefined();
+    });
+  });
 });

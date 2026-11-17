@@ -135,7 +135,8 @@ export class LastGoodCache<T> {
     if (Date.now() < entry.failedUntil) {
       return null;
     }
-    entry.inFlight = fetcher()
+    // A fetcher that throws before returning a promise is a failed refresh too
+    entry.inFlight = new Promise<T>((resolve) => resolve(fetcher()))
       .then(
         (data) => {
           entry.data = data;

@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException } from '@nestjs/common';
+import { of } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { TransportStopsService } from './transport-stops.service';
@@ -166,5 +167,48 @@ describe('TransportStopsService', () => {
     const second = await service.getTransportStops('accra');
 
     expect(second).toBe(first);
+  });
+
+  describe('with a GTFS feed configured', () => {
+    const GTFS_HEADER =
+      'stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon\n';
+    let gtfsGet: jest.Mock;
+    let gtfsService: TransportStopsService;
+
+    beforeEach(() => {
+      gtfsGet = jest.fn();
+      gtfsService = new TransportStopsService(
+        { get: gtfsGet } as unknown as HttpService,
+        {
+          get: jest.fn().mockReturnValue('https://gtfs.example'),
+        } as unknown as ConfigService,
+      );
+      mockedQuery.mockRejectedValue(new Error('overpass down'));
+    });
+
+    it('does not cache a header-only feed as a successful answer', async () => {
+      gtfsGet.mockReturnValue(of({ data: GTFS_HEADER }));
+
+      await expect(
+        gtfsService.getTransportStops('accra'),
+      ).rejects.toMatchObject({ status: 503 });
+
+      now += 11 * 60 * 1000; // past the 10 minute backoff
+      mockedQuery.mockResolvedValue(ELEMENTS);
+      await expect(
+        gtfsService.getTransportStops('accra'),
+      ).resolves.toHaveLength(3);
+    });
+
+    it('keeps the last good stops when a refresh only gets an empty feed', async () => {
+      mockedQuery.mockResolvedValueOnce(ELEMENTS);
+      const first = await gtfsService.getTransportStops('accra');
+
+      now += 25 * 60 * 60 * 1000; // past the 24 hour freshness
+      mockedQuery.mockRejectedValue(new Error('overpass down'));
+      gtfsGet.mockReturnValue(of({ data: GTFS_HEADER }));
+
+      expect(await gtfsService.getTransportStops('accra')).toBe(first);
+    });
   });
 });

@@ -66,10 +66,9 @@ export class GSEApiProvider {
       // Get live data for all stocks
       const liveData = await this.fetchLiveData();
 
-      // Get detailed data for a subset of stocks to optimize performance
-      const detailedStocks = await this.fetchDetailedStocks(
-        liveData.slice(0, 20),
-      ); // First 20 stocks
+      // Company details for every stock, a few at a time. They are cached for
+      // a day, so only the first fetch after a restart is slow.
+      const detailedStocks = await this.fetchDetailedStocks(liveData);
 
       // Combine live data with detailed data where available
       const stocks: RawStockData[] = liveData.map((live) => {

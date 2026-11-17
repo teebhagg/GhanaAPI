@@ -70,6 +70,20 @@ describe('GSEApiProvider upstream load', () => {
     expect(maxInFlight).toBeLessThanOrEqual(4);
   });
 
+  it('fetches company details for every stock, not only the first 20', async () => {
+    get.mockImplementation((url: string) =>
+      url.endsWith('/live')
+        ? slow(live(30))
+        : slow(equity(url.split('/equities/')[1])),
+    );
+
+    const stocks = await provider.fetchAllStocks();
+
+    expect(stocks).toHaveLength(30);
+    expect(stocks[29].sector).toBe('Financials'); // the 30th has details too
+    expect(maxInFlight).toBeLessThanOrEqual(4);
+  });
+
   it('caches company details, so the next refresh only calls /live', async () => {
     await provider.fetchAllStocks();
     get.mockClear();

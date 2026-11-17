@@ -16,6 +16,9 @@ import {
   RateData,
 } from './providers/rate-provider.interface';
 
+// cache-manager v7 takes milliseconds
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class ExchangeRatesService {
   private readonly logger = new Logger(ExchangeRatesService.name);
@@ -29,6 +32,11 @@ export class ExchangeRatesService {
     'CNY',
   ];
   private readonly base = 'GHS';
+  // Last stored rate per provider and pair, so reads do not insert duplicates
+  private readonly lastPersisted = new Map<
+    string,
+    { day: string; rate: number }
+  >();
 
   constructor(
     private readonly exchangeRateApi: ExchangeRateApiProvider,
@@ -63,7 +71,7 @@ export class ExchangeRatesService {
     await this.persistRates(rates);
 
     // Only cache when successful
-    await this.cache.set(cacheKey, rates, 30 * 60);
+    await this.cache.set(cacheKey, rates, CACHE_TTL_MS);
     return rates;
   }
 
@@ -79,8 +87,6 @@ export class ExchangeRatesService {
     if (from > to) {
       throw AppException.badRequest('`from` date must be before `to` date');
     }
-
-    console.log(from, to, currency);
 
     const code = currency.toUpperCase();
 
@@ -211,7 +217,7 @@ export class ExchangeRatesService {
     const conversion = result.data[0] as ConversionResult;
 
     // Only cache when successful
-    await this.cache.set(cacheKey, conversion, 30 * 60);
+    await this.cache.set(cacheKey, conversion, CACHE_TTL_MS);
     return conversion;
   }
 
@@ -232,11 +238,19 @@ export class ExchangeRatesService {
   }
 
   private async persistRates(rates: ExchangeRateDto[]) {
-    if (!rates.length) return;
+    // Providers without their own timestamp are stamped "now", so the unique
+    // constraint cannot dedupe them. Store a rate once per day unless it changed.
+    const day = new Date().toISOString().slice(0, 10);
+    const changed = rates.filter((rate) => {
+      const key = `${rate.provider}:${rate.baseCurrency}:${rate.targetCurrency}`;
+      const last = this.lastPersisted.get(key);
+      return !last || last.day !== day || last.rate !== rate.rate;
+    });
+    if (!changed.length) return;
 
     try {
       await this.prisma.exchangeRateHistory.createMany({
-        data: rates.map((rate) => ({
+        data: changed.map((rate) => ({
           baseCurrency: rate.baseCurrency,
           targetCurrency: rate.targetCurrency,
           rate: rate.rate,
@@ -245,6 +259,12 @@ export class ExchangeRatesService {
         })),
         skipDuplicates: true,
       });
+      for (const rate of changed) {
+        this.lastPersisted.set(
+          `${rate.provider}:${rate.baseCurrency}:${rate.targetCurrency}`,
+          { day, rate: rate.rate },
+        );
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to persist exchange rate history: ${

@@ -133,7 +133,7 @@ describe('ExchangeRatesService', () => {
             provider: 'BOG',
           }),
         ]),
-        30 * 60,
+        30 * 60 * 1000,
       );
       expect(
         mockPrismaService.exchangeRateHistory.createMany,
@@ -149,6 +149,50 @@ describe('ExchangeRatesService', () => {
           skipDuplicates: true,
         }),
       );
+    });
+
+    it('should not store the same rate again on a later uncached read', async () => {
+      const rates = () => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates.mockImplementation(async () => rates());
+
+      await service.getCurrentRates(['USD']);
+      await service.getCurrentRates(['USD']);
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('should store a rate again when it has changed', async () => {
+      const at = (rate: number) => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates
+        .mockResolvedValueOnce(at(12.5))
+        .mockResolvedValueOnce(at(12.6));
+
+      await service.getCurrentRates(['USD']);
+      await service.getCurrentRates(['USD']);
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('should fallback to ExchangeRateAPI when Bank of Ghana fails', async () => {

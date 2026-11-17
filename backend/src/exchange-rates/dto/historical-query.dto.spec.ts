@@ -22,6 +22,9 @@ describe('HistoricalQueryDto', () => {
   it.each([
     ['an unsupported currency', { currency: 'XXX' }],
     ['a bad date', { from: 'yesterday' }],
+    ['an impossible from date', { from: '2026-02-30' }],
+    ['an impossible to date', { to: '2026-04-31' }],
+    ['a leap day in a non-leap year', { from: '2026-02-29' }],
     ['an unknown granularity', { granularity: 'hourly' }],
     ['a limit above 1000', { limit: 5000 }],
     ['a limit of 0', { limit: 0 }],
@@ -29,6 +32,12 @@ describe('HistoricalQueryDto', () => {
     const { errors } = await check({ ...valid, ...override });
 
     expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('accepts a valid leap day', async () => {
+    const { errors } = await check({ ...valid, from: '2024-02-29' });
+
+    expect(errors).toHaveLength(0);
   });
 
   it('accepts granularity and limit within bounds', async () => {

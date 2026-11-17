@@ -20,11 +20,11 @@ export const HISTORICAL_MAX_LIMIT = 1000;
 
 export class HistoricalQueryDto {
   @ApiProperty({ example: '2026-01-01' })
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   from: string;
 
   @ApiProperty({ example: '2026-11-15' })
-  @IsISO8601()
+  @IsISO8601({ strict: true })
   to: string;
 
   @ApiProperty({ example: 'USD', enum: SUPPORTED_CURRENCIES })

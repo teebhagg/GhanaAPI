@@ -195,6 +195,51 @@ describe('ExchangeRatesService', () => {
       ).toHaveBeenCalledTimes(2);
     });
 
+    it('should store an unchanged rate again on a new day', async () => {
+      const rates = () => [
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ];
+      mockCacheManager.get.mockResolvedValue(null);
+      mockBogProvider.fetchRates.mockImplementation(async () => rates());
+
+      jest.useFakeTimers().setSystemTime(new Date('2026-11-16T10:00:00Z'));
+      try {
+        await service.getCurrentRates(['USD']);
+        jest.setSystemTime(new Date('2026-11-17T10:00:00Z'));
+        await service.getCurrentRates(['USD']);
+      } finally {
+        jest.useRealTimers();
+      }
+
+      expect(
+        mockPrismaService.exchangeRateHistory.createMany,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should skip the cache when refresh is requested', async () => {
+      mockCacheManager.get.mockResolvedValue([{ rate: 1 }]);
+      mockBogProvider.fetchRates.mockResolvedValue([
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 12.5,
+          provider: 'BOG',
+          timestamp: new Date(),
+        },
+      ]);
+
+      await service.getCurrentRates(['USD'], { refresh: true });
+
+      expect(mockBogProvider.fetchRates).toHaveBeenCalled();
+      expect(mockCacheManager.set).toHaveBeenCalled();
+    });
+
     it('should fallback to ExchangeRateAPI when Bank of Ghana fails', async () => {
       const mockRates = [
         {
@@ -393,7 +438,11 @@ describe('ExchangeRatesService', () => {
       expect((mockBogProvider as any).convertCurrency).toHaveBeenCalledWith(
         body,
       );
-      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        'fx:convert:USD:GHS:100',
+        mockConversion,
+        30 * 60 * 1000,
+      );
     });
 
     it('should fallback to other providers when BOG fails', async () => {
@@ -523,7 +572,7 @@ describe('ExchangeRatesService', () => {
 
       await service.updateExchangeRates();
 
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledWith(undefined, { refresh: true });
       spy.mockRestore();
     });
   });

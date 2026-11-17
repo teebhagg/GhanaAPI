@@ -46,13 +46,20 @@ export class ExchangeRatesService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async getCurrentRates(currencies?: string[]): Promise<ExchangeRateDto[]> {
+  async getCurrentRates(
+    currencies?: string[],
+    options: { refresh?: boolean } = {},
+  ): Promise<ExchangeRateDto[]> {
     const list = (
       currencies?.length ? currencies : this.supportedCurrencies
     ).map((c) => c.toUpperCase());
     const cacheKey = `fx:current:${[...list].sort().join(',')}`;
-    const cached = await this.cache.get<ExchangeRateDto[]>(cacheKey);
-    if (cached) return cached;
+    // The scheduled refresh skips the cache, otherwise it would mostly read
+    // the entry it wrote 30 minutes earlier and never reach the providers
+    if (!options.refresh) {
+      const cached = await this.cache.get<ExchangeRateDto[]>(cacheKey);
+      if (cached) return cached;
+    }
 
     const providers = [
       () => this.bog.fetchRates(this.base, list),
@@ -164,7 +171,7 @@ export class ExchangeRatesService {
   @Cron('0 */30 * * * *') // every 30 minutes
   async updateExchangeRates() {
     try {
-      await this.getCurrentRates();
+      await this.getCurrentRates(undefined, { refresh: true });
     } catch (error) {
       this.logger.warn(
         `Scheduled rate update failed: ${

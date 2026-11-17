@@ -377,4 +377,37 @@ describe('BankDataProviderService (no placeholder data)', () => {
       expect(banks).toHaveLength(1);
     });
   });
+
+  describe('getHealth', () => {
+    const BANK = {
+      type: 'node',
+      id: 7,
+      lat: 5.6,
+      lon: -0.2,
+      tags: { amenity: 'bank', name: 'Test Bank' },
+    };
+
+    it('is healthy and says so before anything was requested', () => {
+      expect(service.getHealth()).toMatchObject({
+        status: 'healthy',
+        asOf: null,
+      });
+    });
+
+    it('is unhealthy after a failed fetch with nothing stored', async () => {
+      mockedGet.mockRejectedValue(new Error('Overpass down'));
+      await service.getBanks().catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('is healthy with a fetch time after a successful fetch', async () => {
+      mockedGet.mockResolvedValue({ data: { elements: [BANK] } } as any);
+      await service.getBanks();
+
+      const health = service.getHealth();
+      expect(health.status).toBe('healthy');
+      expect(health.asOf).not.toBeNull();
+    });
+  });
 });

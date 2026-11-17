@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { BankDataProviderService } from './banking/services/bank-data-provider.service';
 import { PrismaService } from './common/database/prisma.service';
+import { ServiceHealth, worstOf } from './common/health/service-health';
+import { CryptoService } from './crypto/crypto.service';
 import { regions } from './locations/data/regions.json';
+import { StockMarketService } from './stock-market/stock-market.service';
+import { FuelPriceService } from './transport/services/fuel-price.service';
+import { TransportStopsService } from './transport/services/transport-stops.service';
 
 interface HealthStatus {
   database: 'healthy' | 'degraded' | 'unhealthy';
@@ -25,7 +31,14 @@ export interface StatusResponse {
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bankData: BankDataProviderService,
+    private readonly stockMarket: StockMarketService,
+    private readonly transportStops: TransportStopsService,
+    private readonly fuelPrices: FuelPriceService,
+    private readonly crypto: CryptoService,
+  ) {}
 
   getHello(): string {
     return "Welcome to Ghana API - Your gateway to Ghana's data and services";
@@ -139,40 +152,27 @@ export class AppService {
           };
           health.services.locations = 'degraded';
         }
-
-        // Banking module (no database table, service-based)
-        statistics.banking = {
-          totalRecords: 0, // Banking data is service-based, not stored in DB
-          lastUpdated: null,
-          note: 'Service-based data, not stored in database',
-        };
-        health.services.banking = 'healthy';
-
-        // Stock Market module (service-based)
-        statistics.stockMarket = {
-          totalRecords: 0, // Stock data is service-based
-          lastUpdated: null,
-          note: 'Service-based data, not stored in database',
-        };
-        health.services.stockMarket = 'healthy';
-
-        // Business Verification module (if exists)
-        // Note: Business verification module exists but may not have database tables yet
-        statistics.businessVerification = {
-          totalRecords: 0,
-          lastUpdated: null,
-          note: 'Service available',
-        };
-        health.services.businessVerification = 'healthy';
       }
     } catch (error) {
       this.logger.error('Failed to collect statistics', error);
     }
 
+    // Services that fetch from third parties. Each reports what its last real
+    // refresh did; nothing here calls an upstream, so /status stays cheap.
+    this.addServiceHealth(health, statistics, {
+      banking: this.bankData.getHealth(),
+      stockMarket: this.stockMarket.getHealth(),
+      crypto: this.crypto.getHealth(),
+      transport: this.combineHealth(
+        this.transportStops.getHealth(),
+        this.fuelPrices.getHealth(),
+      ),
+    });
+
     // Determine overall status
     const hasUnhealthy = health.database === 'unhealthy';
     const hasDegraded = Object.values(health.services).some(
-      (s) => s === 'degraded',
+      (s) => s === 'degraded' || s === 'unhealthy',
     );
 
     const overallStatus: 'healthy' | 'degraded' | 'unhealthy' = hasUnhealthy
@@ -187,6 +187,38 @@ export class AppService {
       timestamp,
       health,
       statistics,
+    };
+  }
+
+  private addServiceHealth(
+    health: HealthStatus,
+    statistics: Record<string, ModuleStatistics>,
+    reports: Record<string, ServiceHealth>,
+  ): void {
+    for (const [name, report] of Object.entries(reports)) {
+      health.services[name] = report.status;
+      statistics[name] = {
+        totalRecords: 0, // Service-based data, not stored in the database
+        lastUpdated: report.asOf ? new Date(report.asOf) : null,
+        note: report.detail ?? 'Service-based data, not stored in database',
+      };
+    }
+  }
+
+  /** One report for a module made of several data sources: the worst state */
+  private combineHealth(...parts: ServiceHealth[]): ServiceHealth {
+    const asOf = parts
+      .map((part) => part.asOf)
+      .filter((value): value is string => value !== null)
+      .sort()
+      .pop();
+    const details = parts
+      .map((part) => part.detail)
+      .filter((detail): detail is string => Boolean(detail));
+    return {
+      status: worstOf(...parts.map((part) => part.status)),
+      asOf: asOf ?? null,
+      detail: details.length ? details.join('; ') : undefined,
     };
   }
 }

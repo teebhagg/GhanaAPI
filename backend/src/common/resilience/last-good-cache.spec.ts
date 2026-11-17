@@ -159,4 +159,64 @@ describe('LastGoodCache', () => {
       await expect(cache.refresh('k', throwsSync)).resolves.toBeUndefined();
     });
   });
+
+  describe('health()', () => {
+    it('is healthy and empty before anything is fetched', () => {
+      expect(cache.health()).toEqual({ status: 'healthy', asOf: null });
+    });
+
+    it('is healthy after a successful fetch, with the fetch time', async () => {
+      await cache.get('k', jest.fn().mockResolvedValue(['a']));
+
+      expect(cache.health()).toEqual({
+        status: 'healthy',
+        asOf: new Date(now),
+      });
+    });
+
+    it('is unhealthy when the refresh failed and there is no data', async () => {
+      await cache
+        .get('k', jest.fn().mockRejectedValue(new Error('x')))
+        .catch(() => undefined);
+
+      expect(cache.health().status).toBe('unhealthy');
+    });
+
+    it('stays unhealthy after the backoff ends, until a refresh succeeds', async () => {
+      await cache
+        .get('k', jest.fn().mockRejectedValue(new Error('x')))
+        .catch(() => undefined);
+      now += 10 * 60 * 1000; // well past the 1 minute backoff
+
+      expect(cache.health().status).toBe('unhealthy');
+
+      await cache.get('k', jest.fn().mockResolvedValue(['a']));
+      expect(cache.health().status).toBe('healthy');
+    });
+
+    it('is degraded when a refresh failed but older real data is still served', async () => {
+      await cache.get('k', jest.fn().mockResolvedValue(['a']));
+      now += 10 * 60 * 1000; // stale
+      await cache.refresh('k', jest.fn().mockRejectedValue(new Error('x')));
+
+      expect(cache.health().status).toBe('degraded');
+    });
+
+    it('is unhealthy when the failed refresh left only data past maxStale', async () => {
+      await cache.get('k', jest.fn().mockResolvedValue(['a']));
+      now += 25 * HOUR; // past the 24 hour limit
+      await cache.refresh('k', jest.fn().mockRejectedValue(new Error('x')));
+
+      expect(cache.health().status).toBe('unhealthy');
+    });
+
+    it('reports the worst key', async () => {
+      await cache.get('ok', jest.fn().mockResolvedValue(['a']));
+      await cache
+        .get('bad', jest.fn().mockRejectedValue(new Error('x')))
+        .catch(() => undefined);
+
+      expect(cache.health().status).toBe('unhealthy');
+    });
+  });
 });

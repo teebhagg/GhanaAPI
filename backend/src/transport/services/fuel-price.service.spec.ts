@@ -241,6 +241,28 @@ describe('FuelPriceService', () => {
     });
   });
 
+  describe('getHealth', () => {
+    it('is unhealthy after every source failed, even once the failure marker expires', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(throwError(() => new Error('down')));
+      await service.getFuelPrices().catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('is healthy with a fetch time after a successful fetch', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      httpService.get
+        .mockReturnValueOnce(of(createMockResponse(mockNpaHtml)))
+        .mockReturnValueOnce(of(createMockResponse(mockNpaArticleHtml)));
+      await service.getFuelPrices();
+
+      const health = service.getHealth();
+      expect(health.status).toBe('healthy');
+      expect(health.asOf).not.toBeNull();
+    });
+  });
+
   describe('isValidFuelPriceData', () => {
     it('should validate correct fuel price data', () => {
       const validData: Partial<FuelPrice> = {

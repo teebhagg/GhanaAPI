@@ -84,4 +84,38 @@ describe('CryptoService', () => {
     expect(result).toEqual(cachedData);
     expect(mockHttpService.get).not.toHaveBeenCalled();
   });
+
+  describe('getHealth', () => {
+    it('is healthy before any request', () => {
+      expect(service.getHealth()).toMatchObject({
+        status: 'healthy',
+        asOf: null,
+      });
+    });
+
+    it('is unhealthy after a failed attempt and healthy after a later success', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      mockHttpService.get = jest.fn(() => throwError(() => new Error('429')));
+      await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+      expect(service.getHealth().status).toBe('unhealthy');
+
+      mockHttpService.get = jest.fn(() =>
+        of({ data: { bitcoin: { usd: 60000 } } }),
+      );
+      await service.getCryptoPrices(['bitcoin']);
+      const health = service.getHealth();
+      expect(health.status).toBe('healthy');
+      expect(health.asOf).not.toBeNull();
+    });
+
+    it('is unhealthy when the GHS conversion fails', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      mockExchangeRatesService.convertCurrency.mockRejectedValueOnce(
+        new Error('down'),
+      );
+      await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
+  });
 });

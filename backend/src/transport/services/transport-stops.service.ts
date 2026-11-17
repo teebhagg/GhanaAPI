@@ -9,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
+import { ServiceHealth } from '../../common/health/service-health';
 import { LastGoodCache } from '../../common/resilience/last-good-cache';
 
 /**
@@ -49,6 +50,23 @@ export class TransportStopsService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
+
+  /** For the /status endpoint. Never contacts Overpass. */
+  getHealth(): ServiceHealth {
+    const { status, asOf } = this.stopsCache.health();
+    return {
+      status,
+      asOf: asOf ? asOf.toISOString() : null,
+      detail:
+        status === 'unhealthy'
+          ? 'The last fetch of transport stops failed and there is no usable list'
+          : status === 'degraded'
+            ? 'The last fetch of transport stops failed; serving the last good list'
+            : asOf
+              ? undefined
+              : 'No transport stops requested since the server started',
+    };
+  }
 
   async getTransportStops(
     city: string = 'accra',

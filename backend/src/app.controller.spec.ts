@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BankDataProviderService } from './banking/services/bank-data-provider.service';
 import { PrismaService } from './common/database/prisma.service';
+import { CryptoService } from './crypto/crypto.service';
+import { StockMarketService } from './stock-market/stock-market.service';
+import { FuelPriceService } from './transport/services/fuel-price.service';
+import { TransportStopsService } from './transport/services/transport-stops.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -28,6 +33,18 @@ describe('AppController', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        ...[
+          BankDataProviderService,
+          StockMarketService,
+          TransportStopsService,
+          FuelPriceService,
+          CryptoService,
+        ].map((provide) => ({
+          provide,
+          useValue: {
+            getHealth: () => ({ status: 'healthy', asOf: null }),
+          },
+        })),
       ],
     }).compile();
 

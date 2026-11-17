@@ -10,6 +10,11 @@ import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { PrismaService } from '../../common/database/prisma.service';
+import {
+  HealthState,
+  ServiceHealth,
+  worstOf,
+} from '../../common/health/service-health';
 import { ATMLocation, Bank } from '../entities/bank.entity';
 
 // Official global instances, main host first. Do not add country-specific
@@ -32,6 +37,8 @@ interface DataSlot<T> {
   data: T[] | null;
   fetchedAt: number | null;
   failedUntil: number;
+  /** True from a failed refresh until the next successful one */
+  lastRefreshFailed: boolean;
   inFlight: Promise<T[]> | null;
 }
 
@@ -40,6 +47,7 @@ const newSlot = <T>(key: DataSlot<T>['key']): DataSlot<T> => ({
   data: null,
   fetchedAt: null,
   failedUntil: 0,
+  lastRefreshFailed: false,
   inFlight: null,
 });
 
@@ -115,6 +123,35 @@ export class BankDataProviderService {
       stale: slot.data !== null && !this.isFresh(slot),
     });
     return { banks: describe(this.banksSlot), atms: describe(this.atmsSlot) };
+  }
+
+  /** For the /status endpoint. Never contacts Overpass or Bank of Ghana. */
+  getHealth(): ServiceHealth {
+    const slots = [this.banksSlot, this.atmsSlot];
+    const states = slots.map((slot): HealthState => {
+      if (!slot.lastRefreshFailed) {
+        return 'healthy';
+      }
+      return slot.data !== null ? 'degraded' : 'unhealthy';
+    });
+    const status = worstOf(...states);
+    const fetched = slots
+      .map((slot) => slot.fetchedAt)
+      .filter((at): at is number => at !== null);
+    const asOf = fetched.length ? new Date(Math.min(...fetched)) : null;
+
+    return {
+      status,
+      asOf: asOf ? asOf.toISOString() : null,
+      detail:
+        status === 'unhealthy'
+          ? 'The last refresh of bank data failed and there is no usable data'
+          : status === 'degraded'
+            ? 'The last refresh of bank data failed; serving the last good data'
+            : asOf
+              ? undefined
+              : 'No bank data requested since the server started',
+    };
   }
 
   private isFresh<T>(slot: DataSlot<T>): boolean {
@@ -221,12 +258,14 @@ export class BankDataProviderService {
         (data) => {
           slot.data = data;
           slot.fetchedAt = Date.now();
+          slot.lastRefreshFailed = false;
           void this.persist(slot);
           return data;
         },
         (error) => {
           this.logger.error(`${label} refresh failed:`, error);
           slot.failedUntil = Date.now() + this.FAILURE_BACKOFF_MS;
+          slot.lastRefreshFailed = true;
           throw error;
         },
       )

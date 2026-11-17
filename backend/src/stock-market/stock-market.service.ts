@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import type { Cache } from 'cache-manager';
+import { ServiceHealth } from '../common/health/service-health';
 import {
   CacheResult,
   LastGoodCache,
@@ -173,6 +174,23 @@ export class StockMarketService {
     return this.stocksCache.get(this.STOCKS_KEY, () =>
       this.stockDataProvider.fetchAllStocks(),
     );
+  }
+
+  /** For the /status endpoint. Never contacts the upstream. */
+  getHealth(): ServiceHealth {
+    const { status, asOf } = this.stocksCache.health();
+    return {
+      status,
+      asOf: asOf ? asOf.toISOString() : null,
+      detail:
+        status === 'unhealthy'
+          ? 'The last refresh of stock prices failed and there is no usable data'
+          : status === 'degraded'
+            ? 'The last refresh of stock prices failed; serving the last good prices'
+            : asOf
+              ? undefined
+              : 'No stock data requested since the server started',
+    };
   }
 
   /** Freshness of stock data fetched at a known time (for a stored summary) */

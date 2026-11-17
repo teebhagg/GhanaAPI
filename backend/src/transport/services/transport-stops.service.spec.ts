@@ -211,4 +211,31 @@ describe('TransportStopsService', () => {
       expect(await gtfsService.getTransportStops('accra')).toBe(first);
     });
   });
+
+  describe('getHealth', () => {
+    it('is healthy before anything was requested', () => {
+      expect(service.getHealth()).toMatchObject({
+        status: 'healthy',
+        asOf: null,
+      });
+    });
+
+    it('is unhealthy when Overpass fails and no list is stored', async () => {
+      mockedQuery.mockRejectedValue(new Error('down'));
+      await service.getTransportStops('accra').catch(() => undefined);
+
+      expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('is degraded when a refresh fails but the last good list is served', async () => {
+      mockedQuery.mockResolvedValue(ELEMENTS);
+      await service.getTransportStops('accra');
+      now += 25 * 60 * 60 * 1000; // past the 24 hour freshness
+      mockedQuery.mockRejectedValue(new Error('down'));
+      await service.getTransportStops('accra');
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(service.getHealth().status).toBe('degraded');
+    });
+  });
 });

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ExchangeRatesService } from './exchange-rates.service';
+import { HistoricalQueryDto } from './dto/historical-query.dto';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
 import { ConvertCurrencyDto } from './dto/convert-currency.dto';
 
@@ -32,15 +33,12 @@ export class ExchangeRatesController {
   @ApiOperation({
     summary: 'Get historical exchange rates from stored snapshots',
   })
-  getHistoricalRates(
-    @Query('from') from: string,
-    @Query('to') to: string,
-    @Query('currency') currency: string,
-  ) {
+  getHistoricalRates(@Query() query: HistoricalQueryDto) {
     return this.exchangeRatesService.getHistoricalRates(
-      new Date(from),
-      new Date(to),
-      currency,
+      new Date(query.from),
+      new Date(query.to),
+      query.currency,
+      { granularity: query.granularity, limit: query.limit },
     );
   }
 

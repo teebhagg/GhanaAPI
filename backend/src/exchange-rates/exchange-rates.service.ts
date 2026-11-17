@@ -6,6 +6,11 @@ import { PrismaService } from '../common/database/prisma.service';
 import { AppException } from '../common/exceptions/app-exception';
 import { ConvertCurrencyDto } from './dto/convert-currency.dto';
 import { ExchangeRateDto } from './dto/exchange-rate.dto';
+import {
+  HISTORICAL_DEFAULT_LIMIT,
+  HistoricalGranularity,
+  SUPPORTED_CURRENCIES,
+} from './dto/historical-query.dto';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
 import { BankOfGhanaProvider } from './providers/bank-of-ghana.provider';
 import { ExchangeRateApiProvider } from './providers/exchangerateapi.provider';
@@ -16,21 +21,17 @@ import {
   RateData,
 } from './providers/rate-provider.interface';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_RAW_RANGE_DAYS = 366;
+const MAX_DAILY_RANGE_DAYS = 5 * 366;
+
 // cache-manager v7 takes milliseconds
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 @Injectable()
 export class ExchangeRatesService {
   private readonly logger = new Logger(ExchangeRatesService.name);
-  private readonly supportedCurrencies = [
-    'USD',
-    'EUR',
-    'GBP',
-    'NGN',
-    'CHF',
-    'JPY',
-    'CNY',
-  ];
+  private readonly supportedCurrencies = SUPPORTED_CURRENCIES;
   private readonly base = 'GHS';
   // Last stored rate per provider and pair, so reads do not insert duplicates
   private readonly lastPersisted = new Map<
@@ -86,13 +87,26 @@ export class ExchangeRatesService {
     from: Date,
     to: Date,
     currency: string,
+    options: { granularity?: HistoricalGranularity; limit?: number } = {},
   ): Promise<HistoricalRateDto[]> {
+    const granularity = options.granularity ?? 'daily';
+    const limit = options.limit ?? HISTORICAL_DEFAULT_LIMIT;
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
       throw AppException.badRequest('Invalid date range provided');
     }
 
     if (from > to) {
       throw AppException.badRequest('`from` date must be before `to` date');
+    }
+
+    const maxDays =
+      granularity === 'raw' ? MAX_RAW_RANGE_DAYS : MAX_DAILY_RANGE_DAYS;
+    if ((to.getTime() - from.getTime()) / DAY_MS > maxDays) {
+      throw AppException.badRequest(
+        granularity === 'raw'
+          ? `Range too large: raw snapshots can cover at most ${MAX_RAW_RANGE_DAYS} days, use granularity=daily for longer ranges`
+          : `Range too large: daily rates can cover at most 5 years`,
+      );
     }
 
     const code = currency.toUpperCase();
@@ -144,20 +158,39 @@ export class ExchangeRatesService {
       }
     }
 
-    // Fetch historical data (may include today's data if it was just added)
-    const history = await this.prisma.exchangeRateHistory.findMany({
-      where: {
-        baseCurrency: this.base,
-        targetCurrency: code,
-        sourceTimestamp: {
-          gte: from,
-          lte: to,
-        },
-      },
-      orderBy: {
-        sourceTimestamp: 'asc',
-      },
-    });
+    // Always bounded: one row per day by default, and never more than `limit`
+    const history =
+      granularity === 'raw'
+        ? await this.prisma.exchangeRateHistory.findMany({
+            where: {
+              baseCurrency: this.base,
+              targetCurrency: code,
+              sourceTimestamp: { gte: from, lte: to },
+            },
+            orderBy: { sourceTimestamp: 'asc' },
+            take: limit,
+          })
+        : await this.prisma.$queryRaw<
+            Array<{
+              baseCurrency: string;
+              targetCurrency: string;
+              rate: unknown;
+              provider: string;
+              sourceTimestamp: Date;
+            }>
+          >`
+            SELECT * FROM (
+              SELECT DISTINCT ON (date_trunc('day', "sourceTimestamp"))
+                     "baseCurrency", "targetCurrency", "rate", "provider", "sourceTimestamp"
+              FROM exchange_rate_history
+              WHERE "baseCurrency" = ${this.base}
+                AND "targetCurrency" = ${code}
+                AND "sourceTimestamp" BETWEEN ${from} AND ${to}
+              ORDER BY date_trunc('day', "sourceTimestamp"), "sourceTimestamp" DESC
+            ) latest_per_day
+            ORDER BY "sourceTimestamp" ASC
+            LIMIT ${limit}
+          `;
 
     return history.map((record) => ({
       baseCurrency: record.baseCurrency,

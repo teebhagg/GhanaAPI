@@ -43,6 +43,16 @@ export class GSEApiProvider {
   private readonly baseUrl = 'https://dev.kwayisi.org/apis/gse';
   private readonly requestTimeout = 10000; // 10 seconds
   private readonly maxRetries = 3;
+  // Company details change rarely and the upstream rate-limits bursts (429),
+  // so fetch few at a time, keep them for a day, and pause after a 429.
+  private readonly detailConcurrency = 4;
+  private readonly detailTtlMs = 24 * 60 * 60 * 1000;
+  private readonly detailPauseMs = 60 * 1000;
+  private detailPausedUntil = 0;
+  private readonly detailCache = new Map<
+    string,
+    { data: GSEEquityData; at: number }
+  >();
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -56,10 +66,9 @@ export class GSEApiProvider {
       // Get live data for all stocks
       const liveData = await this.fetchLiveData();
 
-      // Get detailed data for a subset of stocks to optimize performance
-      const detailedStocks = await this.fetchDetailedStocks(
-        liveData.slice(0, 20),
-      ); // First 20 stocks
+      // Company details for every stock, a few at a time. They are cached for
+      // a day, so only the first fetch after a restart is slow.
+      const detailedStocks = await this.fetchDetailedStocks(liveData);
 
       // Combine live data with detailed data where available
       const stocks: RawStockData[] = liveData.map((live) => {
@@ -121,10 +130,13 @@ export class GSEApiProvider {
   /**
    * Get market indices (simulated from available data)
    */
-  async fetchMarketIndices(): Promise<MarketIndices> {
+  async fetchMarketIndices(
+    stocks?: Array<{ price: number; change: number }>,
+  ): Promise<MarketIndices> {
     try {
-      // Since GSE API doesn't provide indices, we'll calculate from live data
-      const liveData = await this.fetchLiveData();
+      // Since GSE API doesn't provide indices, we'll calculate from live data.
+      // Callers that already hold the stocks pass them, saving an upstream call.
+      const liveData = stocks ?? (await this.fetchLiveData());
 
       const totalChange = liveData.reduce(
         (sum, stock) => sum + stock.change,
@@ -235,33 +247,74 @@ export class GSEApiProvider {
   }
 
   /**
-   * Fetch detailed equity data for multiple stocks
+   * Fetch detailed equity data for multiple stocks, a few at a time.
+   * Details are optional: a failed one is null and is retried on a later refresh.
    */
   private async fetchDetailedStocks(
     liveStocks: GSELiveData[],
   ): Promise<Array<GSEEquityData | null>> {
-    const promises = liveStocks.map(async (stock) => {
-      try {
-        return await this.makeRequest<GSEEquityData>(`/equities/${stock.name}`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to get detailed data for ${stock.name}: ${error.message}`,
-        );
-        return null;
-      }
-    });
+    const results: Array<GSEEquityData | null> = new Array(
+      liveStocks.length,
+    ).fill(null);
+    let next = 0;
 
-    return await Promise.allSettled(promises).then((results) =>
-      results.map((result) =>
-        result.status === 'fulfilled' ? result.value : null,
+    const worker = async () => {
+      while (next < liveStocks.length) {
+        const index = next++;
+        results[index] = await this.fetchDetail(liveStocks[index].name);
+      }
+    };
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(this.detailConcurrency, liveStocks.length) },
+        worker,
       ),
     );
+    return results;
+  }
+
+  private async fetchDetail(name: string): Promise<GSEEquityData | null> {
+    const cached = this.detailCache.get(name);
+    if (cached && Date.now() - cached.at < this.detailTtlMs) {
+      return cached.data;
+    }
+    if (Date.now() < this.detailPausedUntil) {
+      return null; // upstream asked us to slow down
+    }
+
+    try {
+      // No retries here: details are optional and retrying adds to the burst
+      const data = await this.makeRequest<GSEEquityData>(
+        `/equities/${name}`,
+        0,
+        0,
+      );
+      this.detailCache.set(name, { data, at: Date.now() });
+      return data;
+    } catch (error) {
+      if (error?.response?.status === 429) {
+        this.detailPausedUntil = Date.now() + this.detailPauseMs;
+        this.logger.warn(
+          `GSE API rate limit (429): pausing detail requests for ${this.detailPauseMs / 1000}s`,
+        );
+      } else {
+        this.logger.warn(
+          `Failed to get detailed data for ${name}: ${error.message}`,
+        );
+      }
+      return null;
+    }
   }
 
   /**
    * Make HTTP request with retry logic and timeout
    */
-  private async makeRequest<T>(endpoint: string, retryCount = 0): Promise<T> {
+  private async makeRequest<T>(
+    endpoint: string,
+    retryCount = 0,
+    maxRetries = this.maxRetries,
+  ): Promise<T> {
     try {
       const url = `${this.baseUrl}${endpoint}`;
 
@@ -271,12 +324,12 @@ export class GSEApiProvider {
 
       return response.data;
     } catch (error) {
-      if (retryCount < this.maxRetries && this.isRetryableError(error)) {
+      if (retryCount < maxRetries && this.isRetryableError(error)) {
         this.logger.warn(
-          `Request failed, retrying (${retryCount + 1}/${this.maxRetries}): ${error.message}`,
+          `Request failed, retrying (${retryCount + 1}/${maxRetries}): ${error.message}`,
         );
         await this.delay(1000 * (retryCount + 1)); // Exponential backoff
-        return this.makeRequest<T>(endpoint, retryCount + 1);
+        return this.makeRequest<T>(endpoint, retryCount + 1, maxRetries);
       }
 
       throw error;

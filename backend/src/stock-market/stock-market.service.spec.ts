@@ -134,34 +134,108 @@ describe('StockMarketService', () => {
   });
 
   describe('getStock', () => {
-    it('should return a specific stock', async () => {
-      const result = await service.getStock('ACCESS');
+    it('should return a specific stock from the cached list', async () => {
+      const result = await service.getStock('access');
 
       expect(result.symbol).toBe('ACCESS');
       expect(result.name).toBe('Access Bank Ghana Plc');
-      expect(gseApiProvider.fetchStock).toHaveBeenCalledWith('ACCESS');
+      // Served from the shared list, not a per-symbol upstream call
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+      expect(gseApiProvider.fetchStock).not.toHaveBeenCalled();
+    });
+
+    it('should throw 404 for a symbol that is not listed', async () => {
+      await expect(service.getStock('NOPE')).rejects.toMatchObject({
+        status: 404,
+      });
+    });
+
+    it('should throw 503 when the list is unavailable', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+      await expect(service.getStock('ACCESS')).rejects.toMatchObject({
+        status: 503,
+      });
     });
   });
 
   describe('getAllStocks', () => {
-    it('should return cached stocks if available', async () => {
-      mockCacheManager.get.mockResolvedValueOnce([mockRawStockData]);
+    it('keeps serving the last good prices over a weekend, then gives up', async () => {
+      const t0 = 1_700_000_000_000;
+      const day = 24 * 60 * 60 * 1000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      await service.getAllStocks();
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
 
-      const result = await service.getAllStocks();
+      nowSpy.mockReturnValue(t0 + 2 * day);
+      await expect(service.getAllStocks()).resolves.toHaveLength(1);
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(mockRawStockData);
-      expect(gseApiProvider.fetchAllStocks).not.toHaveBeenCalled();
+      nowSpy.mockReturnValue(t0 + 4 * day);
+      await expect(service.getAllStocks()).rejects.toMatchObject({
+        status: 503,
+      });
+      nowSpy.mockRestore();
     });
 
-    it('should fetch and cache stocks if not in cache', async () => {
-      mockCacheManager.get.mockResolvedValueOnce(null); // Cache miss
-
+    it('should fetch stocks from the provider on first use', async () => {
       const result = await service.getAllStocks();
 
       expect(result).toHaveLength(1);
-      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalled();
-      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('should serve a second call from memory without calling the provider', async () => {
+      await service.getAllStocks();
+      const result = await service.getAllStocks();
+
+      expect(result[0]).toEqual(mockRawStockData);
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('should share one provider call between simultaneous requests', async () => {
+      await Promise.all(
+        Array.from({ length: 20 }, () => service.getAllStocks()),
+      );
+
+      expect(gseApiProvider.fetchAllStocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw 503 (not 500) when there is no data and the provider fails', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValueOnce(
+        new Error('GSE API down'),
+      );
+
+      await expect(service.getAllStocks()).rejects.toMatchObject({
+        status: 503,
+      });
+    });
+
+    it('should pass the 503 through search and sector queries', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('GSE API down'),
+      );
+
+      await expect(service.searchStocks({} as any)).rejects.toMatchObject({
+        status: 503,
+      });
+      await expect(
+        service.getStocksBySector('Financials'),
+      ).rejects.toMatchObject({
+        status: 503,
+      });
+    });
+
+    it('should report freshness of the stored data', async () => {
+      expect(service.getFreshness()).toEqual({ asOf: null, stale: false });
+
+      await service.getAllStocks();
+
+      const freshness = service.getFreshness();
+      expect(freshness.asOf).toEqual(expect.any(String));
+      expect(freshness.stale).toBe(false);
     });
   });
 
@@ -187,6 +261,61 @@ describe('StockMarketService', () => {
       expect(result).toHaveProperty('totalVolume');
       expect(result).toHaveProperty('marketStatus');
       expect(result.marketStatus).toBe('OPEN');
+    });
+
+    it('uses the snapshot it summarised even if a refresh lands meanwhile', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      mockCacheManager.get.mockResolvedValue(null);
+      (gseApiProvider.fetchMarketIndices as jest.Mock).mockImplementationOnce(
+        async () => {
+          // A refresh finishes while the summary is being built
+          nowSpy.mockReturnValue(t0 + 10 * 60 * 1000);
+          await (service as any).stocksCache.refresh('all', () =>
+            Promise.resolve([{ ...mockRawStockData, price: 99 }]),
+          );
+          return mockMarketIndices;
+        },
+      );
+
+      const result = await service.getMarketSummary();
+
+      expect(result.lastUpdated).toBe(new Date(t0).toISOString());
+      nowSpy.mockRestore();
+    });
+
+    it('does not serve a stored summary older than the 3 day limit', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      mockCacheManager.get.mockResolvedValue({
+        indexValue: 1,
+        lastUpdated: new Date(t0 - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+
+      await expect(service.getMarketSummary()).rejects.toMatchObject({
+        status: 503,
+      });
+      nowSpy.mockRestore();
+    });
+
+    it('reports when the prices were fetched, not when the summary was built', async () => {
+      const t0 = 1_700_000_000_000;
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      await service.getAllStocks();
+
+      nowSpy.mockReturnValue(t0 + 60 * 60 * 1000); // an hour on, still serving the old prices
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        new Error('upstream down'),
+      );
+      mockCacheManager.get.mockResolvedValue(null);
+
+      const result = await service.getMarketSummary();
+
+      expect(result.lastUpdated).toBe(new Date(t0).toISOString());
+      nowSpy.mockRestore();
     });
   });
 

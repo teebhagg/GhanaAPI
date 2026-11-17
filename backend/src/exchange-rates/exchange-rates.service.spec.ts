@@ -46,6 +46,7 @@ describe('ExchangeRatesService', () => {
         createMany: jest.fn(),
         findMany: jest.fn(),
       },
+      $queryRaw: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<PrismaService>;
 
     (
@@ -511,7 +512,9 @@ describe('ExchangeRatesService', () => {
       const to = new Date('2023-01-31');
       const currency = 'USD';
 
-      const result = await service.getHistoricalRates(from, to, currency);
+      const result = await service.getHistoricalRates(from, to, currency, {
+        granularity: 'raw',
+      });
 
       expect(result).toEqual([]);
       expect(
@@ -528,6 +531,7 @@ describe('ExchangeRatesService', () => {
         orderBy: {
           sourceTimestamp: 'asc',
         },
+        take: 400,
       });
     });
 
@@ -549,7 +553,9 @@ describe('ExchangeRatesService', () => {
         },
       ]);
 
-      const result = await service.getHistoricalRates(from, to, currency);
+      const result = await service.getHistoricalRates(from, to, currency, {
+        granularity: 'raw',
+      });
 
       expect(result).toEqual([
         {
@@ -572,7 +578,89 @@ describe('ExchangeRatesService', () => {
           },
         },
         orderBy: { sourceTimestamp: 'asc' },
+        take: 400,
       });
+    });
+
+    it('should read one row per day by default, not every snapshot', async () => {
+      const day = new Date('2023-01-15T23:00:00Z');
+      (mockPrismaService.$queryRaw as jest.Mock).mockResolvedValue([
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: '0.081',
+          provider: 'bank-of-ghana',
+          sourceTimestamp: day,
+        },
+      ]);
+
+      const result = await service.getHistoricalRates(
+        new Date('2023-01-01'),
+        new Date('2023-01-31'),
+        'usd',
+      );
+
+      expect(result).toEqual([
+        {
+          baseCurrency: 'GHS',
+          targetCurrency: 'USD',
+          rate: 0.081,
+          provider: 'bank-of-ghana',
+          date: day,
+        },
+      ]);
+      expect(mockPrismaService.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(
+        mockPrismaService.exchangeRateHistory.findMany,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should pass the limit to raw queries', async () => {
+      await service.getHistoricalRates(
+        new Date('2023-01-01'),
+        new Date('2023-01-31'),
+        'USD',
+        { granularity: 'raw', limit: 25 },
+      );
+
+      expect(
+        mockPrismaService.exchangeRateHistory.findMany,
+      ).toHaveBeenCalledWith(expect.objectContaining({ take: 25 }));
+    });
+
+    it('should reject a raw range longer than 366 days', async () => {
+      await expect(
+        service.getHistoricalRates(
+          new Date('2022-01-01'),
+          new Date('2023-06-01'),
+          'USD',
+          { granularity: 'raw' },
+        ),
+      ).rejects.toThrow(/at most 366 days/);
+      expect(
+        mockPrismaService.exchangeRateHistory.findMany,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should reject a daily range longer than 5 years', async () => {
+      await expect(
+        service.getHistoricalRates(
+          new Date('2015-01-01'),
+          new Date('2026-01-01'),
+          'USD',
+        ),
+      ).rejects.toThrow(/at most 5 years/);
+      expect(mockPrismaService.$queryRaw).not.toHaveBeenCalled();
+    });
+
+    it('should accept a 2022-to-today daily range', async () => {
+      await expect(
+        service.getHistoricalRates(
+          new Date('2022-01-01'),
+          new Date('2026-11-15'),
+          'USD',
+        ),
+      ).resolves.toEqual([]);
     });
 
     it('should throw when the date range is invalid', async () => {

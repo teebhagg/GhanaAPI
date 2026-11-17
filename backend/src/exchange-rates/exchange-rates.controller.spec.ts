@@ -125,16 +125,17 @@ describe('ExchangeRatesController', () => {
         mockHistoricalRates,
       );
 
-      const result = await controller.getHistoricalRates(
-        '2023-01-01',
-        '2023-01-02',
-        'USD',
-      );
+      const result = await controller.getHistoricalRates({
+        from: '2023-01-01',
+        to: '2023-01-02',
+        currency: 'USD',
+      });
 
       expect(service.getHistoricalRates).toHaveBeenCalledWith(
         new Date('2023-01-01'),
         new Date('2023-01-02'),
         'USD',
+        { granularity: undefined, limit: undefined },
       );
       expect(result).toEqual(mockHistoricalRates);
     });
@@ -142,12 +143,19 @@ describe('ExchangeRatesController', () => {
     it('should handle date parsing correctly', async () => {
       mockExchangeRatesService.getHistoricalRates.mockResolvedValue([]);
 
-      await controller.getHistoricalRates('2023-12-01', '2023-12-31', 'EUR');
+      await controller.getHistoricalRates({
+        from: '2023-12-01',
+        to: '2023-12-31',
+        currency: 'EUR',
+        granularity: 'raw',
+        limit: 50,
+      });
 
       expect(service.getHistoricalRates).toHaveBeenCalledWith(
         new Date('2023-12-01'),
         new Date('2023-12-31'),
         'EUR',
+        { granularity: 'raw', limit: 50 },
       );
     });
   });

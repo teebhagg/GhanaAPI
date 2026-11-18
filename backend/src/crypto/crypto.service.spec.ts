@@ -23,7 +23,7 @@ describe('CryptoService', () => {
     };
 
     mockExchangeRatesService = {
-      convertCurrency: jest.fn().mockResolvedValue({ result: 900000 }),
+      convertCurrency: jest.fn().mockResolvedValue({ rate: 15, result: 15 }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -50,6 +50,11 @@ describe('CryptoService', () => {
     expect(result).toBeDefined();
     expect(result.data.bitcoin.usd).toEqual(60000);
     expect(result.data.bitcoin.ghs).toEqual(900000);
+    expect(mockExchangeRatesService.convertCurrency).toHaveBeenCalledWith({
+      from: 'USD',
+      to: 'GHS',
+      amount: 1,
+    });
     expect(mockHttpService.get).toHaveBeenCalled();
     expect(mockExchangeRatesService.convertCurrency).toHaveBeenCalled();
     expect(mockCacheManager.set).toHaveBeenCalled();
@@ -73,6 +78,18 @@ describe('CryptoService', () => {
       ServiceUnavailableException,
     );
     expect(mockCacheManager.set).not.toHaveBeenCalled();
+  });
+
+  it('converts once per request with a fixed amount, however many coins', async () => {
+    mockCacheManager.get.mockResolvedValue(null);
+    mockHttpService.get = jest.fn(() =>
+      of({ data: { bitcoin: { usd: 60000 }, ethereum: { usd: 3000 } } }),
+    );
+
+    const result = await service.getCryptoPrices(['bitcoin', 'ethereum']);
+
+    expect(mockExchangeRatesService.convertCurrency).toHaveBeenCalledTimes(1);
+    expect(result.data.ethereum.ghs).toEqual(45000);
   });
 
   it('should return cached data if available', async () => {

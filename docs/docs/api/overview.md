@@ -132,29 +132,34 @@ All responses follow a consistent JSON format:
 
 ### Error Responses
 
+Every error has the same three fields:
+
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid input provided",
-    "details": {
-      "field": "digitalCode",
-      "issue": "Format must be XX-XXX-XXXX"
-    }
-  },
-  "timestamp": "2024-01-15T10:30:00Z"
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Unsupported city. Allowed values: accra, kumasi, tamale, takoradi"
 }
 ```
+
+- `statusCode` matches the HTTP status.
+- `error` is the HTTP status text.
+- `message` says what went wrong. For request validation it is a list with one entry per problem.
+
+Some errors add fields, for example `code` and `details` when a data provider fails, or `success: false` on the transport endpoints. A 500 never includes internal details: the cause is logged on the server and the response says `Internal server error`.
 
 ## 📋 Common HTTP Status Codes
 
 | Code | Description           |
 | ---- | --------------------- |
-| 200  | Success               |
-| 400  | Bad Request           |
-| 404  | Not Found             |
-| 500  | Internal Server Error |
+| 200  | Success                |
+| 400  | Bad Request            |
+| 404  | Not Found              |
+| 413  | Payload Too Large      |
+| 415  | Unsupported Media Type |
+| 429  | Too Many Requests      |
+| 500  | Internal Server Error  |
+| 503  | Service Unavailable    |
 
 ## 📊 Usage Examples
 

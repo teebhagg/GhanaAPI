@@ -44,7 +44,7 @@ describe('GeocodingService (Overpass fallback)', () => {
   it('uses the shared Overpass client with a short timeout, never POSTs, and neutralises the name', async () => {
     mockedQuery.mockResolvedValue({
       elements: [
-        { lat: 6.69, lon: -1.62, tags: { name: 'Kuasi', place: 'city' } },
+        { lat: 6.69, lon: -1.62, tags: { name: 'Kumasi', place: 'city' } },
       ],
     });
 
@@ -54,6 +54,8 @@ describe('GeocodingService (Overpass fallback)', () => {
     expect(httpService.post).not.toHaveBeenCalled();
     const query = mockedQuery.mock.calls[0][0];
     expect(query).toContain('Ku.asi');
+    // The mocked place must be one the generated pattern really matches.
+    expect(new RegExp('Ku.asi', 'i').test('Kumasi')).toBe(true);
     expect(query).not.toContain('Ku"asi');
     expect(mockedQuery.mock.calls[0][1]).toBe(8_000);
     // Overpass has no (country:XX) filter, so the query must use an area.

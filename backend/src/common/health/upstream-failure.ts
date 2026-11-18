@@ -1,10 +1,16 @@
+import { HttpException } from '@nestjs/common';
+import { STATUS_CODES } from 'node:http';
+
 /**
  * A short, safe description of why an upstream call failed, for /status.
  *
  * /status is public, so nothing here may carry a secret: never a URL path or
  * query (some providers put an API key in the path), never a raw message from
- * a library that may hold connection strings. Hosts, status codes and error
- * codes are enough to tell a block from a timeout from a DNS problem.
+ * an error we did not write. Hosts, status codes and error codes are enough to
+ * tell a block from a timeout from a DNS problem.
+ *
+ * Free text only gets through an UpstreamFailure, which a developer creates on
+ * purpose with static wording. Any other error is described by its type.
  */
 
 const MAX_REASON_LENGTH = 160;
@@ -12,9 +18,11 @@ const MAX_SUMMARY_LENGTH = 700;
 const MAX_CAUSE_DEPTH = 5;
 
 /**
- * A failure that has already been summarised in safe words, usually by a
- * service that tried several sources. Attach it as the `cause` of the error the
- * service throws, so the summary survives the generic message on top.
+ * A failure summarised in words that are safe to publish: static text written
+ * in our own code, or a summary built from other safe descriptions. Throw it
+ * for our own conditions ("No GTFS data available"), or attach it as the
+ * `cause` of the error a service throws, so it survives the generic message on
+ * top. Never put text from an upstream response or a library error in it.
  */
 export class UpstreamFailure extends Error {
   constructor(
@@ -83,34 +91,38 @@ function describeAxios(error: AxiosLike): string {
   return `no response from${where || ' upstream'}`;
 }
 
+/** What to say about an error whose message we do not trust. */
+function describeByType(error: Error): string {
+  if (error instanceof HttpException) {
+    const status = error.getStatus();
+    return `${(STATUS_CODES[status] ?? 'error').toLowerCase()} (${status})`;
+  }
+  return `unexpected ${error.name || 'Error'}`;
+}
+
 /**
  * Describe the most useful error in a chain: walk `cause` until something we
  * can summarise safely turns up (an UpstreamFailure, an HTTP client error, a
- * timeout), and fall back to a cleaned message or the error name.
+ * timeout). An error with none of these is described by its type, never by its
+ * message, because the message may hold a path, a query or a credential.
  */
 export function describeFailure(error: unknown): string {
   let current: unknown = error;
   let fallback: string | null = null;
 
   for (let depth = 0; depth < MAX_CAUSE_DEPTH; depth++) {
-    if (current instanceof UpstreamFailure) return current.summary;
+    if (current instanceof UpstreamFailure) {
+      return safeMessage(current.summary, MAX_SUMMARY_LENGTH);
+    }
     if (isAxiosError(current)) return describeAxios(current);
-    if (current instanceof Error) {
-      // rxjs timeout() raises a TimeoutError with no URL
-      if (current.name === 'TimeoutError') {
-        return 'timeout: the request exceeded its time limit';
-      }
-      fallback ??= current.message
-        ? safeMessage(current.message)
-        : current.name;
-      current = (current as { cause?: unknown }).cause;
-      if (current === undefined || current === null) break;
-      continue;
+    if (!(current instanceof Error)) break;
+    // rxjs timeout() raises a TimeoutError with no URL
+    if (current.name === 'TimeoutError') {
+      return 'timeout: the request exceeded its time limit';
     }
-    if (typeof current === 'string') {
-      fallback ??= safeMessage(current);
-    }
-    break;
+    fallback ??= describeByType(current);
+    current = (current as { cause?: unknown }).cause;
+    if (current === undefined || current === null) break;
   }
   return fallback ?? 'unknown error';
 }

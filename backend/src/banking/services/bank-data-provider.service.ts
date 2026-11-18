@@ -18,6 +18,7 @@ import {
 import {
   describeFailure,
   summariseSources,
+  UpstreamFailure,
 } from '../../common/health/upstream-failure';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ATMLocation, Bank } from '../entities/bank.entity';
@@ -322,7 +323,11 @@ export class BankDataProviderService {
       );
       throw new ServiceUnavailableException(
         'Bank data is temporarily unavailable from all sources',
-        failures.length ? { cause: summariseSources(failures) } : undefined,
+        {
+          cause: failures.length
+            ? summariseSources(failures)
+            : new UpstreamFailure('OpenStreetMap returned no banks'),
+        },
       );
     }
 
@@ -338,7 +343,10 @@ export class BankDataProviderService {
 
     // No data is an outage, not an empty result.
     if (atms.length === 0) {
-      throw new ServiceUnavailableException('ATM data is temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'ATM data is temporarily unavailable',
+        { cause: new UpstreamFailure('OpenStreetMap returned no ATMs') },
+      );
     }
 
     const uniqueATMs = this.deduplicateATMs(atms);

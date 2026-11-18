@@ -107,30 +107,91 @@ describe('describeFailure', () => {
     );
   });
 
-  it('should use the message of an error with no useful cause', () => {
-    expect(describeFailure(new Error('No GTFS data available'))).toBe(
-      'No GTFS data available',
+  describe('errors we did not write', () => {
+    it.each([
+      [
+        'a secret in the path',
+        'Request failed for /v6/SECRETKEY123/pair/USD/GHS',
+      ],
+      [
+        'a secret in the query',
+        'GET /pair?token=abc123&key=SECRETKEY123 failed',
+      ],
+      ['a relative url', 'could not reach ../internal/admin/keys'],
+      [
+        'credentials in a connection string',
+        'connect failed for postgres://user:secret@db.internal:5432/x',
+      ],
+      [
+        'credentials without a scheme',
+        'login user:secret@db.internal rejected',
+      ],
+    ])(
+      'should never publish the message when it holds %s',
+      (_label, message) => {
+        const reason = describeFailure(new Error(message));
+
+        expect(reason).toBe('unexpected Error');
+        expect(reason).not.toMatch(
+          /SECRETKEY|secret|token|abc123|internal|db\./,
+        );
+      },
     );
+
+    it('should describe an error by its own type name', () => {
+      class ParseError extends Error {
+        name = 'ParseError';
+      }
+
+      expect(describeFailure(new ParseError('x'))).toBe(
+        'unexpected ParseError',
+      );
+      expect(describeFailure(new TypeError('x'))).toBe('unexpected TypeError');
+    });
+
+    it('should describe a service exception by its status, not its message', () => {
+      const error = new ServiceUnavailableException('Failed: token=abc123');
+
+      expect(describeFailure(error)).toBe('service unavailable (503)');
+    });
+
+    it('should not publish an unrecognisable cause either', () => {
+      const error = new ServiceUnavailableException('outer', {
+        cause: new Error('Request failed for /v6/SECRETKEY123/pair'),
+      });
+
+      expect(describeFailure(error)).toBe('service unavailable (503)');
+    });
   });
 
-  it('should replace urls in a message with their host and drop credentials', () => {
-    const reason = describeFailure(
-      new Error('connect failed for postgres://user:secret@db.internal:5432/x'),
-    );
+  describe('trusted summaries', () => {
+    it('should publish the text of an UpstreamFailure', () => {
+      expect(
+        describeFailure(new UpstreamFailure('No GTFS data available')),
+      ).toBe('No GTFS data available');
+    });
 
-    expect(reason).toContain('db.internal:5432');
-    expect(reason).not.toMatch(/secret|user:/);
-  });
+    it('should still reduce urls in a trusted summary to their host and drop credentials', () => {
+      const reason = describeFailure(
+        new UpstreamFailure(
+          'connect failed for postgres://user:secret@db.internal:5432/x',
+        ),
+      );
 
-  it('should cut a long message', () => {
-    const reason = describeFailure(new Error('x'.repeat(1000)));
+      expect(reason).toContain('db.internal:5432');
+      expect(reason).not.toMatch(/secret|user:/);
+    });
 
-    expect(reason.length).toBeLessThanOrEqual(160);
-    expect(reason.endsWith('…')).toBe(true);
+    it('should cut a very long summary', () => {
+      const reason = describeFailure(new UpstreamFailure('x'.repeat(2000)));
+
+      expect(reason.length).toBeLessThanOrEqual(700);
+      expect(reason.endsWith('…')).toBe(true);
+    });
   });
 
   it('should cope with values that are not errors', () => {
-    expect(describeFailure('plain text failure')).toBe('plain text failure');
+    expect(describeFailure('plain text failure')).toBe('unknown error');
     expect(describeFailure(undefined)).toBe('unknown error');
     expect(describeFailure({ any: 'object' })).toBe('unknown error');
   });
@@ -140,7 +201,7 @@ describe('describeFailure', () => {
     const b = new Error('second', { cause: a });
     (a as { cause?: unknown }).cause = b;
 
-    expect(describeFailure(a)).toBe('first');
+    expect(describeFailure(a)).toBe('unexpected Error');
   });
 });
 
@@ -155,7 +216,10 @@ describe('summariseSources', () => {
     const first = httpError(502, 'https://overpass-api.de/api/interpreter');
     const summary = summariseSources([
       { source: 'overpass', error: first },
-      { source: 'gtfs', error: new Error('No GTFS data available for Ghana') },
+      {
+        source: 'gtfs',
+        error: new UpstreamFailure('No GTFS data available for Ghana'),
+      },
     ]);
 
     expect(summary).toBeInstanceOf(UpstreamFailure);

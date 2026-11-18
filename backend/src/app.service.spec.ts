@@ -217,7 +217,7 @@ describe('AppService.getStatus', () => {
 
       expect(status.statistics.transport.lastFailure).toEqual({
         reason:
-          'stops: overpass: HTTP 502 from overpass-api.de; fuel prices: npa-scraper: HTTP 404 from npa.gov.gh',
+          'stops/accra: overpass: HTTP 502 from overpass-api.de; fuel prices: npa-scraper: HTTP 404 from npa.gov.gh',
         at: '2026-11-18T12:05:00.000Z',
       });
     });

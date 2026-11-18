@@ -13,7 +13,10 @@ import {
   HealthState,
   ServiceHealth,
 } from '../common/health/service-health';
-import { describeFailure } from '../common/health/upstream-failure';
+import {
+  describeFailure,
+  UpstreamFailure,
+} from '../common/health/upstream-failure';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 
 // How long a price set stays in the cache (cache-manager v5 uses ms)
@@ -122,13 +125,13 @@ export class CryptoService {
         });
         usdToGhs = conversion.rate;
         if (!Number.isFinite(usdToGhs)) {
-          throw new Error('Conversion returned no usable rate');
+          throw new UpstreamFailure('Conversion returned no usable rate');
         }
       } catch (error) {
         this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
         this.lastUpstreamFailed = true;
         this.lastFailure = {
-          reason: describeFailure(error),
+          reason: `USD to GHS conversion failed: ${describeFailure(error)}`,
           at: new Date(Date.now()).toISOString(),
           scope: 'usd-to-ghs',
         };

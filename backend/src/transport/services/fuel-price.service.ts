@@ -13,7 +13,10 @@ import {
   HealthState,
   ServiceHealth,
 } from '../../common/health/service-health';
-import { summariseSources } from '../../common/health/upstream-failure';
+import {
+  summariseSources,
+  UpstreamFailure,
+} from '../../common/health/upstream-failure';
 import { firstValueFrom } from 'rxjs';
 
 export interface FuelPrice {
@@ -214,7 +217,7 @@ export class FuelPriceService {
           lastError = new Error(`Invalid fuel price data from ${api}`);
           failures.push({
             source: api,
-            error: new Error('returned no valid prices'),
+            error: new UpstreamFailure('returned no valid prices'),
           });
           continue;
         }
@@ -505,7 +508,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in NPA press releases');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in NPA press releases',
+        );
       }
 
       return {
@@ -618,7 +623,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in Citi News articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in Citi News articles',
+        );
       }
 
       return {
@@ -733,7 +740,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in Joy Online articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in Joy Online articles',
+        );
       }
 
       return {
@@ -853,7 +862,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in GhanaWeb articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in GhanaWeb articles',
+        );
       }
 
       return {

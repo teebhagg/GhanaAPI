@@ -223,18 +223,33 @@ describe('LastGoodCache', () => {
     it('reports the newest failure when several keys failed', async () => {
       await cache.refresh(
         'accra',
-        jest.fn().mockRejectedValue(new Error('first')),
+        jest.fn().mockRejectedValue(new UpstreamFailure('first')),
       );
       now += 5000;
       await cache.refresh(
         'kumasi',
-        jest.fn().mockRejectedValue(new Error('second')),
+        jest.fn().mockRejectedValue(new UpstreamFailure('second')),
       );
 
       expect(cache.health().lastFailure).toMatchObject({
         reason: 'second',
         scope: 'kumasi',
       });
+    });
+
+    it('does not publish the message of an ordinary error', async () => {
+      await cache.refresh(
+        'k',
+        jest
+          .fn()
+          .mockRejectedValue(
+            new Error('Request failed for /v6/SECRETKEY123/pair?token=abc'),
+          ),
+      );
+
+      const failure = cache.health().lastFailure;
+      expect(failure?.reason).toBe('unexpected Error');
+      expect(JSON.stringify(failure)).not.toMatch(/SECRETKEY|token|\/v6/);
     });
 
     it('forgets the failure once a refresh works', async () => {

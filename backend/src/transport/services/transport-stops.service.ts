@@ -12,7 +12,10 @@ import { Cron } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ServiceHealth } from '../../common/health/service-health';
-import { summariseSources } from '../../common/health/upstream-failure';
+import {
+  summariseSources,
+  UpstreamFailure,
+} from '../../common/health/upstream-failure';
 import { LastGoodCache } from '../../common/resilience/last-good-cache';
 
 /**
@@ -163,7 +166,7 @@ export class TransportStopsService implements OnModuleInit {
         // An empty list for a city is an outage, not an answer. Do not cache
         // it for a day or let it replace the last good list.
         if (stops.length === 0) {
-          throw new Error(`${api} returned no stops`);
+          throw new UpstreamFailure(`${api} returned no stops`);
         }
         return stops;
       } catch (error) {
@@ -201,7 +204,7 @@ export class TransportStopsService implements OnModuleInit {
   private async getStopsFromGTFS(city: string): Promise<TransportStop[]> {
     const gtfsUrl = this.configService.get<string>('GHANA_GTFS_URL');
     if (!gtfsUrl) {
-      throw new Error('No GTFS data available for Ghana');
+      throw new UpstreamFailure('No GTFS data available for Ghana');
     }
 
     const response = await firstValueFrom(

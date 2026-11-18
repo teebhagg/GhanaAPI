@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import axios from 'axios';
+import { safeMessage, UpstreamFailure } from '../health/upstream-failure';
 
 /**
  * Official global Overpass instances, main host first. Do not add
@@ -40,12 +41,14 @@ export async function queryOverpass(
       const remark: string =
         data && typeof data.remark === 'string' ? data.remark : '';
       if (/runtime error/i.test(remark)) {
-        throw new Error(`Overpass runtime error from ${endpoint}: ${remark}`);
+        throw new UpstreamFailure(
+          `Overpass runtime error from ${endpoint}: ${safeMessage(remark, 100)}`,
+        );
       }
       if (data && typeof data === 'object' && Array.isArray(data.elements)) {
         return data;
       }
-      throw new Error(`Non-JSON response from ${endpoint}`);
+      throw new UpstreamFailure(`Non-JSON response from ${endpoint}`);
     } catch (error) {
       lastError = error;
       logger.warn(

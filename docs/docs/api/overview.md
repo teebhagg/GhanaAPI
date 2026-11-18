@@ -364,7 +364,8 @@ const getCachedData = async (url, ttl = 300000) => {
 }
 ```
 
-- `status` and each service are `healthy`, `degraded` (the last refresh failed but older data is still served) or `unhealthy` (the last refresh failed and there is nothing to serve).
+- The overall `status` is `unhealthy` only when the database check fails (and `success` is then `false`). It is `degraded` when the database is healthy but at least one service is `degraded` or `unhealthy`, even if that service has no older data to serve, and `healthy` when everything is healthy.
+- Each data service that fetches from a third party (`banking`, `stockMarket`, `crypto`, `transport`) is `healthy`, `degraded` (the last refresh failed but older data is still served) or `unhealthy` (the last refresh failed and there is nothing to serve). Services stored in the database (`education`, `exchangeRates`) and the static `locations` data are `healthy`, or `degraded` if their statistics could not be read.
 - `build` says which build answered. `commit` and `instance` are `null` when the host does not provide them. With several instances behind one address, `instance` shows which one you reached.
 - `lastFailure` appears only while a failure is outstanding. `reason` names the HTTP status, timeout or connection error and the host, never a URL path, query or credential. `scope` says which dataset or city failed. It disappears after the next successful refresh.
 

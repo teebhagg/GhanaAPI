@@ -282,7 +282,10 @@ export class AppService {
     } else if (failures.length > 1) {
       lastFailure = {
         reason: failures
-          .map(({ label, failure }) => `${label}: ${failure.reason}`)
+          .map(
+            ({ label, failure }) =>
+              `${failure.scope ? `${label}/${failure.scope}` : label}: ${failure.reason}`,
+          )
           .join('; '),
         at: failures
           .map(({ failure }) => failure.at)

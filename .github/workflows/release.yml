@@ -55,9 +55,11 @@ jobs:
       contents: write
     concurrency:
       # One release at a time, in a queue. queue: max keeps every waiting
-      # release (up to 100) instead of replacing it with the newest. Running
-      # them in turn also means a release starts after the previous version's
-      # tag exists, so its changelog can find it.
+      # release (up to 100) instead of replacing it with the newest. Releases
+      # usually run in order, so the previous version's tag is normally there
+      # for the changelog. That is not guaranteed: queue order can vary and an
+      # earlier release can fail. The changelog step then falls back to the
+      # last 10 commits.
       group: release
       queue: max
       cancel-in-progress: false

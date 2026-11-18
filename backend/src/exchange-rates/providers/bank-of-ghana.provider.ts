@@ -8,6 +8,28 @@ import {
   RateProvider,
 } from './rate-provider.interface';
 
+type BogQuote = { buy: number; sell: number };
+
+// Fallback for the old 3-column table that has no "Currency Pair" column.
+const QUOTED_PER_GHS = new Set(['NGN']);
+
+/**
+ * The Bank of Ghana quotes most currencies as GHS per 1 unit (pair "USDGHS")
+ * but some as units per 1 GHS (pair "GHSNGN"). Return GHS per 1 unit for
+ * either, so the rest of the provider uses one convention. Null when a value
+ * is not a positive number.
+ */
+function ghsPerUnit(
+  buy: number,
+  sell: number,
+  quotedPerGhs: boolean,
+): BogQuote | null {
+  if (!(buy > 0) || !(sell > 0)) return null;
+  // Units per GHS: the bank pays the lower figure for GHS, so a customer
+  // buying the foreign currency pays 1 / lower GHS per unit.
+  return quotedPerGhs ? { buy: 1 / sell, sell: 1 / buy } : { buy, sell };
+}
+
 @Injectable()
 export class BankOfGhanaProvider implements RateProvider {
   name = 'bank-of-ghana';
@@ -33,6 +55,62 @@ export class BankOfGhanaProvider implements RateProvider {
     if (/(^|[^A-Z])CNY([^A-Z]|$)|CHINESE\s*YUAN|RENMINBI|RMB|YUAN|CN¥/.test(L))
       return 'CNY';
     return null;
+  }
+
+  /** Parse the Bank of Ghana table into GHS per 1 unit of each currency. */
+  private parseRates(html: string): {
+    rates: Map<string, BogQuote>;
+    parsedRows: number;
+    detectedDate?: string;
+  } {
+    const $ = cheerio.load(html);
+
+    const rates = new Map<string, BogQuote>();
+    let parsedRows = 0;
+    let detectedDate: string | undefined;
+    // Primary: 6-column table (date, currency, pair, buying, selling, mid)
+    $('table tbody tr').each((_, row) => {
+      const cells = $(row).find('td');
+      if (cells.length >= 6) {
+        const date = $(cells[0]).text().trim();
+        const currencyLabel = $(cells[1]).text().trim();
+        // "USDGHS" is GHS per USD; "GHSNGN" is NGN per GHS
+        const pair = $(cells[2])
+          .text()
+          .replace(/[^A-Za-z]/g, '')
+          .toUpperCase();
+        const buy = parseFloat($(cells[3]).text().trim().replace(/,/g, ''));
+        const sell = parseFloat($(cells[4]).text().trim().replace(/,/g, ''));
+        const code = this.normalizeCode(currencyLabel);
+        const quote =
+          code &&
+          ghsPerUnit(buy, sell, pair.length === 6 && pair.startsWith('GHS'));
+        if (code && quote) {
+          rates.set(code, quote);
+          parsedRows++;
+          detectedDate = detectedDate || date;
+        }
+      }
+    });
+    // Fallback: 3-column table (currency, buying, selling), no pair column
+    if (parsedRows === 0) {
+      $('table tbody tr').each((_, row) => {
+        const cells = $(row).find('td');
+        if (cells.length >= 3) {
+          const currencyLabel = $(cells[0]).text().trim();
+          const buy = parseFloat($(cells[1]).text().trim().replace(/,/g, ''));
+          const sell = parseFloat($(cells[2]).text().trim().replace(/,/g, ''));
+          const code = this.normalizeCode(currencyLabel);
+          const quote = code && ghsPerUnit(buy, sell, QUOTED_PER_GHS.has(code));
+          if (code && quote) {
+            rates.set(code, quote);
+            parsedRows++;
+          }
+        }
+      });
+    }
+
+    return { rates, parsedRows, detectedDate };
   }
 
   private async loadRates(
@@ -71,47 +149,7 @@ export class BankOfGhanaProvider implements RateProvider {
     if (!html)
       throw new Error((lastError as string) || 'Failed to fetch BoG page');
 
-    const $ = cheerio.load(html);
-
-    const rates = new Map<string, { buy: number; sell: number }>();
-    let parsedRows = 0;
-    let detectedDate: string | undefined;
-    // Primary: 6-column table (date, currency, pair, buying, selling, mid)
-    $('table tbody tr').each((_, row) => {
-      const cells = $(row).find('td');
-      if (cells.length >= 6) {
-        const date = $(cells[0]).text().trim();
-        const currencyLabel = $(cells[1]).text().trim();
-        const buyingStr = $(cells[3]).text().trim();
-        const sellingStr = $(cells[4]).text().trim();
-        const buy = parseFloat(buyingStr.replace(/,/g, ''));
-        const sell = parseFloat(sellingStr.replace(/,/g, ''));
-        const code = this.normalizeCode(currencyLabel);
-        if (code && isFinite(buy) && isFinite(sell)) {
-          rates.set(code, { buy, sell });
-          parsedRows++;
-          detectedDate = detectedDate || date;
-        }
-      }
-    });
-    // Fallback: 3-column table (currency, buying, selling)
-    if (parsedRows === 0) {
-      $('table tbody tr').each((_, row) => {
-        const cells = $(row).find('td');
-        if (cells.length >= 3) {
-          const currencyLabel = $(cells[0]).text().trim();
-          const buyingStr = $(cells[1]).text().trim();
-          const sellingStr = $(cells[2]).text().trim();
-          const buy = parseFloat(buyingStr.replace(/,/g, ''));
-          const sell = parseFloat(sellingStr.replace(/,/g, ''));
-          const code = this.normalizeCode(currencyLabel);
-          if (code && isFinite(buy) && isFinite(sell)) {
-            rates.set(code, { buy, sell });
-            parsedRows++;
-          }
-        }
-      });
-    }
+    const { rates, parsedRows, detectedDate } = this.parseRates(html);
 
     this.logger.log(
       `BoG parsed rows=${parsedRows}, date=${detectedDate ?? 'n/a'}, currencies=[${[...rates.keys()].join(', ')}]`,

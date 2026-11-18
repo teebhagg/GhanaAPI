@@ -159,4 +159,126 @@ describe('BankOfGhanaProvider', () => {
       expect(converted.rate).toBe(fetched.rate);
     });
   });
+
+  describe('quote direction (Currency Pair column)', () => {
+    // Rows as published by the Bank of Ghana on 18 Nov 2026. "USDGHS" is GHS
+    // per USD. "GHSNGN" is NGN per GHS: the naira is quoted the other way.
+    const row = (name: string, pair: string, buy: string, sell: string) =>
+      `<tr><td>18 Nov 2026</td><td>${name}</td><td>${pair}</td><td>${buy}</td><td>${sell}</td><td>0</td></tr>`;
+    const html = (rows: string[]) =>
+      `<table><tbody>${rows.join('')}</tbody></table>`;
+    const live = html([
+      row('US Dollar', 'USDGHS', '11.7741', '11.7859'),
+      row('Euro', 'EURGHS', '12.9236', '12.9365'),
+      row('Japanese yen', 'JPYGHS', '0.0739', '0.0740'),
+      row('Naira', 'GHSNGN', '116.5993', '117.0382'),
+      row('Dalasi', 'GHSGMD', '6.2488', '6.2689'), // not a supported currency
+    ]);
+    type Quote = { buy: number; sell: number };
+    type Parsed = {
+      rates: Map<string, Quote>;
+      parsedRows: number;
+      detectedDate?: string;
+    };
+    const parse = (source: string) =>
+      (provider as any).parseRates(source) as Parsed;
+
+    it('should keep GHS per unit quotes as published', () => {
+      const { rates } = parse(live);
+
+      expect(rates.get('USD')).toEqual({ buy: 11.7741, sell: 11.7859 });
+      expect(rates.get('JPY')).toEqual({ buy: 0.0739, sell: 0.074 });
+    });
+
+    it('should turn a units per GHS quote into GHS per unit', () => {
+      const { rates, parsedRows, detectedDate } = parse(live);
+      const ngn = rates.get('NGN') as Quote;
+
+      expect(ngn.buy).toBeCloseTo(1 / 117.0382, 10);
+      expect(ngn.sell).toBeCloseTo(1 / 116.5993, 10);
+      expect(ngn.buy).toBeLessThan(ngn.sell); // the bank still earns the spread
+      expect(rates.has('GMD')).toBe(false);
+      expect(parsedRows).toBe(4);
+      expect(detectedDate).toBe('18 Nov 2026');
+    });
+
+    it('should skip a row whose buy or sell is not a positive number', () => {
+      const { rates } = parse(
+        html([
+          row('US Dollar', 'USDGHS', '0.0000', '11.7859'),
+          row('Naira', 'GHSNGN', '116.5993', '0.0000'),
+          row('Euro', 'EURGHS', '12.9236', '12.9365'),
+        ]),
+      );
+
+      expect([...rates.keys()]).toEqual(['EUR']);
+    });
+
+    it('should treat the naira as units per GHS in the old 3-column table', () => {
+      const { rates } = parse(
+        `<table><tbody>
+          <tr><td>US Dollar</td><td>11.7741</td><td>11.7859</td></tr>
+          <tr><td>Naira</td><td>116.5993</td><td>117.0382</td></tr>
+        </tbody></table>`,
+      );
+
+      expect(rates.get('USD')).toEqual({ buy: 11.7741, sell: 11.7859 });
+      expect(rates.get('NGN')?.sell).toBeCloseTo(1 / 116.5993, 10);
+    });
+
+    describe('with the real table', () => {
+      beforeEach(() => {
+        const { rates } = parse(live);
+        jest.spyOn(provider as any, 'loadRates').mockResolvedValue(rates);
+      });
+
+      it('should convert 100 GHS into about 11,660 NGN', async () => {
+        const result = await provider.convertCurrency({
+          from: 'GHS',
+          to: 'NGN',
+          amount: 100,
+        });
+
+        expect(result.result).toBeCloseTo(11659.93, 1);
+      });
+
+      it('should convert 100 NGN into under 1 GHS', async () => {
+        const result = await provider.convertCurrency({
+          from: 'NGN',
+          to: 'GHS',
+          amount: 100,
+        });
+
+        expect(result.result).toBeCloseTo(100 / 117.0382, 6); // about 0.854
+      });
+
+      it('should convert USD into NGN at about 1,370 NGN per USD', async () => {
+        const result = await provider.convertCurrency({
+          from: 'USD',
+          to: 'NGN',
+          amount: 1,
+        });
+
+        expect(result.result).toBeCloseTo(11.7741 * 116.5993, 2);
+        expect(result.result).toBeGreaterThan(1000);
+        expect(result.result).toBeLessThan(2000);
+      });
+
+      it('should publish the GHS to NGN rate as naira per cedi', async () => {
+        const [ngn] = await provider.fetchRates('GHS', ['NGN']);
+
+        expect(ngn.rate).toBeCloseTo(116.5993, 4); // not 0.0086
+      });
+
+      it('should still convert GHS into USD by dividing', async () => {
+        const result = await provider.convertCurrency({
+          from: 'GHS',
+          to: 'USD',
+          amount: 100,
+        });
+
+        expect(result.result).toBeCloseTo(100 / 11.7859, 6);
+      });
+    });
+  });
 });

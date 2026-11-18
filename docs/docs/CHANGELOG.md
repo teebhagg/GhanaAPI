@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Currency conversion from GHS**: converting from GHS to another currency (for example GHS to USD, EUR, GBP or NGN) returned a result that was far too large, because the Bank of Ghana sell rate was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5. The `rate` field in the response changes by the same factor for every GHS to foreign conversion, so any client that worked around the old values must remove that workaround. Conversions from a foreign currency to GHS, and between two foreign currencies, were already correct.
+- **Currency conversion from GHS**: converting from GHS to USD, EUR, GBP, CHF, CNY or JPY returned a result that was far too large, because the Bank of Ghana sell rate was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5.
+- **Naira (NGN) rates**: the Bank of Ghana publishes the naira as naira per cedi (pair GHSNGN), but it was read as cedis per naira. NGN to GHS conversions and the NGN rate from `/exchange-rates/current` were therefore inverted. For example, 100 NGN returned about 11,700 GHS and now returns about 0.85 GHS, and 1 GHS is now about 116.6 NGN, not 0.0086. GHS to NGN conversions happened to be right and are unchanged.
+- The `rate` and `result` fields change for these pairs, so any client that worked around the old values must remove that workaround. Rows already stored in the rate history for NGN hold the inverted value. Conversions from a foreign currency to GHS and between two foreign currencies (other than NGN) were already correct.
 
 <details>
 <summary><strong>🗺️ [0.5.5] - 2026-01-XX</strong> - Enhanced Address Service with OpenRouteService Integration</summary>

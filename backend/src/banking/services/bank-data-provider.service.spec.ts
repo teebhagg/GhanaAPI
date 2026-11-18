@@ -414,6 +414,22 @@ describe('BankDataProviderService (no placeholder data)', () => {
       });
     });
 
+    it('does not publish the text of an Overpass runtime error remark', async () => {
+      mockedGet.mockResolvedValue({
+        data: {
+          elements: [],
+          remark: 'runtime error: failed /internal/data?token=secret123',
+        },
+      } as any);
+      await service.getBanks().catch(() => undefined);
+
+      const failure = service.getHealth().lastFailure;
+      expect(failure?.reason).toBe(
+        'OpenStreetMap: Overpass runtime error on z.overpass-api.de',
+      );
+      expect(JSON.stringify(failure)).not.toMatch(/internal|secret123|token/);
+    });
+
     it('says why the ATMs could not be loaded', async () => {
       mockedGet.mockRejectedValue(
         httpError(504, 'https://lz4.overpass-api.de/api/interpreter'),

@@ -91,13 +91,28 @@ function describeAxios(error: AxiosLike): string {
   return `no response from${where || ' upstream'}`;
 }
 
+/** A plain class name such as TypeError or PrismaClientKnownRequestError */
+const SAFE_TYPE_NAME = /^([A-Z][A-Za-z0-9]{0,39})?(Error|Exception)$/;
+
+/**
+ * The class of an error. `error.name` is an instance property that code can set
+ * from data, so it is not used. The class name is fixed where the class is
+ * written, and it is only accepted when it looks like a plain type name.
+ */
+function typeNameOf(error: Error): string {
+  const name = (
+    Object.getPrototypeOf(error) as { constructor?: { name?: unknown } } | null
+  )?.constructor?.name;
+  return typeof name === 'string' && SAFE_TYPE_NAME.test(name) ? name : 'Error';
+}
+
 /** What to say about an error whose message we do not trust. */
 function describeByType(error: Error): string {
   if (error instanceof HttpException) {
     const status = error.getStatus();
     return `${(STATUS_CODES[status] ?? 'error').toLowerCase()} (${status})`;
   }
-  return `unexpected ${error.name || 'Error'}`;
+  return `unexpected ${typeNameOf(error)}`;
 }
 
 /**

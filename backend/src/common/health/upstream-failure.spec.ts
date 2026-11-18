@@ -149,6 +149,24 @@ describe('describeFailure', () => {
       expect(describeFailure(new TypeError('x'))).toBe('unexpected TypeError');
     });
 
+    it('should ignore the name property, which code can set from data', () => {
+      const error = Object.assign(new Error('x'), {
+        name: '/v6/SECRETKEY123?token=abc',
+      });
+
+      expect(describeFailure(error)).toBe('unexpected Error');
+    });
+
+    it('should not publish a class name that is not a plain type name', () => {
+      const hostile = Object.defineProperty(class extends Error {}, 'name', {
+        value: '/v6/SECRETKEY123?token=abc',
+      });
+      class Unusual extends Error {}
+
+      expect(describeFailure(new hostile('x'))).toBe('unexpected Error');
+      expect(describeFailure(new Unusual('x'))).toBe('unexpected Error');
+    });
+
     it('should describe a service exception by its status, not its message', () => {
       const error = new ServiceUnavailableException('Failed: token=abc123');
 

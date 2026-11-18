@@ -1,4 +1,4 @@
-import { HttpException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RouteProfile } from './dto/route-directions.dto';
 import { TransportController } from './transport.controller';
@@ -100,6 +100,26 @@ describe('TransportController', () => {
 
       await expect(controller.getStops()).rejects.toThrow(HttpException);
     });
+
+    it('returns 503 for an upstream failure', async () => {
+      mockTransportService.getTransportStops.mockRejectedValue(
+        new Error('Service unavailable'),
+      );
+
+      await expect(controller.getStops()).rejects.toMatchObject({
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
+    });
+
+    it('keeps a 400 for an unsupported city or stop type instead of turning it into 503', async () => {
+      mockTransportService.getTransportStops.mockRejectedValue(
+        new BadRequestException('Invalid stop type'),
+      );
+
+      await expect(controller.getStops('accra', 'nope')).rejects.toMatchObject({
+        status: HttpStatus.BAD_REQUEST,
+      });
+    });
   });
 
   describe('getNearbyStops', () => {
@@ -128,7 +148,7 @@ describe('TransportController', () => {
 
       await expect(
         controller.getNearbyStops(invalidLat, validLng),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST });
     });
   });
 

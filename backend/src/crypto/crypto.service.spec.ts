@@ -1,3 +1,4 @@
+import { httpError } from '../test/axios-error';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CryptoService } from './crypto.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -108,6 +109,28 @@ describe('CryptoService', () => {
         status: 'healthy',
         asOf: null,
       });
+    });
+
+    it('says why CoinGecko could not be reached, then forgets it', async () => {
+      Object.assign(mockHttpService as object, {
+        get: jest.fn(() =>
+          throwError(() =>
+            httpError(429, 'https://api.coingecko.com/api/v3/simple/price'),
+          ),
+        ),
+      });
+      await service.getCryptoPrices(['bitcoin']).catch(() => undefined);
+
+      expect(service.getHealth().lastFailure).toMatchObject({
+        reason: 'HTTP 429 from api.coingecko.com',
+        scope: 'coingecko',
+      });
+
+      Object.assign(mockHttpService as object, {
+        get: jest.fn(() => of({ data: { bitcoin: { usd: 60000 } } })),
+      });
+      await service.getCryptoPrices(['bitcoin']);
+      expect(service.getHealth()).not.toHaveProperty('lastFailure');
     });
 
     it('is unhealthy after a failed attempt and healthy after a later success', async () => {

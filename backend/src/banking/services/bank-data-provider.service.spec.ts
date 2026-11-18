@@ -1,3 +1,4 @@
+import { httpError } from '../../test/axios-error';
 import { HttpService } from '@nestjs/axios';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -399,6 +400,40 @@ describe('BankDataProviderService (no placeholder data)', () => {
       await service.getBanks().catch(() => undefined);
 
       expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('says why the banks could not be loaded', async () => {
+      mockedGet.mockRejectedValue(
+        httpError(502, 'https://z.overpass-api.de/api/interpreter'),
+      );
+      await service.getBanks().catch(() => undefined);
+
+      expect(service.getHealth().lastFailure).toMatchObject({
+        reason: 'OpenStreetMap: HTTP 502 from z.overpass-api.de',
+        scope: 'banks',
+      });
+    });
+
+    it('says why the ATMs could not be loaded', async () => {
+      mockedGet.mockRejectedValue(
+        httpError(504, 'https://lz4.overpass-api.de/api/interpreter'),
+      );
+      await service.getATMs().catch(() => undefined);
+
+      expect(service.getHealth().lastFailure).toMatchObject({
+        reason: 'HTTP 504 from lz4.overpass-api.de',
+        scope: 'atms',
+      });
+    });
+
+    it('forgets the failure once a fetch works', async () => {
+      mockedGet.mockRejectedValueOnce(new Error('Overpass down'));
+      await service.getBanks().catch(() => undefined);
+      mockedGet.mockResolvedValue({ data: { elements: [BANK] } } as any);
+      jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 10 * 60 * 1000);
+      await service.getBanks();
+
+      expect(service.getHealth()).not.toHaveProperty('lastFailure');
     });
 
     it('is healthy with a fetch time after a successful fetch', async () => {

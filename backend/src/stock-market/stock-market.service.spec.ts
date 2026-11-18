@@ -1,3 +1,4 @@
+import { networkError } from '../test/axios-error';
 import { HttpModule } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -175,6 +176,23 @@ describe('StockMarketService', () => {
       await service.getAllStocks().catch(() => undefined);
 
       expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('says why the upstream failed when the provider keeps the cause', async () => {
+      (gseApiProvider.fetchAllStocks as jest.Mock).mockRejectedValue(
+        Object.assign(new Error('Failed to fetch stock data from GSE API'), {
+          cause: networkError(
+            'ECONNABORTED',
+            'timeout of 10000ms exceeded',
+            'https://dev.kwayisi.org/apis/gse/live',
+          ),
+        }),
+      );
+      await service.getAllStocks().catch(() => undefined);
+
+      expect(service.getHealth().lastFailure).toMatchObject({
+        reason: 'timeout after 10000ms contacting dev.kwayisi.org',
+      });
     });
 
     it('is degraded when a refresh fails but the last good prices are served', async () => {

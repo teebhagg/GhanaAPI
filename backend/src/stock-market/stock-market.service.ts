@@ -178,10 +178,11 @@ export class StockMarketService {
 
   /** For the /status endpoint. Never contacts the upstream. */
   getHealth(): ServiceHealth {
-    const { status, asOf } = this.stocksCache.health();
+    const { status, asOf, lastFailure } = this.stocksCache.health();
     return {
       status,
       asOf: asOf ? asOf.toISOString() : null,
+      ...(lastFailure && { lastFailure }),
       detail:
         status === 'unhealthy'
           ? 'The last refresh of stock prices failed and there is no usable data'

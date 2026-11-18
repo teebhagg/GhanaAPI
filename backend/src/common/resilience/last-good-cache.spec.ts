@@ -1,4 +1,5 @@
 import { HttpException, ServiceUnavailableException } from '@nestjs/common';
+import { UpstreamFailure } from '../health/upstream-failure';
 import { LastGoodCache } from './last-good-cache';
 
 const HOUR = 60 * 60 * 1000;
@@ -162,7 +163,11 @@ describe('LastGoodCache', () => {
 
   describe('health()', () => {
     it('is healthy and empty before anything is fetched', () => {
-      expect(cache.health()).toEqual({ status: 'healthy', asOf: null });
+      expect(cache.health()).toEqual({
+        status: 'healthy',
+        asOf: null,
+        lastFailure: null,
+      });
     });
 
     it('is healthy after a successful fetch, with the fetch time', async () => {
@@ -171,6 +176,7 @@ describe('LastGoodCache', () => {
       expect(cache.health()).toEqual({
         status: 'healthy',
         asOf: new Date(now),
+        lastFailure: null,
       });
     });
 
@@ -192,6 +198,62 @@ describe('LastGoodCache', () => {
 
       await cache.get('k', jest.fn().mockResolvedValue(['a']));
       expect(cache.health().status).toBe('healthy');
+    });
+
+    it('explains the last failure in safe words, with the key it happened to', async () => {
+      const error = Object.assign(
+        new Error('Request failed with status code 502'),
+        {
+          isAxiosError: true,
+          config: {
+            url: 'https://overpass-api.de/api/interpreter?data=secret',
+          },
+          response: { status: 502 },
+        },
+      );
+      await cache.refresh('kumasi', jest.fn().mockRejectedValue(error));
+
+      expect(cache.health().lastFailure).toEqual({
+        reason: 'HTTP 502 from overpass-api.de',
+        at: new Date(now).toISOString(),
+        scope: 'kumasi',
+      });
+    });
+
+    it('reports the newest failure when several keys failed', async () => {
+      await cache.refresh(
+        'accra',
+        jest.fn().mockRejectedValue(new Error('first')),
+      );
+      now += 5000;
+      await cache.refresh(
+        'kumasi',
+        jest.fn().mockRejectedValue(new Error('second')),
+      );
+
+      expect(cache.health().lastFailure).toMatchObject({
+        reason: 'second',
+        scope: 'kumasi',
+      });
+    });
+
+    it('forgets the failure once a refresh works', async () => {
+      await cache.refresh('k', jest.fn().mockRejectedValue(new Error('x')));
+      now += 2 * 60 * 1000; // past the backoff
+      await cache.refresh('k', jest.fn().mockResolvedValue(['a']));
+
+      expect(cache.health().lastFailure).toBeNull();
+    });
+
+    it('looks through the cause of the error the fetcher threw', async () => {
+      const wrapped = new HttpException('All sources failed', 503, {
+        cause: new UpstreamFailure('overpass: HTTP 502 from overpass-api.de'),
+      });
+      await cache.refresh('k', jest.fn().mockRejectedValue(wrapped));
+
+      expect(cache.health().lastFailure?.reason).toBe(
+        'overpass: HTTP 502 from overpass-api.de',
+      );
     });
 
     it('is degraded when a refresh failed but older real data is still served', async () => {

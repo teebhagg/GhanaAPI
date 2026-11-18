@@ -12,6 +12,7 @@ import { Cron } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ServiceHealth } from '../../common/health/service-health';
+import { summariseSources } from '../../common/health/upstream-failure';
 import { LastGoodCache } from '../../common/resilience/last-good-cache';
 
 /**
@@ -98,10 +99,11 @@ export class TransportStopsService implements OnModuleInit {
 
   /** For the /status endpoint. Never contacts Overpass. */
   getHealth(): ServiceHealth {
-    const { status, asOf } = this.stopsCache.health();
+    const { status, asOf, lastFailure } = this.stopsCache.health();
     return {
       status,
       asOf: asOf ? asOf.toISOString() : null,
+      ...(lastFailure && { lastFailure }),
       detail:
         status === 'unhealthy'
           ? 'The last fetch of transport stops failed and there is no usable list'
@@ -142,6 +144,7 @@ export class TransportStopsService implements OnModuleInit {
   }
 
   private async fetchStops(city: string): Promise<TransportStop[]> {
+    const failures: Array<{ source: string; error: unknown }> = [];
     for (const api of this.transportApis) {
       try {
         this.logger.log(`Trying to get transport stops from ${api}`);
@@ -165,13 +168,16 @@ export class TransportStopsService implements OnModuleInit {
         return stops;
       } catch (error) {
         this.logger.warn(`${api} failed: ${error.message}`);
+        failures.push({ source: api, error });
         continue;
       }
     }
 
+    // Keep why each source failed, for /status
     throw new HttpException(
       'All transport stops APIs failed',
       HttpStatus.SERVICE_UNAVAILABLE,
+      { cause: summariseSources(failures) },
     );
   }
 

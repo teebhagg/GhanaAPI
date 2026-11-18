@@ -1,3 +1,4 @@
+import { networkError } from '../../test/axios-error';
 import { HttpService } from '@nestjs/axios';
 import { defer, delay, finalize, of, throwError } from 'rxjs';
 import { GSEApiProvider } from './gse-api.provider';
@@ -119,6 +120,20 @@ describe('GSEApiProvider upstream load', () => {
     await provider.fetchMarketIndices(stocks);
 
     expect(get).not.toHaveBeenCalled();
+  });
+
+  it('keeps the upstream error as the cause, so /status can say why', async () => {
+    const timeout = networkError(
+      'ECONNABORTED',
+      'timeout of 10000ms exceeded',
+      'https://dev.kwayisi.org/apis/gse/live',
+    );
+    get.mockImplementation(() => throwError(() => timeout));
+
+    await expect(provider.fetchAllStocks()).rejects.toMatchObject({
+      status: 503,
+      cause: timeout,
+    });
   });
 
   it('throws a 503 when the live prices cannot be fetched', async () => {

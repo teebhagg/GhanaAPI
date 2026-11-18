@@ -8,7 +8,12 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
-import { HealthState, ServiceHealth } from '../common/health/service-health';
+import {
+  FailureReport,
+  HealthState,
+  ServiceHealth,
+} from '../common/health/service-health';
+import { describeFailure } from '../common/health/upstream-failure';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 
 // How long a price set stays in the cache (cache-manager v5 uses ms)
@@ -21,6 +26,7 @@ export class CryptoService {
   // What the last real upstream attempt did, for the /status endpoint. The
   // price cache only lasts 60 s and would forget an outage.
   private lastUpstreamFailed = false;
+  private lastFailure: FailureReport | null = null;
   private lastUpstreamOkAt: number | null = null;
 
   constructor(
@@ -47,6 +53,8 @@ export class CryptoService {
       asOf: this.lastUpstreamOkAt
         ? new Date(this.lastUpstreamOkAt).toISOString()
         : null,
+      ...(this.lastFailure &&
+        status !== 'healthy' && { lastFailure: this.lastFailure }),
       detail:
         status === 'degraded'
           ? 'The last attempt to get crypto prices failed; serving cached prices'
@@ -87,8 +95,13 @@ export class CryptoService {
         )
       );
       coinGeckoData = response.data;
-    } catch {
+    } catch (error) {
       this.lastUpstreamFailed = true;
+      this.lastFailure = {
+        reason: describeFailure(error),
+        at: new Date(Date.now()).toISOString(),
+        scope: 'coingecko',
+      };
       throw new ServiceUnavailableException(
         'Crypto prices are temporarily unavailable from the upstream provider',
       );
@@ -114,6 +127,11 @@ export class CryptoService {
       } catch (error) {
         this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
         this.lastUpstreamFailed = true;
+        this.lastFailure = {
+          reason: describeFailure(error),
+          at: new Date(Date.now()).toISOString(),
+          scope: 'usd-to-ghs',
+        };
         throw new ServiceUnavailableException(
           'Crypto GHS conversion is temporarily unavailable',
         );
@@ -132,6 +150,7 @@ export class CryptoService {
     };
 
     this.lastUpstreamFailed = false;
+    this.lastFailure = null;
     this.lastUpstreamOkAt = Date.now();
 
     // Cache results for 60 seconds. Errors above return before this point, so they are never cached.

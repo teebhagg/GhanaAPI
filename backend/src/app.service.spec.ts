@@ -107,4 +107,119 @@ describe('AppService.getStatus', () => {
     expect(status.health.services.crypto).toBe('unhealthy');
     expect(status.health.services.banking).toBe('healthy');
   });
+
+  describe('build information', () => {
+    const saved = { ...process.env };
+    afterEach(() => {
+      process.env = { ...saved };
+    });
+
+    it('should say which build is answering', async () => {
+      process.env.RENDER_GIT_COMMIT =
+        '3f43af6c0ffee1234567890abcdef1234567890a';
+      process.env.RENDER_INSTANCE_ID = 'srv-abc123-5d8f7';
+
+      const { build } = await service.getStatus();
+
+      expect(build.version).toMatch(/^\d+\.\d+\.\d+/);
+      expect(build).toMatchObject({
+        commit: '3f43af6',
+        instance: 'srv-abc123-5d8f7',
+      });
+      expect(new Date(build.startedAt).getTime()).toBeLessThanOrEqual(
+        Date.now(),
+      );
+      expect(build.uptimeSeconds).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should use null when the host gives no commit or instance', async () => {
+      delete process.env.RENDER_GIT_COMMIT;
+      delete process.env.GIT_COMMIT;
+      delete process.env.RENDER_INSTANCE_ID;
+
+      const { build } = await service.getStatus();
+
+      expect(build.commit).toBeNull();
+      expect(build.instance).toBeNull();
+    });
+  });
+
+  describe('why a service failed', () => {
+    const failure = (reason: string, scope?: string) => ({
+      reason,
+      at: '2026-11-18T12:00:00.000Z',
+      ...(scope && { scope }),
+    });
+
+    it('should show the last failure of a service next to its note', async () => {
+      reports.stock = {
+        status: 'unhealthy',
+        asOf: null,
+        detail: 'The last refresh of stock prices failed',
+        lastFailure: failure(
+          'timeout after 10000ms contacting dev.kwayisi.org',
+        ),
+      };
+
+      const status = await service.getStatus();
+
+      expect(status.statistics.stockMarket.lastFailure).toEqual(
+        failure('timeout after 10000ms contacting dev.kwayisi.org'),
+      );
+      expect(status.statistics.stockMarket.note).toBe(
+        'The last refresh of stock prices failed',
+      );
+    });
+
+    it('should leave lastFailure out for a healthy service', async () => {
+      const status = await service.getStatus();
+
+      expect(status.statistics.banking).not.toHaveProperty('lastFailure');
+    });
+
+    it('should label the failure of stops when only stops failed', async () => {
+      reports.stops = {
+        status: 'unhealthy',
+        asOf: null,
+        lastFailure: failure(
+          'overpass: HTTP 502 from overpass-api.de',
+          'kumasi',
+        ),
+      };
+
+      const status = await service.getStatus();
+
+      expect(status.statistics.transport.lastFailure).toEqual({
+        ...failure('overpass: HTTP 502 from overpass-api.de'),
+        scope: 'stops/kumasi',
+      });
+    });
+
+    it('should name both sources when stops and fuel prices failed', async () => {
+      reports.stops = {
+        status: 'unhealthy',
+        asOf: null,
+        lastFailure: failure(
+          'overpass: HTTP 502 from overpass-api.de',
+          'accra',
+        ),
+      };
+      reports.fuel = {
+        status: 'unhealthy',
+        asOf: null,
+        lastFailure: {
+          reason: 'npa-scraper: HTTP 404 from npa.gov.gh',
+          at: '2026-11-18T12:05:00.000Z',
+        },
+      };
+
+      const status = await service.getStatus();
+
+      expect(status.statistics.transport.lastFailure).toEqual({
+        reason:
+          'stops: overpass: HTTP 502 from overpass-api.de; fuel prices: npa-scraper: HTTP 404 from npa.gov.gh',
+        at: '2026-11-18T12:05:00.000Z',
+      });
+    });
+  });
 });

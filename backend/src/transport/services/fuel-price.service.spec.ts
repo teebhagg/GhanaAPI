@@ -1,3 +1,4 @@
+import { httpError } from '../../test/axios-error';
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Logger, ServiceUnavailableException } from '@nestjs/common';
@@ -248,6 +249,23 @@ describe('FuelPriceService', () => {
       await service.getFuelPrices().catch(() => undefined);
 
       expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('says which sources failed and why', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() =>
+          httpError(404, 'https://npa.gov.gh/category/press-releases/'),
+        ),
+      );
+      await service.getFuelPrices().catch(() => undefined);
+
+      const failure = service.getHealth().lastFailure;
+      expect(failure?.reason).toContain(
+        'npa-scraper: HTTP 404 from npa.gov.gh',
+      );
+      expect(failure?.reason).toContain('cedirates-scraper:');
+      expect(failure?.reason).not.toContain('/category/');
     });
 
     it('is healthy with a fetch time after a successful fetch', async () => {

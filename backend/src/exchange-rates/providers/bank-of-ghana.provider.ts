@@ -177,8 +177,10 @@ export class BankOfGhanaProvider implements RateProvider {
     if (from === 'GHS') {
       const toRow = getRow(to);
       if (!toRow) throw new Error(`Unsupported currency: ${to}`);
-      // GHS -> foreign: use SELL
-      rate = toRow.sell; // to per 1 GHS
+      // GHS -> foreign: the bank sells foreign currency at SELL, which is GHS
+      // per 1 unit of it, so 1 GHS buys 1 / SELL units. fetchRates does the
+      // same. Using SELL as is would multiply instead of divide.
+      rate = 1 / toRow.sell; // to per 1 GHS
     } else if (to === 'GHS') {
       const fromRow = getRow(from);
       if (!fromRow) throw new Error(`Unsupported currency: ${from}`);
@@ -191,6 +193,11 @@ export class BankOfGhanaProvider implements RateProvider {
       if (!toRow) throw new Error(`Unsupported currency: ${to}`);
       // foreign -> foreign: buy(from) then sell(to)
       rate = fromRow.buy / toRow.sell; // to per 1 from
+    }
+
+    // A zero or missing buy/sell value must not become Infinity or NaN
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error(`No usable rate for ${from} -> ${to}`);
     }
 
     const result = amount * rate;

@@ -46,6 +46,8 @@ export class TransportStopsService implements OnModuleInit {
   // list is served for up to a week. Failures are not retried for 10 minutes,
   // but a city with no list at all retries after 1 minute: a single slow
   // Overpass response must not leave users with a 503 for 10 minutes.
+  private activeSweep: Promise<void> | null = null;
+
   private readonly stopsCache = new LastGoodCache<TransportStop[]>({
     label: 'Transport stops',
     freshMs: 24 * 60 * 60 * 1000,
@@ -71,11 +73,27 @@ export class TransportStopsService implements OnModuleInit {
 
   /** Daily refresh at 04:00 so most requests are served from memory. */
   @Cron('0 0 4 * * *')
-  async refreshAllCities(): Promise<void> {
-    // One city at a time: each cold query is heavy, and Overpass is shared.
-    for (const city of ALLOWED_CITIES) {
-      await this.stopsCache.refresh(city, () => this.fetchStops(city));
+  scheduledRefresh(): Promise<void> {
+    // The e2e suite boots the scheduler too; it must not query Overpass.
+    if (process.env.NODE_ENV === 'test') return Promise.resolve();
+    return this.refreshAllCities();
+  }
+
+  /**
+   * Refresh every city, one at a time. Startup and the daily run share one
+   * sweep, so they never overlap and send duplicate queries.
+   */
+  refreshAllCities(): Promise<void> {
+    if (!this.activeSweep) {
+      this.activeSweep = (async () => {
+        for (const city of ALLOWED_CITIES) {
+          await this.stopsCache.refresh(city, () => this.fetchStops(city));
+        }
+      })().finally(() => {
+        this.activeSweep = null;
+      });
     }
+    return this.activeSweep;
   }
 
   /** For the /status endpoint. Never contacts Overpass. */
@@ -184,7 +202,15 @@ export class TransportStopsService implements OnModuleInit {
       this.httpService.get(`${gtfsUrl}/stops.txt`, { timeout: 15000 }),
     );
 
-    return this.parseGTFSStops(response.data);
+    // A feed can cover the whole country. Keep only this city's stops, so a
+    // failed Kumasi fetch can never fall back to Accra stops.
+    const [south, west, north, east] = this.getCityBoundingBox(city)
+      .split(',')
+      .map(Number);
+    return this.parseGTFSStops(response.data).filter(
+      ({ coordinates: [lat, lng] }) =>
+        lat >= south && lat <= north && lng >= west && lng <= east,
+    );
   }
 
   // ===== PARSING METHODS =====

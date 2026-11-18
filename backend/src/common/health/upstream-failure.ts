@@ -91,19 +91,38 @@ function describeAxios(error: AxiosLike): string {
   return `no response from${where || ' upstream'}`;
 }
 
-/** A plain class name such as TypeError or PrismaClientKnownRequestError */
-const SAFE_TYPE_NAME = /^([A-Z][A-Za-z0-9]{0,39})?(Error|Exception)$/;
+/**
+ * The error types we are willing to name. A class can be renamed at runtime, so
+ * a name is only published when it is on this fixed list: the built-in errors
+ * and the ones our libraries raise. Anything else is reported as plain Error.
+ */
+const KNOWN_ERROR_TYPES: ReadonlySet<string> = new Set([
+  'Error',
+  'TypeError',
+  'RangeError',
+  'SyntaxError',
+  'ReferenceError',
+  'EvalError',
+  'URIError',
+  'AggregateError',
+  'PrismaClientKnownRequestError',
+  'PrismaClientUnknownRequestError',
+  'PrismaClientInitializationError',
+  'PrismaClientValidationError',
+  'PrismaClientRustPanicError',
+]);
 
 /**
- * The class of an error. `error.name` is an instance property that code can set
- * from data, so it is not used. The class name is fixed where the class is
- * written, and it is only accepted when it looks like a plain type name.
+ * The class of an error, if it is a known one. `error.name` is an instance
+ * property that code can set from data, so it is not used.
  */
 function typeNameOf(error: Error): string {
   const name = (
     Object.getPrototypeOf(error) as { constructor?: { name?: unknown } } | null
   )?.constructor?.name;
-  return typeof name === 'string' && SAFE_TYPE_NAME.test(name) ? name : 'Error';
+  return typeof name === 'string' && KNOWN_ERROR_TYPES.has(name)
+    ? name
+    : 'Error';
 }
 
 /** What to say about an error whose message we do not trust. */

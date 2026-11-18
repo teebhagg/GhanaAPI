@@ -138,15 +138,20 @@ describe('describeFailure', () => {
       },
     );
 
-    it('should describe an error by its own type name', () => {
+    it('should name an error type only when it is on the known list', () => {
+      class PrismaClientKnownRequestError extends Error {}
       class ParseError extends Error {
         name = 'ParseError';
       }
 
-      expect(describeFailure(new ParseError('x'))).toBe(
-        'unexpected ParseError',
-      );
       expect(describeFailure(new TypeError('x'))).toBe('unexpected TypeError');
+      expect(describeFailure(new RangeError('x'))).toBe(
+        'unexpected RangeError',
+      );
+      expect(describeFailure(new PrismaClientKnownRequestError('x'))).toBe(
+        'unexpected PrismaClientKnownRequestError',
+      );
+      expect(describeFailure(new ParseError('x'))).toBe('unexpected Error');
     });
 
     it('should ignore the name property, which code can set from data', () => {
@@ -157,13 +162,21 @@ describe('describeFailure', () => {
       expect(describeFailure(error)).toBe('unexpected Error');
     });
 
-    it('should not publish a class name that is not a plain type name', () => {
-      const hostile = Object.defineProperty(class extends Error {}, 'name', {
-        value: '/v6/SECRETKEY123?token=abc',
-      });
+    it('should not publish a class name that is not on the known list', () => {
+      const withName = (name: string) =>
+        Object.defineProperty(class extends Error {}, 'name', { value: name });
       class Unusual extends Error {}
 
-      expect(describeFailure(new hostile('x'))).toBe('unexpected Error');
+      expect(
+        describeFailure(new (withName('/v6/SECRETKEY123?token=abc'))('x')),
+      ).toBe('unexpected Error');
+      // a name that looks like a plain type name is still not enough
+      expect(describeFailure(new (withName('SECRETKEY123Error'))('x'))).toBe(
+        'unexpected Error',
+      );
+      expect(describeFailure(new (withName('tokenabc123Exception'))('x'))).toBe(
+        'unexpected Error',
+      );
       expect(describeFailure(new Unusual('x'))).toBe('unexpected Error');
     });
 

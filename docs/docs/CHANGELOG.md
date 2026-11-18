@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Currency conversion from GHS**: converting from GHS to USD, EUR, GBP, CHF, CNY or JPY returned a result that was far too large, because the Bank of Ghana sell rate was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5.
-- **Naira (NGN) rates**: the Bank of Ghana publishes the naira as naira per cedi (pair GHSNGN), but it was read as cedis per naira. NGN to GHS conversions and the NGN rate from `/exchange-rates/current` were therefore inverted. For example, 100 NGN returned about 11,700 GHS and now returns about 0.85 GHS, and 1 GHS is now about 116.6 NGN, not 0.0086. GHS to NGN conversions happened to be right and are unchanged.
+- **Currency conversion from GHS**: converting from GHS to USD, EUR, GBP, CHF or CNY returned a result that was far too large, and GHS to JPY a result that was far too small. The Bank of Ghana sell rate (cedis per unit of the foreign currency) was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5, and 100 GHS to JPY returned about 7.4 and now returns about 1351.
+- **Naira (NGN) rates**: the Bank of Ghana publishes the naira as naira per cedi (pair GHSNGN), but it was read as cedis per naira. NGN to GHS conversions and the NGN rate from `/exchange-rates/current` were therefore inverted. For example, 100 NGN returned about 11,700 GHS and now returns about 0.85 GHS, and 1 GHS is now about 116.6 NGN, not 0.0086. GHS to NGN was nearly right but used the wrong side of the bank's spread, so it is about 0.4% lower now (100 GHS: about 11,704 NGN before, about 11,660 after).
 - The `rate` and `result` fields change for these pairs, so any client that worked around the old values must remove that workaround. Rows already stored in the rate history for NGN hold the inverted value. Conversions from a foreign currency to GHS and between two foreign currencies (other than NGN) were already correct.
 
 <details>

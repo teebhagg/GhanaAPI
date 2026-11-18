@@ -270,6 +270,28 @@ describe('BankOfGhanaProvider', () => {
         expect(ngn.rate).toBeCloseTo(116.5993, 4); // not 0.0086
       });
 
+      it('should convert 100 GHS into about 1,351 JPY, not 7 JPY', async () => {
+        const result = await provider.convertCurrency({
+          from: 'GHS',
+          to: 'JPY',
+          amount: 100,
+        });
+
+        expect(result.result).toBeCloseTo(100 / 0.074, 4);
+      });
+
+      it('should use the buying side of the spread for GHS to NGN', async () => {
+        const result = await provider.convertCurrency({
+          from: 'GHS',
+          to: 'NGN',
+          amount: 100,
+        });
+
+        // the bank buys cedis at 116.5993 naira per cedi, not at 117.0382
+        expect(result.result).toBeCloseTo(100 * 116.5993, 1);
+        expect(result.result).toBeLessThan(100 * 117.0382);
+      });
+
       it('should still convert GHS into USD by dividing', async () => {
         const result = await provider.convertCurrency({
           from: 'GHS',

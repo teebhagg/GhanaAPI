@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExchangeRatesController } from './exchange-rates.controller';
 import { ExchangeRatesService } from './exchange-rates.service';
+import { HISTORICAL_RATE_LIMIT } from './guards/historical-rate-limit.guard';
+import request from 'supertest';
 
 describe('ExchangeRatesController', () => {
   let controller: ExchangeRatesController;
@@ -270,4 +272,40 @@ describe('ExchangeRatesController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+});
+
+describe('ExchangeRatesController rate limiting over HTTP', () => {
+  it.each([
+    '/exchange-rates/USD/trend',
+    '/exchange-rates/historical?from=2026-01-01&to=2026-01-31&currency=USD',
+  ])(
+    'returns 429 after the limit on %s and counts clients separately',
+    async (path) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [ExchangeRatesController],
+        providers: [
+          {
+            provide: ExchangeRatesService,
+            useValue: { getHistoricalRates: jest.fn().mockResolvedValue([]) },
+          },
+        ],
+      }).compile();
+      const app = moduleRef.createNestApplication();
+      await app.init();
+      try {
+        const get = (ip: string) =>
+          request(app.getHttpServer()).get(path).set('X-Forwarded-For', ip);
+
+        for (let i = 0; i < HISTORICAL_RATE_LIMIT; i++) {
+          expect((await get('198.51.100.1')).status).toBe(200);
+        }
+        const limited = await get('198.51.100.1');
+        expect(limited.status).toBe(429);
+        expect(limited.headers['retry-after']).toBeDefined();
+        expect((await get('198.51.100.2')).status).toBe(200);
+      } finally {
+        await app.close();
+      }
+    },
+  );
 });

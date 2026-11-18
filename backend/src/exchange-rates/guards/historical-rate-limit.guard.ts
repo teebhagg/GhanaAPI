@@ -12,6 +12,11 @@ export const HISTORICAL_RATE_WINDOW_MS = 60_000;
 // Upper bound on tracked clients, so a flood of distinct addresses cannot grow memory without limit.
 const MAX_TRACKED_CLIENTS = 10_000;
 
+function proxyHops(): number {
+  const hops = Number.parseInt(process.env.RATE_LIMIT_PROXY_HOPS ?? '', 10);
+  return Number.isInteger(hops) && hops >= 1 ? hops : 1;
+}
+
 interface Bucket {
   count: number;
   resetAt: number;
@@ -55,14 +60,23 @@ export class HistoricalRateLimitGuard implements CanActivate {
     return true;
   }
 
-  // Behind a proxy (Render) req.ip is the proxy. The proxy appends the real
-  // client address to X-Forwarded-For, so the last entry is the one it vouches
-  // for; earlier entries can be forged by the caller.
+  // Behind a proxy (Render) req.ip is the proxy. Each proxy appends the address
+  // it received the request from to X-Forwarded-For, so counting from the right
+  // gives addresses our own infrastructure vouched for; entries further left can
+  // be forged by the caller. RATE_LIMIT_PROXY_HOPS is how many proxies of ours
+  // sit in front of the app (default 1); set it to 2 if another layer, such as a
+  // CDN, adds its own address after the client's.
   private clientKey(request: Request): string {
     const forwarded = request.headers['x-forwarded-for'];
     const header = Array.isArray(forwarded) ? forwarded.join(',') : forwarded;
-    const last = header?.split(',').pop()?.trim();
-    return last || request.ip || request.socket?.remoteAddress || 'unknown';
+    const entries =
+      header
+        ?.split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean) ?? [];
+    const hops = proxyHops();
+    const client = entries[Math.max(0, entries.length - hops)];
+    return client || request.ip || request.socket?.remoteAddress || 'unknown';
   }
 
   private evictExpired(now: number): void {

@@ -24,7 +24,10 @@ describe('HistoricalRateLimitGuard', () => {
     guard = new HistoricalRateLimitGuard();
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    delete process.env.RATE_LIMIT_PROXY_HOPS;
+  });
 
   it('allows requests up to the limit and sets rate limit headers', () => {
     const { context, response } = contextFor();
@@ -69,6 +72,21 @@ describe('HistoricalRateLimitGuard', () => {
       );
     }
     const next = contextFor({ 'x-forwarded-for': `9.9.9.9, ${real}` }).context;
+    expect(() => guard.canActivate(next)).toThrow(HttpException);
+  });
+
+  it('counts from the right by RATE_LIMIT_PROXY_HOPS when another proxy sits in front', () => {
+    process.env.RATE_LIMIT_PROXY_HOPS = '2';
+    const client = '203.0.113.9';
+    for (let i = 0; i < HISTORICAL_RATE_LIMIT; i++) {
+      // The CDN address (last) differs per request; the client address is the second from the right.
+      guard.canActivate(
+        contextFor({ 'x-forwarded-for': `${client}, 172.70.0.${i}` }).context,
+      );
+    }
+    const next = contextFor({
+      'x-forwarded-for': `${client}, 172.70.9.9`,
+    }).context;
     expect(() => guard.canActivate(next)).toThrow(HttpException);
   });
 

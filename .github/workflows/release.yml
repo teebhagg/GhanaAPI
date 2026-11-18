@@ -54,7 +54,9 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: release
+      # One group per version. A rerun of the same version waits for the first,
+      # and a newer version bump never cancels or replaces a waiting one.
+      group: release-${{ needs.check-version-change.outputs.new-version }}
       cancel-in-progress: false
 
     # Same database setup as ci.yml: the e2e tests need a real Postgres.
@@ -77,14 +79,35 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ghanaapi_test
 
     steps:
-      # persist-credentials: false keeps the write token out of .git/config,
-      # so install scripts and tests never see it. The release action below
-      # receives the token directly.
+      # persist-credentials: false keeps the token out of .git/config, the usual
+      # place install scripts and tests could read it. It does not reduce the
+      # job's permissions: this job still has contents: write. Splitting build
+      # and publish into separate jobs would remove that, at the cost of
+      # passing the build between jobs as an artifact.
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      # Fail early, before the tests. The release action ignores
+      # target_commitish when the tag already exists, so a tag at another
+      # commit would publish this build under the wrong tag.
+      - name: Check an existing tag points at this commit
+        env:
+          NEW_VERSION: ${{ needs.check-version-change.outputs.new-version }}
+        run: |
+          TAG="v${NEW_VERSION}"
+          # ^{commit} resolves annotated tags to the commit they point at
+          if EXISTING=$(git rev-parse -q --verify "refs/tags/${TAG}^{commit}"); then
+            if [ "$EXISTING" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag ${TAG} already exists at ${EXISTING}, not at ${GITHUB_SHA}. Bump the version again or delete the stale tag."
+              exit 1
+            fi
+            echo "Tag ${TAG} already exists at this commit; continuing"
+          else
+            echo "Tag ${TAG} does not exist yet; the release will create it"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

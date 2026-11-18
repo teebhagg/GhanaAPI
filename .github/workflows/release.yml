@@ -7,11 +7,9 @@ on:
     paths:
       - "backend/package.json"
 
+# Read-only by default. Only the job that creates the release can write.
 permissions:
-  contents: write
-  pull-requests: read
-  statuses: write
-  actions: read
+  contents: read
 
 jobs:
   check-version-change:
@@ -25,6 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
+          persist-credentials: false
 
       - name: Check if version changed
         id: version-check
@@ -51,16 +50,74 @@ jobs:
     needs: check-version-change
     if: needs.check-version-change.outputs.version-changed == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    concurrency:
+      # One release at a time, in a queue. queue: max keeps every waiting
+      # release (up to 100) instead of replacing it with the newest. Releases
+      # usually run in order, so the previous version's tag is normally there
+      # for the changelog. That is not guaranteed: queue order can vary and an
+      # earlier release can fail. The changelog step then falls back to the
+      # last 10 commits.
+      group: release
+      queue: max
+      cancel-in-progress: false
+
+    # Same database setup as ci.yml: the e2e tests need a real Postgres.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ghanaapi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ghanaapi_test
+
     steps:
+      # persist-credentials: false keeps the token out of .git/config, the usual
+      # place install scripts and tests could read it. It does not reduce the
+      # job's permissions: this job still has contents: write. Splitting build
+      # and publish into separate jobs would remove that, at the cost of
+      # passing the build between jobs as an artifact.
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      # Fail early, before the tests. The release action ignores
+      # target_commitish when the tag already exists, so a tag at another
+      # commit would publish this build under the wrong tag.
+      - name: Check an existing tag points at this commit
+        env:
+          NEW_VERSION: ${{ needs.check-version-change.outputs.new-version }}
+        run: |
+          TAG="v${NEW_VERSION}"
+          # ^{commit} resolves annotated tags to the commit they point at
+          if EXISTING=$(git rev-parse -q --verify "refs/tags/${TAG}^{commit}"); then
+            if [ "$EXISTING" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag ${TAG} already exists at ${EXISTING}, not at ${GITHUB_SHA}. Bump the version again or delete the stale tag."
+              exit 1
+            fi
+            echo "Tag ${TAG} already exists at this commit; continuing"
+          else
+            echo "Tag ${TAG} does not exist yet; the release will create it"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: "backend/package-lock.json"
 
@@ -68,11 +125,25 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Run tests
+      - name: Generate Prisma client
         working-directory: ./backend
-        run: |
-          npm run test
-          npm run test:e2e
+        run: npx prisma generate
+
+      - name: Type check
+        working-directory: ./backend
+        run: npx tsc --noEmit
+
+      - name: Apply migrations
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+
+      - name: Unit tests
+        working-directory: ./backend
+        run: npm run test
+
+      - name: End-to-end tests
+        working-directory: ./backend
+        run: npm run test:e2e
 
       - name: Build backend
         working-directory: ./backend
@@ -80,16 +151,16 @@ jobs:
 
       - name: Generate changelog
         id: changelog
+        env:
+          VERSION: ${{ needs.check-version-change.outputs.new-version }}
+          PREVIOUS_VERSION: ${{ needs.check-version-change.outputs.previous-version }}
         run: |
-          VERSION="${{ needs.check-version-change.outputs.new-version }}"
-          PREVIOUS_VERSION="${{ needs.check-version-change.outputs.previous-version }}"
-
           # Create a changelog from git commits between versions
           echo "## What's Changed" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
 
           # Get commits since last version tag (if it exists) or since previous commit
-          if git tag --list | grep -q "v${PREVIOUS_VERSION}"; then
+          if git rev-parse -q --verify "refs/tags/v${PREVIOUS_VERSION}" >/dev/null; then
             COMMITS=$(git log --oneline v${PREVIOUS_VERSION}..HEAD --pretty=format:"- %s (%h)" | head -20)
           else
             COMMITS=$(git log --oneline HEAD~10..HEAD --pretty=format:"- %s (%h)" | head -20)
@@ -106,27 +177,49 @@ jobs:
           echo "**Release Date:** $(date +'%Y-%m-%d')" >> RELEASE_NOTES.md
 
           # Output the changelog content for the release
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Git Tag
-        run: |
-          VERSION="v${{ needs.check-version-change.outputs.new-version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a $VERSION -m "Release $VERSION"
-          git push origin $VERSION
+          # A random delimiter, so a commit message cannot end the output early
+          DELIMITER="EOF_$(openssl rand -hex 8)"
+          echo "changelog<<${DELIMITER}" >> "$GITHUB_OUTPUT"
+          cat RELEASE_NOTES.md >> "$GITHUB_OUTPUT"
+          echo "${DELIMITER}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release Archive
+        env:
+          NEW_VERSION: ${{ needs.check-version-change.outputs.new-version }}
         run: |
           cd backend
-          tar -czf ../backend-build-v${{ needs.check-version-change.outputs.new-version }}.tar.gz dist/
+          tar -czf "../backend-build-v${NEW_VERSION}.tar.gz" dist/
+
+      # The first check ran before the tests, which take minutes. Ask GitHub
+      # again right before publishing, in case the tag was created or moved
+      # since checkout. git ls-remote needs no token on a public repository,
+      # and a network failure fails the job rather than letting it publish.
+      - name: Re-check the tag on GitHub before publishing
+        env:
+          NEW_VERSION: ${{ needs.check-version-change.outputs.new-version }}
+        run: |
+          TAG="v${NEW_VERSION}"
+          REMOTE=$(git ls-remote --tags origin "refs/tags/${TAG}" "refs/tags/${TAG}^{}")
+          if [ -z "$REMOTE" ]; then
+            echo "Tag ${TAG} does not exist yet; the release will create it"
+            exit 0
+          fi
+          # An annotated tag lists the tag object, then its commit on the ^{} line
+          PEELED=$(echo "$REMOTE" | awk -v ref="refs/tags/${TAG}^{}" '$2 == ref { print $1 }')
+          PLAIN=$(echo "$REMOTE" | awk -v ref="refs/tags/${TAG}" '$2 == ref { print $1 }')
+          EXISTING="${PEELED:-$PLAIN}"
+          if [ "$EXISTING" != "$GITHUB_SHA" ]; then
+            echo "::error::Tag ${TAG} now exists at ${EXISTING}, not at ${GITHUB_SHA}. Not publishing."
+            exit 1
+          fi
+          echo "Tag ${TAG} exists at this commit; continuing"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version-change.outputs.new-version }}
+          # Creates the tag at the commit that was tested, if it does not exist
+          target_commitish: ${{ github.sha }}
           name: Release v${{ needs.check-version-change.outputs.new-version }}
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false

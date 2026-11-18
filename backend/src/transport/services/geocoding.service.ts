@@ -93,14 +93,16 @@ export class GeocodingService {
   private async geocodeWithOverpass(
     locationName: string,
   ): Promise<GeocodingResult> {
-    // Use Overpass API to search for named places in Ghana
+    // Overpass has no (country:XX) filter; scope to Ghana with an area, the
+    // same way the banking queries do.
     const name = toOverpassNamePattern(locationName);
     const query = `
       [out:json][timeout:8];
+      area["name"="Ghana"]->.searchArea;
       (
-        node["name"~"${name}",i]["place"~"city|town|village"](country:GH);
-        way["name"~"${name}",i]["place"~"city|town|village"](country:GH);
-        relation["name"~"${name}",i]["place"~"city|town|village"](country:GH);
+        node["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
+        way["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
+        relation["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
       );
       out center;
     `;

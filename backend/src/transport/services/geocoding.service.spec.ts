@@ -56,5 +56,9 @@ describe('GeocodingService (Overpass fallback)', () => {
     expect(query).toContain('Ku.masi');
     expect(query).not.toContain('Ku"masi');
     expect(mockedQuery.mock.calls[0][1]).toBe(8_000);
+    // Overpass has no (country:XX) filter, so the query must use an area.
+    expect(query).not.toContain('country:');
+    expect(query).toContain('area["name"="Ghana"]->.searchArea;');
+    expect(query.match(/\(area\.searchArea\)/g)).toHaveLength(3);
   });
 });

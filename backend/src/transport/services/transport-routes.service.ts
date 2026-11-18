@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as polyline from '@mapbox/polyline';
+import { queryOverpass } from '../../common/overpass/overpass-client';
 
 export interface TransportRoute {
   id?: string;
@@ -75,15 +76,9 @@ export class TransportRoutesService {
       out geom;
     `;
 
-    const url = 'https://overpass-api.de/api/interpreter';
-    const response = await firstValueFrom(
-      this.httpService.post(url, query, {
-        headers: { 'Content-Type': 'text/plain' },
-        timeout: 30000,
-      }),
-    );
+    const data = await queryOverpass(query, 30_000);
 
-    return this.parseOverpassRoutes(response.data);
+    return this.parseOverpassRoutes(data);
   }
 
   private async getRoutesFromGTFS(city: string): Promise<TransportRoute[]> {

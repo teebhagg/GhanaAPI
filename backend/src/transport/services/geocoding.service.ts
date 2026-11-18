@@ -2,7 +2,22 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { queryOverpass } from '../../common/overpass/overpass-client';
 import { GeocodingResult } from '../dto/route-directions.dto';
+
+/**
+ * The name is placed inside a quoted Overpass regex. Each quote, backslash or
+ * regex metacharacter becomes "." (any one character), so the text cannot end
+ * the string or change the query, and no backslash escapes are needed.
+ * "St. Mary's (Old)" still matches itself.
+ */
+export function toOverpassNamePattern(value: string): string {
+  return value.replace(/[\\^$.|?*+()[\]{}"]/g, '.');
+}
+
+// Per instance. The shared client tries three instances in turn, so the
+// worst case is about 3 x 8 s instead of 3 x 20 s inside a user request.
+const OVERPASS_GEOCODE_TIMEOUT_MS = 8_000;
 
 @Injectable()
 export class GeocodingService {
@@ -78,34 +93,32 @@ export class GeocodingService {
   private async geocodeWithOverpass(
     locationName: string,
   ): Promise<GeocodingResult> {
-    // Use Overpass API to search for named places in Ghana
+    // Overpass has no (country:XX) filter; scope to Ghana's national boundary
+    // with an area. The ISO code picks one area, unlike a name match.
+    const name = toOverpassNamePattern(locationName);
     const query = `
-      [out:json][timeout:15];
+      [out:json][timeout:8];
+      area["ISO3166-1"="GH"][admin_level=2]->.searchArea;
       (
-        node["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
-        way["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
-        relation["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
+        node["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
+        way["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
+        relation["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
       );
       out center;
     `;
 
-    const url = 'https://overpass-api.de/api/interpreter';
-    const response = await firstValueFrom(
-      this.httpService.post(url, query, {
-        headers: { 'Content-Type': 'text/plain' },
-        timeout: 20000,
-      }),
-    );
+    const data = await queryOverpass(query, OVERPASS_GEOCODE_TIMEOUT_MS);
 
-    if (!response.data.elements || response.data.elements.length === 0) {
+    if (!data.elements || data.elements.length === 0) {
       throw new Error(`No results found for: ${locationName}`);
     }
 
-    const element = response.data.elements[0];
-    const lat = element.lat || element.center?.lat;
-    const lon = element.lon || element.center?.lon;
+    const element = data.elements[0];
+    // ?? not ||: longitude 0 (the prime meridian runs through Tema) is valid.
+    const lat = Number(element.lat ?? element.center?.lat);
+    const lon = Number(element.lon ?? element.center?.lon);
 
-    if (!lat || !lon) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       throw new Error(`Could not extract coordinates for: ${locationName}`);
     }
 

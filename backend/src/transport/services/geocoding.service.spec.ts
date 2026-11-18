@@ -1,22 +1,27 @@
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { queryOverpass } from '../../common/overpass/overpass-client';
-import { escapeOverpassRegex, GeocodingService } from './geocoding.service';
+import { GeocodingService, toOverpassNamePattern } from './geocoding.service';
 
 jest.mock('../../common/overpass/overpass-client');
 const mockedQuery = queryOverpass as jest.MockedFunction<typeof queryOverpass>;
 
-describe('escapeOverpassRegex', () => {
-  it('escapes quotes and regex metacharacters so the text cannot end the string', () => {
-    const escaped = escapeOverpassRegex('a"](0,0,0,0);node(1);out;//');
+describe('toOverpassNamePattern', () => {
+  it('leaves no quote or backslash, so the text cannot end the string', () => {
+    const pattern = toOverpassNamePattern('a"](0,0,0,0);node(1);out;//\\');
 
-    expect(escaped).not.toMatch(/(^|[^\\])"/);
-    expect(escaped).toContain('\\"');
-    expect(escaped).toContain('\\(');
+    expect(pattern).not.toContain('"');
+    expect(pattern).not.toContain('\\');
+    expect(pattern).toBe('a...0,0,0,0.;node.1.;out;//.');
+  });
+
+  it('still matches the original name as a regex', () => {
+    const name = "St. Mary's (Old) [A+B]";
+    expect(new RegExp(toOverpassNamePattern(name), 'i').test(name)).toBe(true);
   });
 
   it('leaves ordinary place names alone', () => {
-    expect(escapeOverpassRegex('Cape Coast')).toBe('Cape Coast');
+    expect(toOverpassNamePattern('Cape Coast')).toBe('Cape Coast');
   });
 });
 
@@ -36,7 +41,7 @@ describe('GeocodingService (Overpass fallback)', () => {
     });
   });
 
-  it('uses the shared Overpass client, never POSTs, and escapes the name', async () => {
+  it('uses the shared Overpass client with a short timeout, never POSTs, and neutralises the name', async () => {
     mockedQuery.mockResolvedValue({
       elements: [
         { lat: 6.69, lon: -1.62, tags: { name: 'Kumasi', place: 'city' } },
@@ -48,7 +53,8 @@ describe('GeocodingService (Overpass fallback)', () => {
     expect(result.coordinates).toEqual([6.69, -1.62]);
     expect(httpService.post).not.toHaveBeenCalled();
     const query = mockedQuery.mock.calls[0][0];
-    expect(query).toContain('Ku\\"masi');
+    expect(query).toContain('Ku.masi');
     expect(query).not.toContain('Ku"masi');
+    expect(mockedQuery.mock.calls[0][1]).toBe(8_000);
   });
 });

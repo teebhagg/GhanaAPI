@@ -6,13 +6,18 @@ import { queryOverpass } from '../../common/overpass/overpass-client';
 import { GeocodingResult } from '../dto/route-directions.dto';
 
 /**
- * The name is placed inside a quoted Overpass regex. Escape the regex
- * metacharacters and the quote so the text cannot end the string or change
- * the query.
+ * The name is placed inside a quoted Overpass regex. Each quote, backslash or
+ * regex metacharacter becomes "." (any one character), so the text cannot end
+ * the string or change the query, and no backslash escapes are needed.
+ * "St. Mary's (Old)" still matches itself.
  */
-export function escapeOverpassRegex(value: string): string {
-  return value.replace(/[\\^$.|?*+()[\]{}"]/g, (ch) => `\\${ch}`);
+export function toOverpassNamePattern(value: string): string {
+  return value.replace(/[\\^$.|?*+()[\]{}"]/g, '.');
 }
+
+// Per instance. The shared client tries three instances in turn, so the
+// worst case is about 3 x 8 s instead of 3 x 20 s inside a user request.
+const OVERPASS_GEOCODE_TIMEOUT_MS = 8_000;
 
 @Injectable()
 export class GeocodingService {
@@ -89,9 +94,9 @@ export class GeocodingService {
     locationName: string,
   ): Promise<GeocodingResult> {
     // Use Overpass API to search for named places in Ghana
-    const name = escapeOverpassRegex(locationName);
+    const name = toOverpassNamePattern(locationName);
     const query = `
-      [out:json][timeout:15];
+      [out:json][timeout:8];
       (
         node["name"~"${name}",i]["place"~"city|town|village"](country:GH);
         way["name"~"${name}",i]["place"~"city|town|village"](country:GH);
@@ -100,7 +105,7 @@ export class GeocodingService {
       out center;
     `;
 
-    const data = await queryOverpass(query, 20_000);
+    const data = await queryOverpass(query, OVERPASS_GEOCODE_TIMEOUT_MS);
 
     if (!data.elements || data.elements.length === 0) {
       throw new Error(`No results found for: ${locationName}`);

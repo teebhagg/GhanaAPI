@@ -10,10 +10,16 @@ import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../common/database/prisma.service';
 import {
+  FailureReport,
   HealthState,
   ServiceHealth,
   worstOf,
 } from '../../common/health/service-health';
+import {
+  describeFailure,
+  summariseSources,
+  UpstreamFailure,
+} from '../../common/health/upstream-failure';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ATMLocation, Bank } from '../entities/bank.entity';
 
@@ -28,6 +34,8 @@ interface DataSlot<T> {
   failedUntil: number;
   /** True from a failed refresh until the next successful one */
   lastRefreshFailed: boolean;
+  /** Why the last refresh failed, until the next one works */
+  lastFailure: FailureReport | null;
   inFlight: Promise<T[]> | null;
 }
 
@@ -37,6 +45,7 @@ const newSlot = <T>(key: DataSlot<T>['key']): DataSlot<T> => ({
   fetchedAt: null,
   failedUntil: 0,
   lastRefreshFailed: false,
+  lastFailure: null,
   inFlight: null,
 });
 
@@ -128,10 +137,16 @@ export class BankDataProviderService {
       .map((slot) => slot.fetchedAt)
       .filter((at): at is number => at !== null);
     const asOf = fetched.length ? new Date(Math.max(...fetched)) : null;
+    // The newest failure that has not been cleared by a later success
+    const lastFailure = slots
+      .map((slot) => (slot.lastRefreshFailed ? slot.lastFailure : null))
+      .filter((failure): failure is FailureReport => failure !== null)
+      .sort((a, b) => b.at.localeCompare(a.at))[0];
 
     return {
       status,
       asOf: asOf ? asOf.toISOString() : null,
+      ...(lastFailure && { lastFailure }),
       detail:
         status === 'unhealthy'
           ? 'The last refresh of bank data failed and there is no usable data'
@@ -248,6 +263,7 @@ export class BankDataProviderService {
           slot.data = data;
           slot.fetchedAt = Date.now();
           slot.lastRefreshFailed = false;
+          slot.lastFailure = null;
           void this.persist(slot);
           return data;
         },
@@ -255,6 +271,11 @@ export class BankDataProviderService {
           this.logger.error(`${label} refresh failed:`, error);
           slot.failedUntil = Date.now() + this.FAILURE_BACKOFF_MS;
           slot.lastRefreshFailed = true;
+          slot.lastFailure = {
+            reason: describeFailure(error),
+            at: new Date(Date.now()).toISOString(),
+            scope: slot.key,
+          };
           throw error;
         },
       )
@@ -292,8 +313,21 @@ export class BankDataProviderService {
 
     // No data from any source is an outage, not an empty directory.
     if (banks.length === 0) {
+      const failures = [
+        { source: 'Bank of Ghana', result: bogBanks },
+        { source: 'OpenStreetMap', result: osmBanks },
+      ].flatMap(({ source, result }) =>
+        result.status === 'rejected'
+          ? [{ source, error: result.reason as unknown }]
+          : [],
+      );
       throw new ServiceUnavailableException(
         'Bank data is temporarily unavailable from all sources',
+        {
+          cause: failures.length
+            ? summariseSources(failures)
+            : new UpstreamFailure('OpenStreetMap returned no banks'),
+        },
       );
     }
 
@@ -309,7 +343,10 @@ export class BankDataProviderService {
 
     // No data is an outage, not an empty result.
     if (atms.length === 0) {
-      throw new ServiceUnavailableException('ATM data is temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'ATM data is temporarily unavailable',
+        { cause: new UpstreamFailure('OpenStreetMap returned no ATMs') },
+      );
     }
 
     const uniqueATMs = this.deduplicateATMs(atms);

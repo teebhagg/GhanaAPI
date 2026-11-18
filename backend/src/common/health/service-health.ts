@@ -1,5 +1,14 @@
 export type HealthState = 'healthy' | 'degraded' | 'unhealthy';
 
+/** Why the last refresh of a data source failed, in words safe to publish */
+export interface FailureReport {
+  reason: string;
+  /** ISO time of the failure */
+  at: string;
+  /** What failed when a service holds several datasets, e.g. a city or "atms" */
+  scope?: string;
+}
+
 /**
  * What a data service knows about itself without calling its upstream:
  * healthy when its last refresh worked (or it has not needed one yet),
@@ -12,6 +21,8 @@ export interface ServiceHealth {
   asOf: string | null;
   /** A short human-readable reason or note */
   detail?: string;
+  /** The most recent failed refresh, while one is outstanding */
+  lastFailure?: FailureReport;
 }
 
 const ORDER: HealthState[] = ['healthy', 'degraded', 'unhealthy'];

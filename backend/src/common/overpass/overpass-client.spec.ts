@@ -1,4 +1,6 @@
+import { Logger } from '@nestjs/common';
 import axios from 'axios';
+import { describeFailure } from '../health/upstream-failure';
 import { OVERPASS_ENDPOINTS, queryOverpass } from './overpass-client';
 
 jest.mock('axios');
@@ -62,6 +64,51 @@ describe('queryOverpass', () => {
     const result = await queryOverpass('q');
 
     expect(result.elements).toEqual([{ id: 3 }]);
+  });
+
+  describe('a runtime error remark from the server', () => {
+    const REMARK = 'runtime error: failed /internal/data?token=secret123';
+    let warn: jest.SpyInstance;
+
+    beforeEach(() => {
+      warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    });
+
+    afterEach(() => warn.mockRestore());
+
+    it('should publish a fixed phrase and keep the remark in the log only', async () => {
+      mockedGet.mockResolvedValue({
+        data: { elements: [], remark: REMARK },
+      } as any);
+
+      const error = await queryOverpass('q').catch((e: unknown) => e);
+
+      expect(describeFailure(error)).toBe(
+        'Overpass runtime error on z.overpass-api.de',
+      );
+      expect(describeFailure(error)).not.toMatch(/internal|secret123|token/);
+      expect(warn.mock.calls.flat().join(' ')).toContain('secret123');
+    });
+
+    it.each([
+      [
+        'runtime error: Query timed out in "query" at line 4.',
+        'query timed out',
+      ],
+      [
+        'runtime error: Query run out of memory using 2048 MB.',
+        'out of memory',
+      ],
+      ['runtime error: something else', 'runtime error'],
+    ])('should describe %p as %p', async (remark, phrase) => {
+      mockedGet.mockResolvedValue({ data: { elements: [], remark } } as any);
+
+      const error = await queryOverpass('q').catch((e: unknown) => e);
+
+      expect(describeFailure(error)).toBe(
+        `Overpass ${phrase} on z.overpass-api.de`,
+      );
+    });
   });
 
   it('throws the last error when every instance fails', async () => {

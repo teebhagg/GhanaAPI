@@ -12,6 +12,10 @@ import { Cron } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ServiceHealth } from '../../common/health/service-health';
+import {
+  summariseSources,
+  UpstreamFailure,
+} from '../../common/health/upstream-failure';
 import { LastGoodCache } from '../../common/resilience/last-good-cache';
 
 /**
@@ -98,10 +102,11 @@ export class TransportStopsService implements OnModuleInit {
 
   /** For the /status endpoint. Never contacts Overpass. */
   getHealth(): ServiceHealth {
-    const { status, asOf } = this.stopsCache.health();
+    const { status, asOf, lastFailure } = this.stopsCache.health();
     return {
       status,
       asOf: asOf ? asOf.toISOString() : null,
+      ...(lastFailure && { lastFailure }),
       detail:
         status === 'unhealthy'
           ? 'The last fetch of transport stops failed and there is no usable list'
@@ -142,6 +147,7 @@ export class TransportStopsService implements OnModuleInit {
   }
 
   private async fetchStops(city: string): Promise<TransportStop[]> {
+    const failures: Array<{ source: string; error: unknown }> = [];
     for (const api of this.transportApis) {
       try {
         this.logger.log(`Trying to get transport stops from ${api}`);
@@ -160,18 +166,21 @@ export class TransportStopsService implements OnModuleInit {
         // An empty list for a city is an outage, not an answer. Do not cache
         // it for a day or let it replace the last good list.
         if (stops.length === 0) {
-          throw new Error(`${api} returned no stops`);
+          throw new UpstreamFailure(`${api} returned no stops`);
         }
         return stops;
       } catch (error) {
         this.logger.warn(`${api} failed: ${error.message}`);
+        failures.push({ source: api, error });
         continue;
       }
     }
 
+    // Keep why each source failed, for /status
     throw new HttpException(
       'All transport stops APIs failed',
       HttpStatus.SERVICE_UNAVAILABLE,
+      { cause: summariseSources(failures) },
     );
   }
 
@@ -195,7 +204,7 @@ export class TransportStopsService implements OnModuleInit {
   private async getStopsFromGTFS(city: string): Promise<TransportStop[]> {
     const gtfsUrl = this.configService.get<string>('GHANA_GTFS_URL');
     if (!gtfsUrl) {
-      throw new Error('No GTFS data available for Ghana');
+      throw new UpstreamFailure('No GTFS data available for Ghana');
     }
 
     const response = await firstValueFrom(

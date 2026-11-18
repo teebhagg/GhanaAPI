@@ -86,6 +86,7 @@ export class GSEApiProvider {
       throw new HttpException(
         `Failed to fetch stock data from GSE API: ${error.message}`,
         HttpStatus.SERVICE_UNAVAILABLE,
+        { cause: error },
       );
     }
   }

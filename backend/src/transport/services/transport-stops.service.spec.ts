@@ -1,3 +1,4 @@
+import { httpError } from '../../test/axios-error';
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException } from '@nestjs/common';
 import { of } from 'rxjs';
@@ -271,6 +272,32 @@ describe('TransportStopsService', () => {
       await service.getTransportStops('accra').catch(() => undefined);
 
       expect(service.getHealth().status).toBe('unhealthy');
+    });
+
+    it('says why every source failed, with the city', async () => {
+      mockedQuery.mockRejectedValue(
+        httpError(502, 'https://z.overpass-api.de/api/interpreter'),
+      );
+      await service.getTransportStops('kumasi').catch(() => undefined);
+
+      expect(service.getHealth().lastFailure).toEqual({
+        reason:
+          'overpass: HTTP 502 from z.overpass-api.de; gtfs: No GTFS data available for Ghana',
+        at: new Date(now).toISOString(),
+        scope: 'kumasi',
+      });
+    });
+
+    it('forgets the failure once the list loads', async () => {
+      mockedQuery.mockRejectedValueOnce(
+        httpError(502, 'https://z.overpass-api.de/api/interpreter'),
+      );
+      await service.getTransportStops('accra').catch(() => undefined);
+      now += 2 * 60 * 1000; // past the one minute retry
+      mockedQuery.mockResolvedValue(ELEMENTS);
+      await service.getTransportStops('accra');
+
+      expect(service.getHealth()).not.toHaveProperty('lastFailure');
     });
 
     it('is degraded when a refresh fails but the last good list is served', async () => {

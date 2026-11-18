@@ -8,7 +8,15 @@ import {
 } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
-import { HealthState, ServiceHealth } from '../../common/health/service-health';
+import {
+  FailureReport,
+  HealthState,
+  ServiceHealth,
+} from '../../common/health/service-health';
+import {
+  summariseSources,
+  UpstreamFailure,
+} from '../../common/health/upstream-failure';
 import { firstValueFrom } from 'rxjs';
 
 export interface FuelPrice {
@@ -70,6 +78,7 @@ export class FuelPriceService {
   // What the last real fetch did, for the /status endpoint. Kept in memory
   // because the cache entries above expire and would forget an outage.
   private lastFetchFailed = false;
+  private lastFailure: FailureReport | null = null;
   private lastFetchedAt: number | null = null;
   // When the prices cached by the last successful fetch expire
   private cachedPricesUntil: number | null = null;
@@ -96,6 +105,8 @@ export class FuelPriceService {
       asOf: this.lastFetchedAt
         ? new Date(this.lastFetchedAt).toISOString()
         : null,
+      ...(this.lastFailure &&
+        status !== 'healthy' && { lastFailure: this.lastFailure }),
       detail:
         status === 'degraded'
           ? 'The last fuel price fetch failed; serving cached prices'
@@ -155,6 +166,7 @@ export class FuelPriceService {
     this.logger.debug('No cached fuel prices found, fetching from APIs');
 
     let lastError: Error | null = null;
+    const failures: Array<{ source: string; error: unknown }> = [];
 
     // Try each source in order until we get valid data
     for (const api of this.fuelPriceApis) {
@@ -191,6 +203,7 @@ export class FuelPriceService {
             ttl * 1000,
           );
           this.lastFetchFailed = false;
+          this.lastFailure = null;
           this.lastFetchedAt = Date.now();
           this.cachedPricesUntil = this.lastFetchedAt + ttl * 1000;
           this.logger.log(
@@ -202,10 +215,15 @@ export class FuelPriceService {
             `Invalid fuel price data from ${api}: ${JSON.stringify(fuelPrices)}`,
           );
           lastError = new Error(`Invalid fuel price data from ${api}`);
+          failures.push({
+            source: api,
+            error: new UpstreamFailure('returned no valid prices'),
+          });
           continue;
         }
       } catch (error) {
         lastError = error;
+        failures.push({ source: api, error });
         this.logger.warn(`Fuel prices from ${api} failed: ${error.message}`);
         continue;
       }
@@ -215,6 +233,10 @@ export class FuelPriceService {
     // failure briefly so the next requests do not re-scrape every source.
     this.logger.error('All fuel price sources failed');
     this.lastFetchFailed = true;
+    this.lastFailure = {
+      reason: summariseSources(failures).summary,
+      at: new Date(Date.now()).toISOString(),
+    };
     await this.cacheManager.set(
       this.FAILURE_CACHE_KEY,
       true,
@@ -486,7 +508,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in NPA press releases');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in NPA press releases',
+        );
       }
 
       return {
@@ -599,7 +623,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in Citi News articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in Citi News articles',
+        );
       }
 
       return {
@@ -714,7 +740,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in Joy Online articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in Joy Online articles',
+        );
       }
 
       return {
@@ -834,7 +862,9 @@ export class FuelPriceService {
       }
 
       if (petrolPrice === 0 && dieselPrice === 0) {
-        throw new Error('No valid fuel prices found in GhanaWeb articles');
+        throw new UpstreamFailure(
+          'No valid fuel prices found in GhanaWeb articles',
+        );
       }
 
       return {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Why a service is failing, and which build is running (`/status`)**: each data service that is degraded or unhealthy now reports a `lastFailure` with a short, safe reason (for example `HTTP 502 from overpass-api.de` or `timeout after 10000ms contacting dev.kwayisi.org`), the time, and which dataset or city failed. The response also has a `build` block with the version, short commit, instance id, start time and uptime. Existing fields are unchanged.
+
 ### Fixed
 
 - **Currency conversion from GHS**: converting from GHS to USD, EUR, GBP, CHF or CNY returned a result that was far too large, and GHS to JPY a result that was far too small. The Bank of Ghana sell rate (cedis per unit of the foreign currency) was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5, and 100 GHS to JPY returned about 7.4 and now returns about 1351.

@@ -329,6 +329,46 @@ const getCachedData = async (url, ttl = 300000) => {
 };
 ```
 
+## 🩺 Service Health
+
+`GET /api/v1/status` reports the health of the API and of each data service. It answers from what each service already knows, so it never calls a third-party provider and stays cheap.
+
+```json
+{
+  "success": true,
+  "status": "degraded",
+  "timestamp": "2026-11-18T20:00:00.000Z",
+  "build": {
+    "version": "0.5.5",
+    "commit": "3f43af6",
+    "instance": "srv-abc123-5d8f7",
+    "startedAt": "2026-11-18T19:52:00.000Z",
+    "uptimeSeconds": 480
+  },
+  "health": {
+    "database": "healthy",
+    "services": { "exchangeRates": "healthy", "banking": "unhealthy" }
+  },
+  "statistics": {
+    "banking": {
+      "totalRecords": 0,
+      "lastUpdated": null,
+      "note": "The last refresh of bank data failed and there is no usable data",
+      "lastFailure": {
+        "reason": "OpenStreetMap: HTTP 502 from z.overpass-api.de",
+        "at": "2026-11-18T19:59:12.000Z",
+        "scope": "banks"
+      }
+    }
+  }
+}
+```
+
+- The overall `status` is `unhealthy` only when the database check fails (and `success` is then `false`). It is `degraded` when the database is healthy but at least one service is `degraded` or `unhealthy`, even if that service has no older data to serve, and `healthy` when everything is healthy.
+- Each data service that fetches from a third party (`banking`, `stockMarket`, `crypto`, `transport`) is `healthy`, `degraded` (the last refresh failed but older data is still served) or `unhealthy` (the last refresh failed and there is nothing to serve). Services stored in the database (`education`, `exchangeRates`) and the static `locations` data are `healthy`, or `degraded` if their statistics could not be read.
+- `build` says which build answered. `commit` and `instance` are `null` when the host does not provide them. With several instances behind one address, `instance` shows which one you reached.
+- `lastFailure` appears only while a failure is outstanding. `reason` names the HTTP status, timeout or connection error and the host, never a URL path, query or credential. `scope` says which dataset or city failed. It disappears after the next successful refresh.
+
 ## 📈 Monitoring and Analytics
 
 ### Request Logging

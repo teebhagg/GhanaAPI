@@ -3,7 +3,8 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { HealthState } from '../health/service-health';
+import { FailureReport, HealthState } from '../health/service-health';
+import { describeFailure } from '../health/upstream-failure';
 
 export interface LastGoodCacheOptions {
   /** Shown in logs and error messages, e.g. "Stock data" */
@@ -36,6 +37,8 @@ interface Entry<T> {
   failedUntil: number;
   /** True from a failed refresh until the next successful one */
   lastRefreshFailed: boolean;
+  /** Why the last refresh failed, until the next one works */
+  lastFailure: FailureReport | null;
   inFlight: Promise<T> | null;
 }
 
@@ -112,9 +115,14 @@ export class LastGoodCache<T> {
    * older than maxStaleMs) and degraded if it still serves older real data.
    * Entries that were never fetched, or whose last refresh worked, are healthy.
    */
-  health(): { status: HealthState; asOf: Date | null } {
+  health(): {
+    status: HealthState;
+    asOf: Date | null;
+    lastFailure: FailureReport | null;
+  } {
     let status: HealthState = 'healthy';
     let newest: number | null = null;
+    let lastFailure: FailureReport | null = null;
 
     for (const entry of this.entries.values()) {
       if (
@@ -126,6 +134,12 @@ export class LastGoodCache<T> {
       if (!entry.lastRefreshFailed) {
         continue;
       }
+      if (
+        entry.lastFailure !== null &&
+        (lastFailure === null || entry.lastFailure.at > lastFailure.at)
+      ) {
+        lastFailure = entry.lastFailure;
+      }
       const usable =
         entry.data !== null && this.ageOf(entry) < this.options.maxStaleMs;
       if (!usable) {
@@ -134,7 +148,11 @@ export class LastGoodCache<T> {
         status = 'degraded';
       }
     }
-    return { status, asOf: newest === null ? null : new Date(newest) };
+    return {
+      status,
+      asOf: newest === null ? null : new Date(newest),
+      lastFailure,
+    };
   }
 
   private entryFor(key: string): Entry<T> {
@@ -145,6 +163,7 @@ export class LastGoodCache<T> {
         fetchedAt: null,
         failedUntil: 0,
         lastRefreshFailed: false,
+        lastFailure: null,
         inFlight: null,
       };
       this.entries.set(key, entry);
@@ -188,6 +207,7 @@ export class LastGoodCache<T> {
           entry.data = data;
           entry.fetchedAt = Date.now();
           entry.lastRefreshFailed = false;
+          entry.lastFailure = null;
           return data;
         },
         (error) => {
@@ -201,6 +221,11 @@ export class LastGoodCache<T> {
               : this.options.backoffMs;
           entry.failedUntil = Date.now() + backoff;
           entry.lastRefreshFailed = true;
+          entry.lastFailure = {
+            reason: describeFailure(error),
+            at: new Date(Date.now()).toISOString(),
+            scope: key,
+          };
           throw error;
         },
       )

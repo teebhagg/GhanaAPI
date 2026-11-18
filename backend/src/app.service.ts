@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { BankDataProviderService } from './banking/services/bank-data-provider.service';
 import { PrismaService } from './common/database/prisma.service';
-import { ServiceHealth, worstOf } from './common/health/service-health';
+import {
+  FailureReport,
+  ServiceHealth,
+  worstOf,
+} from './common/health/service-health';
 import { CryptoService } from './crypto/crypto.service';
 import { regions } from './locations/data/regions.json';
 import { StockMarketService } from './stock-market/stock-market.service';
@@ -19,12 +25,52 @@ interface ModuleStatistics {
   [key: string]: any;
 }
 
+/** Which build is answering. Instances can differ during and after a deploy. */
+export interface BuildInfo {
+  version: string;
+  /** First 7 characters of the git commit, when the host provides it */
+  commit: string | null;
+  /** The host's id for this instance, when it provides one */
+  instance: string | null;
+  startedAt: string;
+  uptimeSeconds: number;
+}
+
 export interface StatusResponse {
   success: boolean;
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: Date;
+  build: BuildInfo;
   health: HealthStatus;
   statistics: Record<string, ModuleStatistics>;
+}
+
+const STARTED_AT = new Date();
+
+/** The version in package.json, which sits in the working directory. */
+function readVersion(): string {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(join(process.cwd(), 'package.json'), 'utf8'),
+    ) as { version?: unknown };
+    if (typeof pkg.version === 'string') return pkg.version;
+  } catch {
+    // fall through to the npm variable
+  }
+  return process.env.npm_package_version ?? 'unknown';
+}
+
+const VERSION = readVersion();
+
+export function getBuildInfo(): BuildInfo {
+  const commit = process.env.RENDER_GIT_COMMIT ?? process.env.GIT_COMMIT;
+  return {
+    version: VERSION,
+    commit: commit ? commit.slice(0, 7) : null,
+    instance: process.env.RENDER_INSTANCE_ID ?? null,
+    startedAt: STARTED_AT.toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+  };
 }
 
 @Injectable()
@@ -164,8 +210,8 @@ export class AppService {
       stockMarket: this.stockMarket.getHealth(),
       crypto: this.crypto.getHealth(),
       transport: this.combineHealth(
-        this.transportStops.getHealth(),
-        this.fuelPrices.getHealth(),
+        ['stops', this.transportStops.getHealth()],
+        ['fuel prices', this.fuelPrices.getHealth()],
       ),
     });
 
@@ -185,6 +231,7 @@ export class AppService {
       success: overallStatus !== 'unhealthy',
       status: overallStatus,
       timestamp,
+      build: getBuildInfo(),
       health,
       statistics,
     };
@@ -201,24 +248,56 @@ export class AppService {
         totalRecords: 0, // Service-based data, not stored in the database
         lastUpdated: report.asOf ? new Date(report.asOf) : null,
         note: report.detail ?? 'Service-based data, not stored in database',
+        // Why the last refresh failed, in words that are safe to publish
+        ...(report.lastFailure && { lastFailure: report.lastFailure }),
       };
     }
   }
 
-  /** One report for a module made of several data sources: the worst state */
-  private combineHealth(...parts: ServiceHealth[]): ServiceHealth {
+  /**
+   * One report for a module made of several data sources: the worst state, and
+   * every source's failure under its label.
+   */
+  private combineHealth(
+    ...parts: Array<[label: string, health: ServiceHealth]>
+  ): ServiceHealth {
     const asOf = parts
-      .map((part) => part.asOf)
+      .map(([, part]) => part.asOf)
       .filter((value): value is string => value !== null)
       .sort()
       .pop();
     const details = parts
-      .map((part) => part.detail)
+      .map(([, part]) => part.detail)
       .filter((detail): detail is string => Boolean(detail));
+    const failures = parts.flatMap(([label, part]) =>
+      part.lastFailure ? [{ label, failure: part.lastFailure }] : [],
+    );
+    let lastFailure: FailureReport | undefined;
+    if (failures.length === 1) {
+      const { label, failure } = failures[0];
+      lastFailure = {
+        ...failure,
+        scope: failure.scope ? `${label}/${failure.scope}` : label,
+      };
+    } else if (failures.length > 1) {
+      lastFailure = {
+        reason: failures
+          .map(
+            ({ label, failure }) =>
+              `${failure.scope ? `${label}/${failure.scope}` : label}: ${failure.reason}`,
+          )
+          .join('; '),
+        at: failures
+          .map(({ failure }) => failure.at)
+          .sort()
+          .pop() as string,
+      };
+    }
     return {
-      status: worstOf(...parts.map((part) => part.status)),
+      status: worstOf(...parts.map(([, part]) => part.status)),
       asOf: asOf ?? null,
       detail: details.length ? details.join('; ') : undefined,
+      ...(lastFailure && { lastFailure }),
     };
   }
 }

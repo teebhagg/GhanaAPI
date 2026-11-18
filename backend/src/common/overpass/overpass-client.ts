@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import axios from 'axios';
+import { UpstreamFailure } from '../health/upstream-failure';
 
 /**
  * Official global Overpass instances, main host first. Do not add
@@ -14,6 +15,13 @@ export const OVERPASS_ENDPOINTS = [
 
 const USER_AGENT = 'GhanaAPI/1.0 (+https://ghana-api.dev)';
 const logger = new Logger('OverpassClient');
+
+/** A fixed description of what went wrong, never the upstream's own words. */
+function runtimeErrorKind(remark: string): string {
+  if (/time(d)?[ -]?out/i.test(remark)) return 'query timed out';
+  if (/memory/i.test(remark)) return 'out of memory';
+  return 'runtime error';
+}
 
 /**
  * Run an Overpass QL query, trying each instance in turn.
@@ -40,12 +48,17 @@ export async function queryOverpass(
       const remark: string =
         data && typeof data.remark === 'string' ? data.remark : '';
       if (/runtime error/i.test(remark)) {
-        throw new Error(`Overpass runtime error from ${endpoint}: ${remark}`);
+        // The remark is text from the upstream server: keep it in the server
+        // log and publish only a fixed phrase.
+        logger.warn(`Overpass remark from ${endpoint}: ${remark}`);
+        throw new UpstreamFailure(
+          `Overpass ${runtimeErrorKind(remark)} on ${new URL(endpoint).host}`,
+        );
       }
       if (data && typeof data === 'object' && Array.isArray(data.elements)) {
         return data;
       }
-      throw new Error(`Non-JSON response from ${endpoint}`);
+      throw new UpstreamFailure(`Non-JSON response from ${endpoint}`);
     } catch (error) {
       lastError = error;
       logger.warn(

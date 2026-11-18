@@ -44,21 +44,51 @@ describe('GeocodingService (Overpass fallback)', () => {
   it('uses the shared Overpass client with a short timeout, never POSTs, and neutralises the name', async () => {
     mockedQuery.mockResolvedValue({
       elements: [
-        { lat: 6.69, lon: -1.62, tags: { name: 'Kumasi', place: 'city' } },
+        { lat: 6.69, lon: -1.62, tags: { name: 'Kuasi', place: 'city' } },
       ],
     });
 
-    const result = await service.geocodeLocation('Ku"masi');
+    const result = await service.geocodeLocation('Ku"asi');
 
     expect(result.coordinates).toEqual([6.69, -1.62]);
     expect(httpService.post).not.toHaveBeenCalled();
     const query = mockedQuery.mock.calls[0][0];
-    expect(query).toContain('Ku.masi');
-    expect(query).not.toContain('Ku"masi');
+    expect(query).toContain('Ku.asi');
+    expect(query).not.toContain('Ku"asi');
     expect(mockedQuery.mock.calls[0][1]).toBe(8_000);
     // Overpass has no (country:XX) filter, so the query must use an area.
     expect(query).not.toContain('country:');
-    expect(query).toContain('area["name"="Ghana"]->.searchArea;');
+    expect(query).toContain(
+      'area["ISO3166-1"="GH"][admin_level=2]->.searchArea;',
+    );
     expect(query.match(/\(area\.searchArea\)/g)).toHaveLength(3);
+  });
+
+  it('accepts longitude 0 and uses the centre of ways and relations', async () => {
+    mockedQuery.mockResolvedValueOnce({
+      elements: [{ lat: 5.67, lon: 0, tags: { name: 'Tema', place: 'city' } }],
+    });
+    await expect(service.geocodeLocation('Tema')).resolves.toMatchObject({
+      coordinates: [5.67, 0],
+    });
+
+    mockedQuery.mockResolvedValueOnce({
+      elements: [
+        { center: { lat: 5.5, lon: 0 }, tags: { name: 'Ada', place: 'town' } },
+      ],
+    });
+    await expect(service.geocodeLocation('Ada')).resolves.toMatchObject({
+      coordinates: [5.5, 0],
+    });
+  });
+
+  it('returns 404 when the result has no usable coordinates', async () => {
+    mockedQuery.mockResolvedValue({
+      elements: [{ tags: { name: 'Nowhere', place: 'village' } }],
+    });
+
+    await expect(service.geocodeLocation('Nowhere')).rejects.toMatchObject({
+      status: 404,
+    });
   });
 });

@@ -93,12 +93,12 @@ export class GeocodingService {
   private async geocodeWithOverpass(
     locationName: string,
   ): Promise<GeocodingResult> {
-    // Overpass has no (country:XX) filter; scope to Ghana with an area, the
-    // same way the banking queries do.
+    // Overpass has no (country:XX) filter; scope to Ghana's national boundary
+    // with an area. The ISO code picks one area, unlike a name match.
     const name = toOverpassNamePattern(locationName);
     const query = `
       [out:json][timeout:8];
-      area["name"="Ghana"]->.searchArea;
+      area["ISO3166-1"="GH"][admin_level=2]->.searchArea;
       (
         node["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
         way["name"~"${name}",i]["place"~"city|town|village"](area.searchArea);
@@ -114,10 +114,11 @@ export class GeocodingService {
     }
 
     const element = data.elements[0];
-    const lat = element.lat || element.center?.lat;
-    const lon = element.lon || element.center?.lon;
+    // ?? not ||: longitude 0 (the prime meridian runs through Tema) is valid.
+    const lat = Number(element.lat ?? element.center?.lat);
+    const lon = Number(element.lon ?? element.center?.lon);
 
-    if (!lat || !lon) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       throw new Error(`Could not extract coordinates for: ${locationName}`);
     }
 

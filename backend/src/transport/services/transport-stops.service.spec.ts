@@ -231,6 +231,21 @@ describe('TransportStopsService', () => {
       ).rejects.toMatchObject({ status: 503 });
     });
 
+    it('keeps the last good Kumasi list when the feed only has Accra stops', async () => {
+      mockedQuery.mockResolvedValueOnce(ELEMENTS);
+      const first = await gtfsService.getTransportStops('kumasi');
+
+      now += 25 * 60 * 60 * 1000; // stale: the next request refreshes
+      mockedQuery.mockRejectedValue(new Error('overpass down'));
+      gtfsGet.mockReturnValue(
+        of({ data: GTFS_HEADER + '1,,Circle,,5.6,-0.18\n' }),
+      );
+
+      expect(await gtfsService.getTransportStops('kumasi')).toBe(first);
+      await new Promise((r) => setImmediate(r)); // let the refresh settle
+      expect(await gtfsService.getTransportStops('kumasi')).toBe(first);
+    });
+
     it('keeps the last good stops when a refresh only gets an empty feed', async () => {
       mockedQuery.mockResolvedValueOnce(ELEMENTS);
       const first = await gtfsService.getTransportStops('accra');

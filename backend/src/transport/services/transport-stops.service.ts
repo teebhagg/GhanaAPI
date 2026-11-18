@@ -24,6 +24,9 @@ export const ALLOWED_STOP_TYPES = [
   'station',
 ];
 
+/** Cities we have a bounding box for. Anything else is rejected, not guessed. */
+export const ALLOWED_CITIES = ['accra', 'kumasi', 'tamale', 'takoradi'];
+
 export interface TransportStop {
   id?: string;
   name: string;
@@ -80,10 +83,16 @@ export class TransportStopsService {
       );
     }
 
+    const cityKey = city.toLowerCase();
+    if (!ALLOWED_CITIES.includes(cityKey)) {
+      throw new BadRequestException(
+        `Unsupported city. Allowed values: ${ALLOWED_CITIES.join(', ')}`,
+      );
+    }
+
     // One cached list per city. The type is applied here, never sent to
     // Overpass, so 4 cities mean at most 4 upstream queries however many
     // types are requested.
-    const cityKey = this.resolveCity(city);
     const { data } = await this.stopsCache.get(cityKey, () =>
       this.fetchStops(cityKey),
     );
@@ -203,12 +212,6 @@ export class TransportStopsService {
   // ===== HELPER METHODS =====
 
   /** Known city name, or the default. Keeps cache keys to a small fixed set. */
-  private resolveCity(city: string): string {
-    const known = ['accra', 'kumasi', 'tamale', 'takoradi'];
-    const name = city.toLowerCase();
-    return known.includes(name) ? name : 'accra';
-  }
-
   private getCityBoundingBox(city: string): string {
     const boxes = {
       accra: '5.4000,-0.4000,5.8000,0.2000',
@@ -217,6 +220,6 @@ export class TransportStopsService {
       takoradi: '4.8000,-2.0000,5.0000,-1.6000',
     };
 
-    return boxes[city.toLowerCase()] || boxes.accra;
+    return boxes[city.toLowerCase()];
   }
 }

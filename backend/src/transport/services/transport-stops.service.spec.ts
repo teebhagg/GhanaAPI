@@ -128,12 +128,18 @@ describe('TransportStopsService', () => {
     ).resolves.toEqual([]);
   });
 
-  it('keeps cache keys bounded: unknown cities share the default city entry', async () => {
+  it('rejects a city we have no data for instead of answering with Accra', async () => {
+    await expect(service.getTransportStops('atlantis')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(mockedQuery).not.toHaveBeenCalled();
+  });
+
+  it('accepts a known city in any letter case and shares its cache entry', async () => {
     mockedQuery.mockResolvedValue(ELEMENTS);
 
-    await service.getTransportStops('atlantis');
-    await service.getTransportStops('narnia');
-    await service.getTransportStops('accra');
+    await service.getTransportStops('Kumasi');
+    await service.getTransportStops('kumasi');
 
     expect(mockedQuery).toHaveBeenCalledTimes(1);
   });

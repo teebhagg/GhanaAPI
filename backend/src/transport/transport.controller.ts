@@ -36,6 +36,7 @@ import {
   TransportService,
   TransportStop,
 } from './transport.service';
+import { ALLOWED_CITIES } from './services/transport-stops.service';
 import {
   ErrorResponseDto,
   ValidationErrorResponseDto,
@@ -68,7 +69,7 @@ export class TransportController {
   })
   @ApiQuery({
     name: 'city',
-    enum: ['accra', 'kumasi', 'tamale', 'takoradi'],
+    enum: ALLOWED_CITIES,
     required: false,
     description: 'City to get stops for (default: accra)',
   })
@@ -84,7 +85,7 @@ export class TransportController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid query parameters',
+    description: 'Unsupported city or invalid stop type',
     type: ValidationErrorResponseDto,
   })
   @ApiResponse({
@@ -116,6 +117,10 @@ export class TransportController {
         ...(type && { type }),
       };
     } catch (error) {
+      // Keep 4xx errors (bad city, bad type, bad coordinates) as they are.
+      if (error instanceof HttpException && error.getStatus() < 500) {
+        throw error;
+      }
       throw new HttpException(
         {
           success: false,
@@ -231,6 +236,10 @@ export class TransportController {
         radius,
       };
     } catch (error) {
+      // Keep 4xx errors (bad city, bad type, bad coordinates) as they are.
+      if (error instanceof HttpException && error.getStatus() < 500) {
+        throw error;
+      }
       throw new HttpException(
         {
           success: false,

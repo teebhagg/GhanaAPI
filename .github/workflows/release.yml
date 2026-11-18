@@ -54,9 +54,12 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      # One group per version. A rerun of the same version waits for the first,
-      # and a newer version bump never cancels or replaces a waiting one.
-      group: release-${{ needs.check-version-change.outputs.new-version }}
+      # One release at a time, in a queue. queue: max keeps every waiting
+      # release (up to 100) instead of replacing it with the newest. Running
+      # them in turn also means a release starts after the previous version's
+      # tag exists, so its changelog can find it.
+      group: release
+      queue: max
       cancel-in-progress: false
 
     # Same database setup as ci.yml: the e2e tests need a real Postgres.
@@ -184,6 +187,30 @@ jobs:
         run: |
           cd backend
           tar -czf "../backend-build-v${NEW_VERSION}.tar.gz" dist/
+
+      # The first check ran before the tests, which take minutes. Ask GitHub
+      # again right before publishing, in case the tag was created or moved
+      # since checkout. git ls-remote needs no token on a public repository,
+      # and a network failure fails the job rather than letting it publish.
+      - name: Re-check the tag on GitHub before publishing
+        env:
+          NEW_VERSION: ${{ needs.check-version-change.outputs.new-version }}
+        run: |
+          TAG="v${NEW_VERSION}"
+          REMOTE=$(git ls-remote --tags origin "refs/tags/${TAG}" "refs/tags/${TAG}^{}")
+          if [ -z "$REMOTE" ]; then
+            echo "Tag ${TAG} does not exist yet; the release will create it"
+            exit 0
+          fi
+          # An annotated tag lists the tag object, then its commit on the ^{} line
+          PEELED=$(echo "$REMOTE" | awk -v ref="refs/tags/${TAG}^{}" '$2 == ref { print $1 }')
+          PLAIN=$(echo "$REMOTE" | awk -v ref="refs/tags/${TAG}" '$2 == ref { print $1 }')
+          EXISTING="${PEELED:-$PLAIN}"
+          if [ "$EXISTING" != "$GITHUB_SHA" ]; then
+            echo "::error::Tag ${TAG} now exists at ${EXISTING}, not at ${GITHUB_SHA}. Not publishing."
+            exit 1
+          fi
+          echo "Tag ${TAG} exists at this commit; continuing"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

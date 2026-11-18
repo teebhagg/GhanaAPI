@@ -143,10 +143,10 @@ Every error has the same three fields:
 ```
 
 - `statusCode` matches the HTTP status.
-- `error` is the HTTP status text.
+- `error` is the HTTP status text (for example `Bad Request`). A few errors use their own name instead, such as `AppException` when a data provider fails.
 - `message` says what went wrong. For request validation it is a list with one entry per problem.
 
-Some errors add fields, for example `code` and `details` when a data provider fails, or `success: false` on the transport endpoints. A 500 never includes internal details: the cause is logged on the server and the response says `Internal server error`.
+Some errors add fields, for example `code` and `details` when a data provider fails, or `success: false` on the transport endpoints. An unexpected error (one the API did not anticipate) returns a generic 500 that says `Internal server error`: the cause is logged on the server and never sent to the client. Errors the API raises on purpose keep their own message.
 
 ## 📋 Common HTTP Status Codes
 

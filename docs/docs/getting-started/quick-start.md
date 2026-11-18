@@ -152,7 +152,7 @@ All API endpoints return consistent error responses:
 }
 ```
 
-`statusCode` is the HTTP status, `error` is its text, and `message` says what went wrong (a list for request validation). See [Error Responses](../api/overview#error-responses) for details.
+`statusCode` is the HTTP status, `error` is its text (a few errors use their own name), and `message` says what went wrong (a list for request validation). See [Error Responses](../api/overview#error-responses) for details.
 
 ## Next Steps
 

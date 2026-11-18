@@ -146,18 +146,13 @@ All API endpoints return consistent error responses:
 
 ```json
 {
-  "error": {
-    "code": "INVALID_ADDRESS",
-    "message": "The provided digital address code is invalid",
-    "details": {
-      "providedCode": "INVALID-123",
-      "expectedFormat": "XX-XXX-XXXX"
-    }
-  },
-  "timestamp": "2025-01-15T10:30:00Z",
-  "requestId": "req_abc123def456"
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Unsupported city. Allowed values: accra, kumasi, tamale, takoradi"
 }
 ```
+
+`statusCode` is the HTTP status, `error` is its text (a few errors use their own name), and `message` says what went wrong (a list for request validation). See [Error Responses](../api/overview#error-responses) for details.
 
 ## Next Steps
 

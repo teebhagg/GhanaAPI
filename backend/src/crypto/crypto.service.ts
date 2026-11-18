@@ -95,31 +95,33 @@ export class CryptoService {
     }
 
     // Convert USD prices to GHS. A failed conversion is an error, not an estimate.
+    // The rate is fetched once for an amount of 1, so the conversion cache key
+    // is the same for every request instead of one entry per price.
+    const priced = ids.filter((id) => coinGeckoData[id]?.usd);
     const results = {};
-    for (const id of ids) {
-      if (coinGeckoData[id] && coinGeckoData[id].usd) {
-        const usdPrice = coinGeckoData[id].usd;
-
-        let ghsPrice: number;
-        try {
-          const conversion = await this.exchangeRatesService.convertCurrency({
-            from: 'USD',
-            to: 'GHS',
-            amount: usdPrice
-          });
-          ghsPrice = conversion.result;
-        } catch (error) {
-          this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
-          this.lastUpstreamFailed = true;
-          throw new ServiceUnavailableException(
-            'Crypto GHS conversion is temporarily unavailable',
-          );
+    if (priced.length) {
+      let usdToGhs: number;
+      try {
+        const conversion = await this.exchangeRatesService.convertCurrency({
+          from: 'USD',
+          to: 'GHS',
+          amount: 1,
+        });
+        usdToGhs = conversion.rate;
+        if (!Number.isFinite(usdToGhs)) {
+          throw new Error('Conversion returned no usable rate');
         }
+      } catch (error) {
+        this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
+        this.lastUpstreamFailed = true;
+        throw new ServiceUnavailableException(
+          'Crypto GHS conversion is temporarily unavailable',
+        );
+      }
 
-        results[id] = {
-          usd: usdPrice,
-          ghs: ghsPrice,
-        };
+      for (const id of priced) {
+        const usdPrice = coinGeckoData[id].usd;
+        results[id] = { usd: usdPrice, ghs: usdPrice * usdToGhs };
       }
     }
 

@@ -14,6 +14,12 @@ export interface LastGoodCacheOptions {
   maxStaleMs: number;
   /** After a failed refresh, do not contact upstream again for this long */
   backoffMs: number;
+  /**
+   * Backoff after a failed refresh when there is no data at all. Callers get
+   * a 503 meanwhile, so this can be much shorter than backoffMs. Defaults to
+   * backoffMs.
+   */
+  noDataBackoffMs?: number;
 }
 
 export interface CacheResult<T> {
@@ -188,7 +194,12 @@ export class LastGoodCache<T> {
           this.logger.error(
             `${key}: refresh failed: ${(error as Error).message}`,
           );
-          entry.failedUntil = Date.now() + this.options.backoffMs;
+          const hadData = entry.data !== null;
+          const backoff =
+            !hadData && this.options.noDataBackoffMs !== undefined
+              ? this.options.noDataBackoffMs
+              : this.options.backoffMs;
+          entry.failedUntil = Date.now() + backoff;
           entry.lastRefreshFailed = true;
           throw error;
         },

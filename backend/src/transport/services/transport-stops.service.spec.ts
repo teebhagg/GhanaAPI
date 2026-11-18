@@ -244,4 +244,46 @@ describe('TransportStopsService', () => {
       expect(service.getHealth().status).toBe('degraded');
     });
   });
+
+  describe('warm-up and retry', () => {
+    const overpassStops = {
+      elements: [
+        {
+          type: 'node',
+          id: 1,
+          lat: 5.6,
+          lon: -0.18,
+          tags: { highway: 'bus_stop', name: 'A' },
+        },
+      ],
+    };
+
+    it('refreshes every allowed city once, one after another', async () => {
+      mockedQuery.mockResolvedValue(overpassStops as any);
+
+      await service.refreshAllCities();
+
+      expect(mockedQuery).toHaveBeenCalledTimes(4);
+    });
+
+    it('retries a city after a failed first fetch within a minute', async () => {
+      mockedQuery
+        .mockRejectedValueOnce(new Error('502 at capacity'))
+        .mockResolvedValue(overpassStops as any);
+
+      await expect(service.getTransportStops('accra')).rejects.toMatchObject({
+        status: 503,
+      });
+
+      now += 30 * 1000;
+      await expect(service.getTransportStops('accra')).rejects.toMatchObject({
+        status: 503,
+      });
+      expect(mockedQuery).toHaveBeenCalledTimes(1);
+
+      now += 31 * 1000;
+      await expect(service.getTransportStops('accra')).resolves.toHaveLength(1);
+      expect(mockedQuery).toHaveBeenCalledTimes(2);
+    });
+  });
 });

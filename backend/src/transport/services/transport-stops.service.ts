@@ -5,8 +5,10 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { ServiceHealth } from '../../common/health/service-health';
@@ -36,23 +38,45 @@ export interface TransportStop {
 }
 
 @Injectable()
-export class TransportStopsService {
+export class TransportStopsService implements OnModuleInit {
   private readonly logger = new Logger(TransportStopsService.name);
   private readonly transportApis = ['overpass', 'gtfs'];
 
   // Stops change rarely. Fresh for a day; if the upstream fails, the last good
-  // list is served for up to a week. Failures are not retried for 10 minutes.
+  // list is served for up to a week. Failures are not retried for 10 minutes,
+  // but a city with no list at all retries after 1 minute: a single slow
+  // Overpass response must not leave users with a 503 for 10 minutes.
   private readonly stopsCache = new LastGoodCache<TransportStop[]>({
     label: 'Transport stops',
     freshMs: 24 * 60 * 60 * 1000,
     maxStaleMs: 7 * 24 * 60 * 60 * 1000,
     backoffMs: 10 * 60 * 1000,
+    noDataBackoffMs: 60 * 1000,
   });
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Warm every city in the background at startup. The cache is in memory, so
+   * a restart starts empty; this runs without blocking the app from starting.
+   */
+  onModuleInit(): void {
+    // Tests and CI must not send live Overpass queries when the app boots.
+    if (process.env.NODE_ENV === 'test') return;
+    void this.refreshAllCities();
+  }
+
+  /** Daily refresh at 04:00 so most requests are served from memory. */
+  @Cron('0 0 4 * * *')
+  async refreshAllCities(): Promise<void> {
+    // One city at a time: each cold query is heavy, and Overpass is shared.
+    for (const city of ALLOWED_CITIES) {
+      await this.stopsCache.refresh(city, () => this.fetchStops(city));
+    }
+  }
 
   /** For the /status endpoint. Never contacts Overpass. */
   getHealth(): ServiceHealth {

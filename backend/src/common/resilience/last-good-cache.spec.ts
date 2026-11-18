@@ -219,4 +219,54 @@ describe('LastGoodCache', () => {
       expect(cache.health().status).toBe('unhealthy');
     });
   });
+
+  describe('noDataBackoffMs', () => {
+    it('retries a city with no data after the short backoff, not backoffMs', async () => {
+      const shortCache = new LastGoodCache<string[]>({
+        label: 'Test data',
+        freshMs: 5 * 60 * 1000,
+        maxStaleMs: 24 * HOUR,
+        backoffMs: 10 * 60 * 1000,
+        noDataBackoffMs: 60 * 1000,
+      });
+      const fetcher = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('overpass busy'))
+        .mockResolvedValueOnce(['a']);
+
+      await expect(shortCache.get('k', fetcher)).rejects.toThrow();
+      now += 59 * 1000;
+      await expect(shortCache.get('k', fetcher)).rejects.toThrow();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+
+      now += 2 * 1000;
+      await expect(shortCache.get('k', fetcher)).resolves.toMatchObject({
+        data: ['a'],
+      });
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the full backoff when the city already has data', async () => {
+      const shortCache = new LastGoodCache<string[]>({
+        label: 'Test data',
+        freshMs: 5 * 60 * 1000,
+        maxStaleMs: 24 * HOUR,
+        backoffMs: 10 * 60 * 1000,
+        noDataBackoffMs: 60 * 1000,
+      });
+      const fetcher = jest
+        .fn()
+        .mockResolvedValueOnce(['a'])
+        .mockRejectedValueOnce(new Error('overpass busy'));
+
+      await shortCache.get('k', fetcher);
+      now += 6 * 60 * 1000; // stale, so a refresh starts and fails
+      await shortCache.get('k', fetcher);
+      await new Promise((r) => setImmediate(r));
+
+      now += 2 * 60 * 1000; // past noDataBackoffMs, still inside backoffMs
+      await shortCache.get('k', fetcher);
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+  });
 });

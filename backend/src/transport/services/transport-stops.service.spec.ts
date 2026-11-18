@@ -206,6 +206,46 @@ describe('TransportStopsService', () => {
       ).resolves.toHaveLength(3);
     });
 
+    it("keeps only the requested city's stops from a country-wide feed", async () => {
+      gtfsGet.mockReturnValue(
+        of({
+          data:
+            GTFS_HEADER +
+            '1,,Circle,,5.6,-0.18\n' + // Accra
+            '2,,Kejetia,,6.69,-1.62\n', // Kumasi
+        }),
+      );
+
+      const stops = await gtfsService.getTransportStops('kumasi');
+
+      expect(stops.map((stop) => stop.id)).toEqual(['2']);
+    });
+
+    it('does not serve Accra stops for Kumasi when the feed has only Accra', async () => {
+      gtfsGet.mockReturnValue(
+        of({ data: GTFS_HEADER + '1,,Circle,,5.6,-0.18\n' }),
+      );
+
+      await expect(
+        gtfsService.getTransportStops('kumasi'),
+      ).rejects.toMatchObject({ status: 503 });
+    });
+
+    it('keeps the last good Kumasi list when the feed only has Accra stops', async () => {
+      mockedQuery.mockResolvedValueOnce(ELEMENTS);
+      const first = await gtfsService.getTransportStops('kumasi');
+
+      now += 25 * 60 * 60 * 1000; // stale: the next request refreshes
+      mockedQuery.mockRejectedValue(new Error('overpass down'));
+      gtfsGet.mockReturnValue(
+        of({ data: GTFS_HEADER + '1,,Circle,,5.6,-0.18\n' }),
+      );
+
+      expect(await gtfsService.getTransportStops('kumasi')).toBe(first);
+      await new Promise((r) => setImmediate(r)); // let the refresh settle
+      expect(await gtfsService.getTransportStops('kumasi')).toBe(first);
+    });
+
     it('keeps the last good stops when a refresh only gets an empty feed', async () => {
       mockedQuery.mockResolvedValueOnce(ELEMENTS);
       const first = await gtfsService.getTransportStops('accra');
@@ -242,6 +282,123 @@ describe('TransportStopsService', () => {
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(service.getHealth().status).toBe('degraded');
+    });
+  });
+
+  describe('warm-up and retry', () => {
+    const overpassStops = {
+      elements: [
+        {
+          type: 'node',
+          id: 1,
+          lat: 5.6,
+          lon: -0.18,
+          tags: { highway: 'bus_stop', name: 'A' },
+        },
+      ],
+    };
+
+    it('refreshes every allowed city once, one after another', async () => {
+      mockedQuery.mockResolvedValue(overpassStops as any);
+      let release!: (value: any) => void;
+      mockedQuery.mockImplementationOnce(
+        () => new Promise((resolve) => (release = resolve)),
+      );
+
+      const sweep = service.refreshAllCities();
+      await new Promise((r) => setImmediate(r));
+      // The first city is still pending, so no second query may have started.
+      expect(mockedQuery).toHaveBeenCalledTimes(1);
+
+      release(overpassStops);
+      await sweep;
+
+      expect(mockedQuery).toHaveBeenCalledTimes(4);
+      const boxes = [
+        '5.4000,-0.4000,5.8000,0.2000', // accra
+        '6.6000,-1.8000,6.8000,-1.4000', // kumasi
+        '9.2000,-1.2000,9.6000,-0.8000', // tamale
+        '4.8000,-2.0000,5.0000,-1.6000', // takoradi
+      ];
+      boxes.forEach((box, i) =>
+        expect(mockedQuery.mock.calls[i][0]).toContain(box),
+      );
+    });
+
+    it('startup and the daily run share one sweep instead of overlapping', async () => {
+      mockedQuery.mockResolvedValue(overpassStops as any);
+
+      const first = service.refreshAllCities();
+      const second = service.refreshAllCities();
+
+      expect(second).toBe(first);
+      await first;
+      expect(mockedQuery).toHaveBeenCalledTimes(4);
+
+      // Once the sweep has settled, a later run starts a fresh one.
+      now += 25 * 60 * 60 * 1000;
+      await service.refreshAllCities();
+      expect(mockedQuery).toHaveBeenCalledTimes(8);
+    });
+
+    it('the daily cron does nothing under NODE_ENV=test', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'test';
+      try {
+        await service.scheduledRefresh();
+        expect(mockedQuery).not.toHaveBeenCalled();
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
+
+    it('retries a city after a failed first fetch within a minute', async () => {
+      mockedQuery
+        .mockRejectedValueOnce(new Error('502 at capacity'))
+        .mockResolvedValue(overpassStops as any);
+
+      await expect(service.getTransportStops('accra')).rejects.toMatchObject({
+        status: 503,
+      });
+
+      now += 30 * 1000;
+      await expect(service.getTransportStops('accra')).rejects.toMatchObject({
+        status: 503,
+      });
+      expect(mockedQuery).toHaveBeenCalledTimes(1);
+
+      now += 31 * 1000;
+      await expect(service.getTransportStops('accra')).resolves.toHaveLength(1);
+      expect(mockedQuery).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('startup warm-up', () => {
+    const originalEnv = process.env.NODE_ENV;
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('does not warm the cache under NODE_ENV=test', () => {
+      process.env.NODE_ENV = 'test';
+      const refresh = jest
+        .spyOn(service, 'refreshAllCities')
+        .mockResolvedValue(undefined);
+
+      service.onModuleInit();
+
+      expect(refresh).not.toHaveBeenCalled();
+    });
+
+    it('warms every city in the background outside tests', () => {
+      process.env.NODE_ENV = 'production';
+      const refresh = jest
+        .spyOn(service, 'refreshAllCities')
+        .mockResolvedValue(undefined);
+
+      service.onModuleInit();
+
+      expect(refresh).toHaveBeenCalledTimes(1);
     });
   });
 });

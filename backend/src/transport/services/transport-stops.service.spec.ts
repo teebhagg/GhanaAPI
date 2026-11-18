@@ -286,4 +286,33 @@ describe('TransportStopsService', () => {
       expect(mockedQuery).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('startup warm-up', () => {
+    const originalEnv = process.env.NODE_ENV;
+    afterEach(() => {
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('does not warm the cache under NODE_ENV=test', () => {
+      process.env.NODE_ENV = 'test';
+      const refresh = jest
+        .spyOn(service, 'refreshAllCities')
+        .mockResolvedValue(undefined);
+
+      service.onModuleInit();
+
+      expect(refresh).not.toHaveBeenCalled();
+    });
+
+    it('warms every city in the background outside tests', () => {
+      process.env.NODE_ENV = 'production';
+      const refresh = jest
+        .spyOn(service, 'refreshAllCities')
+        .mockResolvedValue(undefined);
+
+      service.onModuleInit();
+
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+  });
 });

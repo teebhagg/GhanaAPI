@@ -56,6 +56,7 @@ describe('BankOfGhanaProvider', () => {
     const rows = new Map([
       ['USD', { buy: 11.7, sell: 11.76 }],
       ['EUR', { buy: 12.9, sell: 12.94 }],
+      ['GBP', { buy: 15.5, sell: 15.6 }],
       ['NGN', { buy: 0.0075, sell: 0.0086 }],
     ]);
     const convert = (from: string, to: string, amount = 100) =>
@@ -65,40 +66,55 @@ describe('BankOfGhanaProvider', () => {
       jest.spyOn(provider as any, 'loadRates').mockResolvedValue(rows as any);
     });
 
-    it('converts GHS into a foreign currency by dividing by the sell rate', async () => {
-      const r = await convert('GHS', 'USD');
+    it('should convert GHS into a foreign currency by dividing by the sell rate', async () => {
+      const result = await convert('GHS', 'USD');
 
-      expect(r.rate).toBeCloseTo(1 / 11.76, 8);
-      expect(r.result).toBeCloseTo(100 / 11.76, 6); // about 8.50, not 1176
+      expect(result.rate).toBeCloseTo(1 / 11.76, 8);
+      expect(result.result).toBeCloseTo(100 / 11.76, 6); // about 8.50, not 1176
     });
 
-    it('100 GHS is worth less than 100 of a stronger currency', async () => {
-      for (const to of ['USD', 'EUR']) {
+    it('should convert GHS into GBP by dividing by the sell rate', async () => {
+      const result = await convert('GHS', 'GBP');
+
+      expect(result.rate).toBeCloseTo(1 / 15.6, 8);
+      expect(result.result).toBeCloseTo(100 / 15.6, 6);
+    });
+
+    it('should give less than 100 of a stronger currency for 100 GHS', async () => {
+      for (const to of ['USD', 'EUR', 'GBP']) {
         expect((await convert('GHS', to)).result).toBeLessThan(100);
       }
     });
 
-    it('converts a weaker currency into GHS and back to a larger number', async () => {
-      const ngn = await convert('GHS', 'NGN');
-      expect(ngn.result).toBeCloseTo(100 / 0.0086, 2);
-      expect(ngn.result).toBeGreaterThan(100);
+    it('should give more than 100 NGN for 100 GHS', async () => {
+      const result = await convert('GHS', 'NGN');
+
+      expect(result.result).toBeCloseTo(100 / 0.0086, 2);
+      expect(result.result).toBeGreaterThan(100);
     });
 
-    it('converts foreign currency into GHS by multiplying by the buy rate', async () => {
-      const r = await convert('USD', 'GHS');
+    it('should convert foreign currency into GHS by multiplying by the buy rate', async () => {
+      const result = await convert('USD', 'GHS');
 
-      expect(r.rate).toBeCloseTo(11.7, 8);
-      expect(r.result).toBeCloseTo(1170, 6);
+      expect(result.rate).toBeCloseTo(11.7, 8);
+      expect(result.result).toBeCloseTo(1170, 6);
     });
 
-    it('converts between two foreign currencies through buy and sell', async () => {
-      const r = await convert('USD', 'EUR');
+    it('should convert a weaker currency into GHS', async () => {
+      const result = await convert('NGN', 'GHS');
 
-      expect(r.rate).toBeCloseTo(11.7 / 12.94, 8);
+      expect(result.rate).toBeCloseTo(0.0075, 8);
+      expect(result.result).toBeLessThan(100);
     });
 
-    it('a round trip through GHS only loses the bank spread', async () => {
-      for (const code of ['USD', 'EUR', 'NGN']) {
+    it('should convert between two foreign currencies through buy and sell', async () => {
+      const result = await convert('USD', 'EUR');
+
+      expect(result.rate).toBeCloseTo(11.7 / 12.94, 8);
+    });
+
+    it('should lose only the bank spread on a round trip through GHS', async () => {
+      for (const code of ['USD', 'EUR', 'GBP', 'NGN']) {
         const out = await convert('GHS', code, 1000);
         const back = await convert(code, 'GHS', out.result);
 
@@ -107,25 +123,40 @@ describe('BankOfGhanaProvider', () => {
       }
     });
 
-    it('returns the amount unchanged for the same currency', async () => {
+    it('should return the amount unchanged for the same currency', async () => {
       expect(await convert('GHS', 'GHS', 10)).toMatchObject({
         rate: 1,
         result: 10,
       });
     });
 
-    it('rejects a currency it has no rate for, in either direction', async () => {
+    it('should reject a currency it has no rate for, in either direction', async () => {
       await expect(convert('GHS', 'XXX')).rejects.toThrow(/Unsupported/);
       await expect(convert('XXX', 'GHS')).rejects.toThrow(/Unsupported/);
     });
 
-    it('rejects a zero sell rate instead of returning Infinity', async () => {
-      jest
-        .spyOn(provider as any, 'loadRates')
-        .mockResolvedValue(new Map([['USD', { buy: 11.7, sell: 0 }]]) as any);
+    it('should reject a zero rate instead of returning Infinity or NaN', async () => {
+      jest.spyOn(provider as any, 'loadRates').mockResolvedValue(
+        new Map([
+          ['USD', { buy: 11.7, sell: 0 }], // zero sell
+          ['EUR', { buy: 12.9, sell: 12.94 }],
+          ['GBP', { buy: 0, sell: 15.6 }], // zero buy
+        ]) as any,
+      );
 
+      // GHS -> foreign divides by sell
       await expect(convert('GHS', 'USD')).rejects.toThrow(/No usable rate/);
-      await expect(convert('EUR', 'USD')).rejects.toThrow();
+      // foreign -> foreign divides by the target's sell
+      await expect(convert('EUR', 'USD')).rejects.toThrow(/No usable rate/);
+      // foreign -> GHS multiplies by buy
+      await expect(convert('GBP', 'GHS')).rejects.toThrow(/No usable rate/);
+    });
+
+    it('should use the same GHS to foreign rate in fetchRates and convertCurrency', async () => {
+      const [fetched] = await provider.fetchRates('GHS', ['USD']);
+      const converted = await convert('GHS', 'USD', 1);
+
+      expect(converted.rate).toBe(fetched.rate);
     });
   });
 });

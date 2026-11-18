@@ -121,6 +121,15 @@ export class BankOfGhanaProvider implements RateProvider {
     return rates;
   }
 
+  /**
+   * Foreign units that 1 GHS buys. The bank sells foreign currency at SELL,
+   * which is GHS per 1 unit, so the rate is 1 / SELL. fetchRates and
+   * convertCurrency both use this, so they cannot disagree.
+   */
+  private foreignPerGhs(row: { sell: number }): number {
+    return 1 / row.sell;
+  }
+
   async fetchRates(
     base: string,
     targets: string[],
@@ -136,12 +145,10 @@ export class BankOfGhanaProvider implements RateProvider {
       const code = t.toUpperCase();
       const row = rates.get(code);
       if (!row) continue;
-      // GHS -> target uses SELL (GHS per 1 unit target)
-      const ghsToTarget = 1 / row.sell;
       out.push({
         baseCurrency: base,
         targetCurrency: code,
-        rate: ghsToTarget,
+        rate: this.foreignPerGhs(row),
         provider: this.name,
         timestamp: now,
       });
@@ -177,10 +184,8 @@ export class BankOfGhanaProvider implements RateProvider {
     if (from === 'GHS') {
       const toRow = getRow(to);
       if (!toRow) throw new Error(`Unsupported currency: ${to}`);
-      // GHS -> foreign: the bank sells foreign currency at SELL, which is GHS
-      // per 1 unit of it, so 1 GHS buys 1 / SELL units. fetchRates does the
-      // same. Using SELL as is would multiply instead of divide.
-      rate = 1 / toRow.sell; // to per 1 GHS
+      // GHS -> foreign: the bank sells at SELL, see foreignPerGhs
+      rate = this.foreignPerGhs(toRow); // to per 1 GHS
     } else if (to === 'GHS') {
       const fromRow = getRow(from);
       if (!fromRow) throw new Error(`Unsupported currency: ${from}`);

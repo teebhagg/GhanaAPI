@@ -5,6 +5,12 @@ All notable changes to the Ghana API documentation and implementation will be do
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Currency conversion from GHS**: converting from GHS to another currency (for example GHS to USD, EUR, GBP or NGN) returned a result that was far too large, because the Bank of Ghana sell rate was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5. The `rate` field in the response changes by the same factor for every GHS to foreign conversion, so any client that worked around the old values must remove that workaround. Conversions from a foreign currency to GHS, and between two foreign currencies, were already correct.
+
 <details>
 <summary><strong>🗺️ [0.5.5] - 2026-01-XX</strong> - Enhanced Address Service with OpenRouteService Integration</summary>
 

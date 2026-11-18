@@ -2,7 +2,17 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { queryOverpass } from '../../common/overpass/overpass-client';
 import { GeocodingResult } from '../dto/route-directions.dto';
+
+/**
+ * The name is placed inside a quoted Overpass regex. Escape the regex
+ * metacharacters and the quote so the text cannot end the string or change
+ * the query.
+ */
+export function escapeOverpassRegex(value: string): string {
+  return value.replace(/[\\^$.|?*+()[\]{}"]/g, (ch) => `\\${ch}`);
+}
 
 @Injectable()
 export class GeocodingService {
@@ -79,29 +89,24 @@ export class GeocodingService {
     locationName: string,
   ): Promise<GeocodingResult> {
     // Use Overpass API to search for named places in Ghana
+    const name = escapeOverpassRegex(locationName);
     const query = `
       [out:json][timeout:15];
       (
-        node["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
-        way["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
-        relation["name"~"${locationName}",i]["place"~"city|town|village"](country:GH);
+        node["name"~"${name}",i]["place"~"city|town|village"](country:GH);
+        way["name"~"${name}",i]["place"~"city|town|village"](country:GH);
+        relation["name"~"${name}",i]["place"~"city|town|village"](country:GH);
       );
       out center;
     `;
 
-    const url = 'https://overpass-api.de/api/interpreter';
-    const response = await firstValueFrom(
-      this.httpService.post(url, query, {
-        headers: { 'Content-Type': 'text/plain' },
-        timeout: 20000,
-      }),
-    );
+    const data = await queryOverpass(query, 20_000);
 
-    if (!response.data.elements || response.data.elements.length === 0) {
+    if (!data.elements || data.elements.length === 0) {
       throw new Error(`No results found for: ${locationName}`);
     }
 
-    const element = response.data.elements[0];
+    const element = data.elements[0];
     const lat = element.lat || element.center?.lat;
     const lon = element.lon || element.center?.lon;
 

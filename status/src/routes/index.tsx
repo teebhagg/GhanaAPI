@@ -1,47 +1,24 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
-import { StatusCard } from '../components/StatusCard'
-import { StatusHeader } from '../components/StatusHeader'
-import { StatusStats } from '../components/StatusStats'
+import { createFileRoute } from '@tanstack/react-router'
+import { ServiceRow } from '../components/ServiceRow'
+import { StatusStrip } from '../components/StatusStrip'
+import { Summary } from '../components/Summary'
 import { getCategoryFromEndpointName } from '../lib/categories'
 import { GHANA_API_ENDPOINTS } from '../lib/endpoints'
-import { checkService } from '../lib/fetchStatus'
+import { useStatuses } from '../lib/useStatuses'
 
 export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
       { title: 'GhanaAPI Status' },
-      { name: 'description', content: 'GhanaAPI Status' },
       {
-        name: 'keywords',
-        content:
-          'GhanaAPI Status, GhanaAPI, GhanaAPI Status, GhanaAPI Status Page, GhanaAPI Status Check, GhanaAPI Status Page, GhanaAPI Status Check',
+        name: 'description',
+        content: 'Live status of every GhanaAPI endpoint.',
       },
-      { name: 'author', content: 'Joshua Ansah' },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    _refresh: (search._refresh as number) || undefined,
-  }),
-  loader: async () => {
-    const results = await Promise.all(
-      GHANA_API_ENDPOINTS.map(async (ep) => ({
-        name: ep.name,
-        description: ep.description,
-        url: ep.endpoint,
-        ...(await checkService(ep.endpoint, ep.method, ep.body)),
-      })),
-    )
-
-    return {
-      checkedAt: new Date().toISOString(),
-      services: results,
-    }
-  },
   component: StatusPage,
 })
 
-// Category order for consistent display
 const CATEGORY_ORDER = [
   'Address Services',
   'Banking & ATM Locator',
@@ -53,143 +30,73 @@ const CATEGORY_ORDER = [
   'Other',
 ]
 
-const REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes in milliseconds
+// Static: derived from the endpoint list, so it renders instantly (and on the server).
+const GROUPS = (() => {
+  const map = new Map<string, typeof GHANA_API_ENDPOINTS>()
+  for (const ep of GHANA_API_ENDPOINTS) {
+    const c = getCategoryFromEndpointName(ep.name)
+    map.set(c, [...(map.get(c) ?? []), ep])
+  }
+  return [...map.entries()].sort(
+    ([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b),
+  )
+})()
 
 function StatusPage() {
-  const { checkedAt, services } = Route.useLoaderData()
-  const navigate = useNavigate()
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [lastCheckedAt, setLastCheckedAt] = useState(checkedAt)
-  const [countdown, setCountdown] = useState(REFRESH_INTERVAL / 1000) // Convert to seconds
-
-  // Track when new data arrives to stop loading state
-  useEffect(() => {
-    if (checkedAt !== lastCheckedAt) {
-      setIsRefreshing(false)
-      setLastCheckedAt(checkedAt)
-      setCountdown(REFRESH_INTERVAL / 1000) // Reset countdown after refresh
-    }
-  }, [checkedAt, lastCheckedAt])
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
-    try {
-      // Navigate with a timestamp query param to force reload
-      await navigate({
-        to: '/',
-        search: { _refresh: Date.now() },
-        replace: true,
-      })
-    } catch (error) {
-      console.error('Error refreshing:', error)
-      setIsRefreshing(false)
-    }
-  }, [navigate])
-
-  // Auto-refresh every 10 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleRefresh()
-    }, REFRESH_INTERVAL)
-
-    return () => clearInterval(interval)
-  }, [handleRefresh])
-
-  // Countdown timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          return REFRESH_INTERVAL / 1000 // Reset to 10 minutes
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  const operationalCount = services.filter(
-    (s: any) => s.status === 'operational',
-  ).length
-  const downCount = services.filter((s: any) => s.status === 'down').length
-  const totalCount = services.length
-
-  // Group services by major category
-  const groupedServices = services.reduce((acc: any, service: any) => {
-    const category = getCategoryFromEndpointName(service.name)
-    if (!acc[category]) {
-      acc[category] = []
-    }
-    acc[category].push(service)
-    return acc
-  }, {})
-
-  // Sort categories by predefined order
-  const sortedCategories = Object.keys(groupedServices).sort((a, b) => {
-    const indexA = CATEGORY_ORDER.indexOf(a)
-    const indexB = CATEGORY_ORDER.indexOf(b)
-    if (indexA === -1 && indexB === -1) return a.localeCompare(b)
-    if (indexA === -1) return 1
-    if (indexB === -1) return -1
-    return indexA - indexB
-  })
+  const { entries, run, checking, checkedAt, refresh } = useStatuses()
+  const total = GHANA_API_ENDPOINTS.length
+  const values = Object.values(entries)
+  const down = values.filter((e) => e.status === 'down').length
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <div className="flex-1">
-        <div className="container mx-auto px-6 py-12">
-          <StatusHeader
-            onRefresh={handleRefresh}
-            isRefreshing={isRefreshing}
-            countdown={countdown}
-          />
+    <div className="mx-auto max-w-3xl px-5 pt-12 pb-20">
+      <Summary
+        total={total}
+        done={values.length}
+        down={down}
+        checking={checking}
+        checkedAt={checkedAt}
+        onRefresh={refresh}
+      />
+      <StatusStrip entries={entries} run={run} />
 
-          <StatusStats
-            total={totalCount}
-            operational={operationalCount}
-            down={downCount}
-            lastChecked={checkedAt}
-          />
-
-          {/* Services Grid */}
-          <div className="mt-12 space-y-12">
-            {sortedCategories.map((category) => {
-              const categoryServices = groupedServices[category]
-              const categoryOperational = categoryServices.filter(
-                (s: any) => s.status === 'operational',
-              ).length
-              const categoryTotal = categoryServices.length
-
-              return (
-                <div key={category} className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      {category}
-                    </h2>
-                    <div className="text-sm text-muted-foreground">
-                      {categoryOperational}/{categoryTotal} operational
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {categoryServices.map((service: any) => (
-                      <StatusCard
-                        key={service.name}
-                        name={service.name}
-                        description={service.description}
-                        url={service.url}
-                        status={service.status}
-                        responseTime={service.responseTime}
-                        httpStatus={service.httpStatus}
-                        isLoading={isRefreshing}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+      <div className="mt-12 space-y-10">
+        {GROUPS.map(([category, eps]) => {
+          const up = eps.filter(
+            (e) => entries[e.name]?.status === 'operational',
+          ).length
+          const settled = eps.filter((e) => entries[e.name]).length
+          return (
+            <section key={category} aria-labelledby={`c-${category}`}>
+              <div className="flex items-baseline justify-between border-b border-foreground pb-2">
+                <h2 id={`c-${category}`} className="text-sm font-semibold">
+                  {category}
+                </h2>
+                <span className="tabular text-sm text-muted-foreground">
+                  {settled === 0
+                    ? `${eps.length} endpoints`
+                    : `${up}/${eps.length} up`}
+                </span>
+              </div>
+              <ul>
+                {eps.map((ep) => (
+                  <ServiceRow
+                    key={ep.name}
+                    name={ep.name}
+                    description={ep.description}
+                    url={ep.endpoint}
+                    entry={entries[ep.name]}
+                    stale={
+                      checking &&
+                      !!entries[ep.name] &&
+                      entries[ep.name].run !== run
+                    }
+                  />
+                ))}
+              </ul>
+            </section>
+          )
+        })}
       </div>
     </div>
   )

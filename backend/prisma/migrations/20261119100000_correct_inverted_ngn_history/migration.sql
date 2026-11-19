@@ -7,7 +7,8 @@
 --
 -- A real GHS -> NGN rate is far above 1, so any such row below 1 is inverted.
 -- On the live data no row falls between 0.05 and 20, so the rule is
--- unambiguous. Rows from other providers, other currencies and the reverse
+-- unambiguous. Only rows from the bank-of-ghana provider are changed, since
+-- that is where the bug was. Other providers, other currencies and the reverse
 -- pair (NGN -> GHS) are not touched.
 --
 -- The rate column holds 8 decimals, and inverting twice at that precision
@@ -23,6 +24,7 @@ BEGIN
   SET "rate" = ROUND(1 / "rate", 8)
   WHERE "baseCurrency" = 'GHS'
     AND "targetCurrency" = 'NGN'
+    AND "provider" = 'bank-of-ghana'
     AND "rate" > 0
     AND "rate" < 1;
 

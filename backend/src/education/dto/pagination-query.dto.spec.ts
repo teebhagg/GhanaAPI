@@ -37,6 +37,13 @@ describe('PaginationQueryDto', () => {
     });
   });
 
+  it('accepts an explicit offset of 0 and a large ordinary offset', async () => {
+    await expect(run({ offset: '0' })).resolves.toMatchObject({ offset: 0 });
+    await expect(run({ offset: '1000000' })).resolves.toMatchObject({
+      offset: 1000000,
+    });
+  });
+
   it('accepts the largest page and an offset of zero', async () => {
     await expect(run({ limit: '100', offset: '0' })).resolves.toMatchObject({
       limit: 100,
@@ -51,7 +58,10 @@ describe('PaginationQueryDto', () => {
     },
   );
 
-  it.each(['-3', '1.5', 'abc'])('rejects offset=%p', async (offset) => {
-    await expect(rejected({ offset })).resolves.toMatch(/offset/);
-  });
+  it.each(['-3', '1.5', 'abc', '', ' ', '%20', '100000000000000000000'])(
+    'rejects offset=%p',
+    async (offset) => {
+      await expect(rejected({ offset })).resolves.toMatch(/offset/);
+    },
+  );
 });

@@ -4,6 +4,7 @@ import { FeaturePage } from "@/components/feature-page";
 export function BankingPage() {
   return (
     <FeaturePage
+      endpoint="/banking"
       title="Bank & ATM Locator"
       description="Locate branches and ATMs nationwide with filters for institutions, services, and operational details."
     >

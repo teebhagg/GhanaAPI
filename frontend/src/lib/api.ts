@@ -242,7 +242,7 @@ export type SchoolStatistics = {
   timestamp: string;
 };
 
-const API_BASE =
+export const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
   "http://localhost:3000/api/v1";
 

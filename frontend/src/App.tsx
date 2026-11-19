@@ -7,8 +7,8 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { AppDockLayout } from "@/components/app-dock-layout";
 import { RouteSEO } from "@/components/route-seo";
+import { AppShell } from "@/components/shell/app-shell";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { AddressesPage } from "@/pages/addresses";
 import { BankingPage } from "@/pages/banking";
@@ -20,8 +20,6 @@ import { StocksPage } from "@/pages/stocks";
 import { TransportPage } from "@/pages/transport";
 
 import "./App.css";
-import { Footer } from "./components/footer";
-import { Navbar } from "./components/navbar";
 
 function RouteScrollReset() {
   const { pathname } = useLocation();
@@ -38,10 +36,9 @@ function App() {
     <Router>
       <RouteScrollReset />
       <RouteSEO />
-      <Navbar />
       <ScrollToTop />
       <Routes>
-        <Route element={<AppDockLayout />}>
+        <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
           <Route path="addresses" element={<AddressesPage />} />
           <Route path="banking" element={<BankingPage />} />
@@ -53,7 +50,6 @@ function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer />
     </Router>
   );
 }

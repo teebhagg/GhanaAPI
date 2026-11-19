@@ -4,6 +4,7 @@ import { FeaturePage } from "@/components/feature-page";
 export function StocksPage() {
   return (
     <FeaturePage
+      endpoint="/stock-market"
       title="Ghana Stock Exchange"
       description="Monitor live prices, volumes, and performance metrics for Ghana Stock Exchange listings and indices."
     >

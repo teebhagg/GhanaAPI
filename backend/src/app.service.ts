@@ -47,6 +47,14 @@ export interface StatusResponse {
 
 const STARTED_AT = new Date();
 
+/**
+ * How long the database statistics are reused. The exchange rate history has
+ * hundreds of thousands of rows, and counting them takes 1 to 3 seconds, so
+ * /status must not do it on every call. The counts only change when a rate
+ * snapshot is saved, so a minute of delay is not noticeable.
+ */
+export const STATISTICS_TTL_MS = 60_000;
+
 /** The version in package.json, which sits in the working directory. */
 function readVersion(): string {
   try {
@@ -76,6 +84,11 @@ export function getBuildInfo(): BuildInfo {
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
+  private readonly statisticsCache = new Map<
+    string,
+    { at: number; value: unknown }
+  >();
+  private readonly statisticsInFlight = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -117,18 +130,22 @@ export class AppService {
       // Education module
       if (health.database === 'healthy') {
         try {
-          const [schoolCount, schoolLastUpdated] = await Promise.all([
-            this.prisma.school.count(),
-            this.prisma.school.findFirst({
-              orderBy: { updatedAt: 'desc' },
-              select: { updatedAt: true },
-            }),
-          ]);
-
-          statistics.education = {
-            totalRecords: schoolCount,
-            lastUpdated: schoolLastUpdated?.updatedAt || null,
-          };
+          statistics.education = await this.cachedStatistics(
+            'education',
+            async () => {
+              const [schoolCount, schoolLastUpdated] = await Promise.all([
+                this.prisma.school.count(),
+                this.prisma.school.findFirst({
+                  orderBy: { updatedAt: 'desc' },
+                  select: { updatedAt: true },
+                }),
+              ]);
+              return {
+                totalRecords: schoolCount,
+                lastUpdated: schoolLastUpdated?.updatedAt || null,
+              };
+            },
+          );
           health.services.education = 'healthy';
         } catch (error) {
           this.logger.warn('Failed to fetch education statistics', error);
@@ -141,35 +158,40 @@ export class AppService {
 
         // Exchange Rates module
         try {
-          const [
-            exchangeRateCount,
-            exchangeRateByProvider,
-            exchangeRateLastUpdated,
-          ] = await Promise.all([
-            this.prisma.exchangeRateHistory.count(),
-            this.prisma.exchangeRateHistory.groupBy({
-              by: ['provider'],
-              _count: true,
-            }),
-            this.prisma.exchangeRateHistory.findFirst({
-              orderBy: { sourceTimestamp: 'desc' },
-              select: { sourceTimestamp: true },
-            }),
-          ]);
+          statistics.exchangeRates = await this.cachedStatistics(
+            'exchangeRates',
+            async () => {
+              const [
+                exchangeRateCount,
+                exchangeRateByProvider,
+                exchangeRateLastUpdated,
+              ] = await Promise.all([
+                this.prisma.exchangeRateHistory.count(),
+                this.prisma.exchangeRateHistory.groupBy({
+                  by: ['provider'],
+                  _count: true,
+                }),
+                this.prisma.exchangeRateHistory.findFirst({
+                  orderBy: { sourceTimestamp: 'desc' },
+                  select: { sourceTimestamp: true },
+                }),
+              ]);
 
-          const byProvider = exchangeRateByProvider.reduce(
-            (acc, item) => {
-              acc[item.provider] = item._count;
-              return acc;
+              const byProvider = exchangeRateByProvider.reduce(
+                (acc, item) => {
+                  acc[item.provider] = item._count;
+                  return acc;
+                },
+                {} as Record<string, number>,
+              );
+
+              return {
+                totalRecords: exchangeRateCount,
+                lastUpdated: exchangeRateLastUpdated?.sourceTimestamp || null,
+                byProvider,
+              };
             },
-            {} as Record<string, number>,
           );
-
-          statistics.exchangeRates = {
-            totalRecords: exchangeRateCount,
-            lastUpdated: exchangeRateLastUpdated?.sourceTimestamp || null,
-            byProvider,
-          };
           health.services.exchangeRates = 'healthy';
         } catch (error) {
           this.logger.warn('Failed to fetch exchange rates statistics', error);
@@ -235,6 +257,32 @@ export class AppService {
       health,
       statistics,
     };
+  }
+
+  /**
+   * Database statistics, reused for STATISTICS_TTL_MS. Calls that arrive while
+   * a query is running share it. A failed query is not stored, so the next
+   * call tries again.
+   */
+  private async cachedStatistics(
+    key: string,
+    load: () => Promise<ModuleStatistics>,
+  ): Promise<ModuleStatistics> {
+    const hit = this.statisticsCache.get(key);
+    if (hit && Date.now() - hit.at < STATISTICS_TTL_MS) {
+      return hit.value as ModuleStatistics;
+    }
+    const running = this.statisticsInFlight.get(key);
+    if (running) return running as Promise<ModuleStatistics>;
+
+    const started = load()
+      .then((value) => {
+        this.statisticsCache.set(key, { at: Date.now(), value });
+        return value;
+      })
+      .finally(() => this.statisticsInFlight.delete(key));
+    this.statisticsInFlight.set(key, started);
+    return started;
   }
 
   private addServiceHealth(

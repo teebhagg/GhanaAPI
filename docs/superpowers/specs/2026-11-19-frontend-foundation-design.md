@@ -1,26 +1,27 @@
 # Frontend foundation and shell redesign
 
 Date: 2026-11-19
-Status: Draft, awaiting user review
-Scope: first of a series. Later PRs port each panel, then the Docusaurus theme.
+Status: Revision 2, awaiting user review
+Supersedes: revision 1 (technical/developer-tool direction, commit 6f4ef1f). The user found it too "techy".
+Scope: first of a series. Later PRs port each panel's internals, then the Docusaurus theme.
 
 ## Problem
 
-The frontend (`frontend/`) uses the stock shadcn violet theme, gradient-text headings, a floating magnifying dock, a hero globe, blurred rounded cards and fade-up animations on every element. It reads as generic and dated.
+The frontend (`frontend/`) uses the stock shadcn violet theme, gradient-text headings, a floating magnifying dock, a hero globe, blurred cards and fade-up animations on everything. It reads as generic and dated.
 
 ## Direction
 
-Technical, developer-tool feel (Stripe/Linear-docs style): dense, restrained, mono accents, one sharp accent color.
+Friendly and premium, with a warm Ghana palette. Rounded elements with smooth curved edges throughout. Components are adapted from 21st.dev (no Magic MCP is connected, so they are browsed and adapted by hand). Not techy: no monospace chrome, no endpoint-first layout.
 
 ## Goals
 
-- Replace the visual foundation (tokens, type, shell) without changing routes or panel behavior.
-- Existing panels adopt the new look through shared tokens, with no rewiring.
-- Remove decorative components and the dependencies only they use.
+- Replace the visual foundation (tokens, type, shell, shared primitives) without changing routes or panel behavior.
+- All six panels inherit the new look through the shared `ui/*` primitives.
+- Add tasteful motion that adds delight without noise.
 
 ## Non-goals
 
-- Panel internals (transport, exchange, stocks, banking, addresses, education).
+- Panel internals beyond inheriting primitives (later PRs).
 - Docusaurus theme (`docs/`).
 - Backend changes.
 - Adding a test runner.
@@ -29,63 +30,64 @@ Technical, developer-tool feel (Stripe/Linear-docs style): dense, restrained, mo
 
 ### Tokens (`src/index.css`)
 
-- Keep the existing shadcn variable names so `components/ui/*` keeps working.
-- Warm-neutral ink scale in OKLCH, light and dark.
-- One accent: deep green (Ghana palette), used only for links, focus rings and active state.
-- Radius 4-6px, 1px hairline borders, no shadows by default, no gradients, no backdrop blur.
-- Dark mode uses `next-themes` (installed but currently unused): add a `ThemeProvider` with the class strategy and a toggle in the top bar.
+- Keep existing shadcn variable names so `components/ui/*` keeps working.
+- Light: cream background, warm charcoal text, white cards.
+- Primary: gold/sunrise. Success/active: flag green. Destructive: flag red. Chart colors drawn from the same family.
+- Dark: warm brown-black surfaces, same accents lightened.
+- Radius base `1rem`; cards `1.5rem`; buttons, tabs, badges, inputs fully pill (`9999px`) or `1rem` for multi-line controls.
+- Soft layered shadows replace hairline borders as the main separation.
 
 ### Type
 
-- Geist Sans (UI) and Geist Mono (endpoints, params, numbers), self-hosted, no Google Fonts round-trip.
-- Left-aligned, tight headings; no centered gradient titles.
+- Friendly rounded sans (Plus Jakarta Sans or Nunito Sans), self-hosted variable font in `public/fonts/`.
+- Sentence case, moderate weights. No monospace chrome.
 
 ### Shell (`src/components/shell/`)
 
-- `app-shell.tsx` replaces `app-dock-layout.tsx`.
-- `top-bar.tsx`: wordmark, command palette trigger, GitHub link, theme toggle. Replaces `navbar.tsx`.
-- `side-rail.tsx`: persistent section nav on desktop.
-- `mobile-nav.tsx`: sheet below 768px.
-- Footer reduced to a minimal line.
-- A single `sections` config drives the rail, mobile nav and overview index (replaces the three duplicated lists in `navbar.tsx` and `app-dock-layout.tsx`).
-
-### Primitives (`src/components/ui/`)
-
-- `panel-header.tsx`: title, description, endpoint chip with copy button. Existing panels adopt this component only.
-- `response-viewer.tsx`: collapsible, syntax-colored JSON.
-- `status-dot.tsx`: pings one cheap existing API endpoint (the frontend has no health call today); shows "unknown" on failure or timeout and never blocks the page.
+- `app-shell.tsx`: page container with a floating pill nav at the top and a soft footer.
+- `pill-nav.tsx`: 21st.dev-style tubelight/expandable-tabs nav with an animated sliding active indicator (framer-motion layout animation). Desktop: floating top pill. Mobile: bottom pill bar.
+- Search palette (`/` or Cmd/Ctrl+K), theme toggle and `StatusDot` live in the pill nav's right end, restyled round.
+- Remove the left rail, `side-rail.tsx`, `nav-list.tsx` and `mobile-nav.tsx` (sheet).
+- Single `sections` config (`src/lib/sections.ts`) still drives nav, palette and overview.
 
 ### Overview (`src/pages/overview.tsx`)
 
-Rewritten as a compact endpoint index with live status. Hero globe removed.
+- Friendly hero: headline "Open data for Ghana, ready to use", short copy, primary and secondary pill buttons, restrained animated background (soft drifting color blobs or an endpoint-name marquee).
+- Feature grid of rounded cards (icon, title, one-line description, arrow) with hover lift and staggered entrance.
+- A small stats strip using the new stat card.
+
+### Primitives (`src/components/ui/`)
+
+Restyled in place: `button`, `input`, `textarea`, `select`, `tabs`, `badge`, `card`, `table`, `dialog`, `sheet`, `tooltip`, `skeleton`, `progress`, `slider`, `checkbox`.
+New: `stat-card.tsx` (value, label, trend). `PanelHeader` is restyled: friendly title and description, "Copy endpoint" soft pill. `StatusDot` is restyled as a soft badge. `ResponseViewer` is kept and softened.
 
 ### Motion
 
-Functional transitions only (about 150ms). Respect `prefers-reduced-motion`. Remove fade-up entrances.
+- framer-motion: spring press/hover on buttons and cards, staggered card entrance, nav indicator slide.
+- All motion respects `prefers-reduced-motion` (global rule plus `useReducedMotion` where springs are used).
 
 ### Removals
 
-`ui/dock.tsx`, `ui/globe.tsx`, `ui/bento-grid.tsx`, `hero-globe.tsx`, and the `cobe` dependency once no references remain.
+Left-rail components, `ui/dock.tsx`, `ui/globe.tsx`, `ui/bento-grid.tsx`, `hero-globe.tsx` (already removed in rev 1), `cobe`.
 
 ### Routing
 
-`App.tsx` swaps the layout import only. Routes are unchanged.
+Unchanged.
 
 ## Edge cases
 
-- Rail collapses to the mobile sheet below 768px.
-- Keyboard navigation and visible focus on the rail and command palette.
+- Bottom pill bar must not cover page content: add bottom padding on mobile.
+- Keyboard navigation and visible focus rings on the pill nav, palette and every restyled control.
+- Contrast: gold on cream fails WCAG for text; gold is used for fills with dark text, and green or charcoal for text and links.
 - Status endpoint failure degrades to "unknown".
 
 ## Verification
 
-The frontend has no test runner and none is added.
-
-- `npm run build` and `npm run lint` pass.
-- Every route checked in the in-app browser: light and dark, desktop and mobile widths, no console errors.
-- Grep confirms no references to removed components.
+- `npm run build` passes; `npm run lint` clean on touched files.
+- Every route checked in the in-app browser: light and dark, desktop and mobile, no new console errors.
+- **The user inspects the running UI (dev server on a free port) and approves before any PR is suggested.**
 
 ## Follow-ups (separate PRs)
 
-1. Port each panel onto the new primitives, one per PR.
-2. Docusaurus theme (`docs/src/css/custom.css`) to match.
+1. Port each panel's internals onto the new components, one per PR.
+2. Docusaurus theme to match.

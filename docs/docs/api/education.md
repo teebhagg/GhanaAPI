@@ -116,10 +116,12 @@ Retrieve all educational institutions with pagination.
 
 **Query Parameters:**
 
-| Parameter | Type   | Required | Description      | Default |
-| --------- | ------ | -------- | ---------------- | ------- |
-| `limit`   | number | No       | Results per page | 20      |
-| `offset`  | number | No       | Results to skip  | 0       |
+| Parameter | Type   | Required | Description                                    | Default |
+| --------- | ------ | -------- | ---------------------------------------------- | ------- |
+| `limit`   | number | No       | Results per page, a whole number from 1 to 100 | 20      |
+| `offset`  | number | No       | Results to skip, a whole number from 0         | 0       |
+
+A `limit` above 100 or below 1, an `offset` below 0, or a value that is not a whole number returns `400 Bad Request` with the reason. Schools are ordered by grade, then name, then id, so `offset` pages never repeat or skip a school.
 
 **Example Request:**
 

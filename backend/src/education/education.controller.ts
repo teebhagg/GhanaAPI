@@ -6,13 +6,8 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
 import { SchoolSearchDto } from './dto/school-search.dto';
 import { SchoolDto } from './dto/school.dto';
@@ -62,36 +57,23 @@ export class EducationController {
     summary: 'Get all schools',
     description: 'Retrieve all educational institutions with pagination',
   })
-  @ApiQuery({
-    name: 'limit',
-    type: 'number',
-    required: false,
-    description: 'Number of results per page (default: 20, max: 100)',
-    example: 20,
-  })
-  @ApiQuery({
-    name: 'offset',
-    type: 'number',
-    required: false,
-    description: 'Number of results to skip (default: 0)',
-    example: 0,
-  })
   @ApiResponse({
     status: 200,
     description: 'Successfully retrieved all schools',
     type: [SchoolDto],
   })
+  @ApiResponse({
+    status: 400,
+    description: 'limit is not an integer from 1 to 100, or offset is negative',
+  })
   async getAllSchools(
-    @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
+    @Query() query: PaginationQueryDto,
   ): Promise<SchoolDto[]> {
     try {
-      const safeLimit = Math.min(limit || 20, 100);
-      const safeOffset = Math.max(offset || 0, 0);
-      return await this.educationService.getAllSchools(safeLimit, {
-        limit: safeLimit,
-        offset: safeOffset,
-      });
+      return await this.educationService.getAllSchools(
+        query.limit,
+        query.offset,
+      );
     } catch (error) {
       console.log(error);
       throw new HttpException(

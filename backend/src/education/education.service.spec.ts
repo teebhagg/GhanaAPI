@@ -174,6 +174,30 @@ describe('EducationService', () => {
     });
   });
 
+  describe('getAllSchools', () => {
+    it('passes limit and offset to the query, in a stable order', async () => {
+      prisma.school.findMany.mockResolvedValue([createPrismaSchool()]);
+
+      await service.getAllSchools(5, 15);
+
+      expect(prisma.school.findMany).toHaveBeenCalledWith({
+        take: 5,
+        skip: 15,
+        orderBy: [{ grade: 'asc' }, { name: 'asc' }, { id: 'asc' }],
+      });
+    });
+
+    it('starts at the first school when no offset is given', async () => {
+      prisma.school.findMany.mockResolvedValue([]);
+
+      await service.getAllSchools(20);
+
+      expect(prisma.school.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 20, skip: 0 }),
+      );
+    });
+  });
+
   describe('getSchoolById', () => {
     it('returns cached school when present', async () => {
       const dto = createSchoolDto();

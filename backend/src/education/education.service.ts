@@ -116,8 +116,6 @@ export class EducationService {
    */
   async getAllSchools(
     limit: number = 20,
-
-    query: SchoolSearchDto,
     offset: number = 0,
   ): Promise<SchoolDto[]> {
     this.logger.log(`Getting all schools (limit: ${limit}, offset: ${offset})`);
@@ -125,7 +123,9 @@ export class EducationService {
     const schools = await this.prisma.school.findMany({
       take: limit,
       skip: offset,
-      orderBy: [{ grade: 'asc' }, { name: 'asc' }],
+      // id last, so schools with the same grade and name keep a fixed order
+      // and no school repeats or goes missing between pages
+      orderBy: [{ grade: 'asc' }, { name: 'asc' }, { id: 'asc' }],
     });
 
     return schools.map((school) => this.toSchoolDto(school));

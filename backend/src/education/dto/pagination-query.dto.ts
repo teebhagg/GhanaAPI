@@ -1,30 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { blankIsInvalid } from '../../common/validation/blank-is-invalid';
 
 export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 20;
 /** The largest offset the database accepts without an error */
 export const MAX_OFFSET = Number.MAX_SAFE_INTEGER;
 
-/**
- * An empty or blank value (`?offset=`) would become 0 in the number
- * conversion and pass as a real value. Turn it into NaN so validation rejects it.
- */
-const blankIsInvalid = ({
-  obj,
-  key,
-  value,
-}: {
-  obj: Record<string, unknown>;
-  key: string;
-  value: unknown;
-}): unknown => {
-  const raw = obj[key];
-  return typeof raw === 'string' && raw.trim() === '' ? NaN : value;
-};
-
-/** `limit` and `offset` for list endpoints. Bad values are a 400, never fixed silently. */
 export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: `Number of results per page (1 to ${MAX_PAGE_SIZE})`,

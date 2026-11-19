@@ -160,6 +160,26 @@ You can convert between any of the supported currencies:
 }
 ```
 
+#### Validation
+
+- `from` and `to` must each be one of `GHS`, `USD`, `EUR`, `GBP`, `NGN`, `CHF`, `JPY` or `CNY`. Codes are not case sensitive.
+- `amount` must be a number greater than zero. Zero, negative, non-numeric and infinite amounts are rejected.
+
+A request that breaks these rules returns `400 Bad Request` with the reasons in `message`, for example:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": [
+    "to must be one of the following values: GHS, USD, EUR, GBP, NGN, CHF, JPY, CNY",
+    "amount must be a positive number"
+  ]
+}
+```
+
+A `503` now means the exchange rate providers could not be reached, not that the request was wrong.
+
 #### Example Request
 
 ```bash

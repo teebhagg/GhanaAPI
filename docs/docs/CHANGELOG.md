@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`/status` is cheap again**: every call counted and grouped about 457,000 rate history rows, which took 1 to 3 seconds and loaded the database, and the docs called it cheap. The education and exchange rate record counts are now kept in memory for 60 seconds, and calls that arrive while a count is running share it. A failed count is not kept. The database connection check, the build block and every service's health still run on each call. The counts can be up to a minute old.
 - **Upstream error text no longer reaches clients**: when every exchange rate provider fails, `/exchange-rates/current` and `/exchange-rates/convert` returned `503` with the providers' own error messages joined together (which can include hostnames, ports and URLs). They now return `Exchange rates are temporarily unavailable. Please try again later.` with the same `RATE_PROVIDER_FAILED` code. The stock endpoints no longer put the Ghana Stock Exchange client's error text in their messages either. The real error is logged on the server (exchange rate failures do not appear in `/status`) and, for the stock endpoints, is still kept as the cause that feeds `/status` `lastFailure`.
 
+### Changed
+
+- **One implementation of the `/status` `lastFailure` report**: the code that builds a failure report and picks the newest one was copied in five services (stock market, banking, crypto, fuel prices and the status endpoint itself). It now lives in one place, so a change to the wording or the rules applies everywhere. The `/status` response is unchanged.
+
 <details>
 <summary><strong>🗺️ [0.5.5] - 2026-01-XX</strong> - Enhanced Address Service with OpenRouteService Integration</summary>
 

@@ -1,3 +1,5 @@
+import { describeFailure } from './upstream-failure';
+
 export type HealthState = 'healthy' | 'degraded' | 'unhealthy';
 
 /** Why the last refresh of a data source failed, in words safe to publish */
@@ -34,4 +36,33 @@ export function worstOf(...states: HealthState[]): HealthState {
       ORDER.indexOf(state) > ORDER.indexOf(worst) ? state : worst,
     'healthy',
   );
+}
+
+/**
+ * A report of a failure that happened now. The reason is written by
+ * `describeFailure`, so it is safe to publish. The time comes from `Date.now()`
+ * so tests with fake timers control it.
+ */
+export function failureReport(error: unknown, scope?: string): FailureReport {
+  return {
+    reason: describeFailure(error),
+    at: new Date(Date.now()).toISOString(),
+    ...(scope !== undefined && { scope }),
+  };
+}
+
+/**
+ * The most recent of several failures, ignoring the ones that are missing. When
+ * two happened at the same time, the first one listed wins.
+ */
+export function newestFailure(
+  failures: ReadonlyArray<FailureReport | null | undefined>,
+): FailureReport | null {
+  let newest: FailureReport | null = null;
+  for (const failure of failures) {
+    if (failure && (newest === null || failure.at > newest.at)) {
+      newest = failure;
+    }
+  }
+  return newest;
 }

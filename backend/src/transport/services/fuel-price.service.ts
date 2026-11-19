@@ -12,6 +12,7 @@ import {
   FailureReport,
   HealthState,
   ServiceHealth,
+  failureReport,
 } from '../../common/health/service-health';
 import {
   summariseSources,
@@ -233,10 +234,7 @@ export class FuelPriceService {
     // failure briefly so the next requests do not re-scrape every source.
     this.logger.error('All fuel price sources failed');
     this.lastFetchFailed = true;
-    this.lastFailure = {
-      reason: summariseSources(failures).summary,
-      at: new Date(Date.now()).toISOString(),
-    };
+    this.lastFailure = failureReport(summariseSources(failures));
     await this.cacheManager.set(
       this.FAILURE_CACHE_KEY,
       true,

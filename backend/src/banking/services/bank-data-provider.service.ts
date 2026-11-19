@@ -13,10 +13,11 @@ import {
   FailureReport,
   HealthState,
   ServiceHealth,
+  failureReport,
+  newestFailure,
   worstOf,
 } from '../../common/health/service-health';
 import {
-  describeFailure,
   summariseSources,
   UpstreamFailure,
 } from '../../common/health/upstream-failure';
@@ -138,10 +139,9 @@ export class BankDataProviderService {
       .filter((at): at is number => at !== null);
     const asOf = fetched.length ? new Date(Math.max(...fetched)) : null;
     // The newest failure that has not been cleared by a later success
-    const lastFailure = slots
-      .map((slot) => (slot.lastRefreshFailed ? slot.lastFailure : null))
-      .filter((failure): failure is FailureReport => failure !== null)
-      .sort((a, b) => b.at.localeCompare(a.at))[0];
+    const lastFailure = newestFailure(
+      slots.map((slot) => (slot.lastRefreshFailed ? slot.lastFailure : null)),
+    );
 
     return {
       status,
@@ -189,7 +189,9 @@ export class BankDataProviderService {
     }
 
     if (!pending) {
-      throw new ServiceUnavailableException(`${label} is temporarily unavailable`);
+      throw new ServiceUnavailableException(
+        `${label} is temporarily unavailable`,
+      );
     }
     try {
       return await pending;
@@ -197,7 +199,9 @@ export class BankDataProviderService {
       if (error instanceof ServiceUnavailableException) {
         throw error;
       }
-      throw new ServiceUnavailableException(`${label} is temporarily unavailable`);
+      throw new ServiceUnavailableException(
+        `${label} is temporarily unavailable`,
+      );
     }
   }
 
@@ -207,7 +211,12 @@ export class BankDataProviderService {
     fetcher: () => Promise<T[]>,
   ): Promise<void> {
     const pending = this.startRefresh(slot, label, fetcher);
-    return pending ? pending.then(() => undefined, () => undefined) : Promise.resolve();
+    return pending
+      ? pending.then(
+          () => undefined,
+          () => undefined,
+        )
+      : Promise.resolve();
   }
 
   private async persist<T>(slot: DataSlot<T>): Promise<void> {
@@ -221,7 +230,9 @@ export class BankDataProviderService {
         update: { payload, fetchedAt },
       });
     } catch (error) {
-      this.logger.warn(`Could not save ${slot.key} snapshot: ${(error as Error).message}`);
+      this.logger.warn(
+        `Could not save ${slot.key} snapshot: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -234,10 +245,14 @@ export class BankDataProviderService {
       if (row && Array.isArray(row.payload)) {
         slot.data = reviveDates(row.payload as T[]);
         slot.fetchedAt = row.fetchedAt.getTime();
-        this.logger.log(`Restored ${slot.key} snapshot from ${row.fetchedAt.toISOString()}`);
+        this.logger.log(
+          `Restored ${slot.key} snapshot from ${row.fetchedAt.toISOString()}`,
+        );
       }
     } catch (error) {
-      this.logger.warn(`Could not restore ${slot.key} snapshot: ${(error as Error).message}`);
+      this.logger.warn(
+        `Could not restore ${slot.key} snapshot: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -271,11 +286,7 @@ export class BankDataProviderService {
           this.logger.error(`${label} refresh failed:`, error);
           slot.failedUntil = Date.now() + this.FAILURE_BACKOFF_MS;
           slot.lastRefreshFailed = true;
-          slot.lastFailure = {
-            reason: describeFailure(error),
-            at: new Date(Date.now()).toISOString(),
-            scope: slot.key,
-          };
+          slot.lastFailure = failureReport(error, slot.key);
           throw error;
         },
       )

@@ -6,6 +6,7 @@ import { PrismaService } from './common/database/prisma.service';
 import {
   FailureReport,
   ServiceHealth,
+  newestFailure,
   worstOf,
 } from './common/health/service-health';
 import { CryptoService } from './crypto/crypto.service';
@@ -335,10 +336,7 @@ export class AppService {
               `${failure.scope ? `${label}/${failure.scope}` : label}: ${failure.reason}`,
           )
           .join('; '),
-        at: failures
-          .map(({ failure }) => failure.at)
-          .sort()
-          .pop() as string,
+        at: newestFailure(failures.map(({ failure }) => failure))!.at,
       };
     }
     return {

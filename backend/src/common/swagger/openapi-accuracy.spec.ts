@@ -99,7 +99,6 @@ describe('OpenAPI document accuracy', () => {
   };
 
   it.each([
-    ['get', '/api/v1'],
     ['get', '/api/v1/status'],
     ['get', '/api/v1/addresses/validate/{code}'],
     ['get', '/api/v1/addresses/lookup'],
@@ -172,14 +171,24 @@ describe('OpenAPI document accuracy', () => {
     expect(pick(schema, 'properties', 'timestamp')).toBeDefined();
   });
 
-  it('documents a nullable address lookup, because the API returns null when nothing is found', () => {
+  it('documents the address lookup as a single address or the cached array', () => {
     const schema = pick(
       successOf('get', '/api/v1/addresses/lookup'),
       'content',
       'application/json',
       'schema',
     );
-    expect(schema).toMatchObject({ nullable: true });
+    expect(schema).toEqual({
+      oneOf: [
+        { $ref: '#/components/schemas/AddressDto' },
+        { type: 'array', items: { $ref: '#/components/schemas/AddressDto' } },
+      ],
+    });
+  });
+
+  it('documents the root welcome as text/html, because the API sends it that way', () => {
+    const content = pick(successOf('get', '/api/v1'), 'content');
+    expect(Object.keys(content as object)).toEqual(['text/html']);
   });
 
   it('documents the stop type filter with the values the API accepts', () => {
@@ -191,10 +200,31 @@ describe('OpenAPI document accuracy', () => {
     ]);
   });
 
-  it('does not list halt or tram_stop as stop types, because the filter rejects them', () => {
+  it('does not give the response stop type a closed list, because OpenStreetMap can return other values', () => {
     expect(
-      pick(doc, 'components', 'schemas', 'TransportStopDetailDto', 'enum'),
+      pick(
+        doc,
+        'components',
+        'schemas',
+        'TransportStopDetailDto',
+        'properties',
+        'type',
+      ),
+    ).toBeDefined();
+    expect(
+      pick(
+        doc,
+        'components',
+        'schemas',
+        'TransportStopDetailDto',
+        'properties',
+        'type',
+        'enum',
+      ),
     ).toBeUndefined();
+  });
+
+  it('does not list halt or tram_stop as filter values, because the filter rejects them', () => {
     expect(stopTypeFilterEnum()).not.toContain('halt');
     expect(stopTypeFilterEnum()).not.toContain('tram_stop');
   });

@@ -36,8 +36,13 @@ export class AddressesController {
 
   @ApiOkResponse({
     description:
-      'The nearest address, or null when neither geocoder finds one (the response body is then null)',
-    schema: { nullable: true, allOf: [{ $ref: getSchemaPath(AddressDto) }] },
+      'The nearest address. When neither geocoder finds one, the body is empty (no JSON). A repeat request for the same coordinates within a day is served from the cache and returns an array of addresses instead.',
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(AddressDto) },
+        { type: 'array', items: { $ref: getSchemaPath(AddressDto) } },
+      ],
+    },
   })
   @Get('lookup')
   @ApiOperation({

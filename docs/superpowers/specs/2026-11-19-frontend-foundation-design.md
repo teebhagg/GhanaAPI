@@ -33,7 +33,7 @@ Technical, developer-tool feel (Stripe/Linear-docs style): dense, restrained, mo
 - Warm-neutral ink scale in OKLCH, light and dark.
 - One accent: deep green (Ghana palette), used only for links, focus rings and active state.
 - Radius 4-6px, 1px hairline borders, no shadows by default, no gradients, no backdrop blur.
-- Dark mode continues to use `next-themes`.
+- Dark mode uses `next-themes` (installed but currently unused): add a `ThemeProvider` with the class strategy and a toggle in the top bar.
 
 ### Type
 
@@ -53,7 +53,7 @@ Technical, developer-tool feel (Stripe/Linear-docs style): dense, restrained, mo
 
 - `panel-header.tsx`: title, description, endpoint chip with copy button. Existing panels adopt this component only.
 - `response-viewer.tsx`: collapsible, syntax-colored JSON.
-- `status-dot.tsx`: reads the existing status endpoint; shows "unknown" on failure and never blocks the page.
+- `status-dot.tsx`: pings one cheap existing API endpoint (the frontend has no health call today); shows "unknown" on failure or timeout and never blocks the page.
 
 ### Overview (`src/pages/overview.tsx`)
 

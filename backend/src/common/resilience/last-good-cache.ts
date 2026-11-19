@@ -3,8 +3,12 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { FailureReport, HealthState } from '../health/service-health';
-import { describeFailure } from '../health/upstream-failure';
+import {
+  FailureReport,
+  HealthState,
+  failureReport,
+  newestFailure,
+} from '../health/service-health';
 
 export interface LastGoodCacheOptions {
   /** Shown in logs and error messages, e.g. "Stock data" */
@@ -134,12 +138,7 @@ export class LastGoodCache<T> {
       if (!entry.lastRefreshFailed) {
         continue;
       }
-      if (
-        entry.lastFailure !== null &&
-        (lastFailure === null || entry.lastFailure.at > lastFailure.at)
-      ) {
-        lastFailure = entry.lastFailure;
-      }
+      lastFailure = newestFailure([lastFailure, entry.lastFailure]);
       const usable =
         entry.data !== null && this.ageOf(entry) < this.options.maxStaleMs;
       if (!usable) {
@@ -221,11 +220,7 @@ export class LastGoodCache<T> {
               : this.options.backoffMs;
           entry.failedUntil = Date.now() + backoff;
           entry.lastRefreshFailed = true;
-          entry.lastFailure = {
-            reason: describeFailure(error),
-            at: new Date(Date.now()).toISOString(),
-            scope: key,
-          };
+          entry.lastFailure = failureReport(error, key);
           throw error;
         },
       )

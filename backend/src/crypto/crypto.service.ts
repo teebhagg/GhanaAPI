@@ -12,6 +12,7 @@ import {
   FailureReport,
   HealthState,
   ServiceHealth,
+  failureReport,
 } from '../common/health/service-health';
 import {
   describeFailure,
@@ -85,26 +86,24 @@ export class CryptoService {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get(url, {
-          params: {
-            ids: idsString,
-            vs_currencies: 'usd',
-          },
-        }).pipe(
-          catchError((error) => {
-            this.logger.warn(`CoinGecko API error: ${error.message}`);
-            throw error;
+        this.httpService
+          .get(url, {
+            params: {
+              ids: idsString,
+              vs_currencies: 'usd',
+            },
           })
-        )
+          .pipe(
+            catchError((error) => {
+              this.logger.warn(`CoinGecko API error: ${error.message}`);
+              throw error;
+            }),
+          ),
       );
       coinGeckoData = response.data;
     } catch (error) {
       this.lastUpstreamFailed = true;
-      this.lastFailure = {
-        reason: describeFailure(error),
-        at: new Date(Date.now()).toISOString(),
-        scope: 'coingecko',
-      };
+      this.lastFailure = failureReport(error, 'coingecko');
       throw new ServiceUnavailableException(
         'Crypto prices are temporarily unavailable from the upstream provider',
       );
@@ -130,11 +129,12 @@ export class CryptoService {
       } catch (error) {
         this.logger.warn(`Failed to convert USD to GHS: ${error.message}`);
         this.lastUpstreamFailed = true;
-        this.lastFailure = {
-          reason: `USD to GHS conversion failed: ${describeFailure(error)}`,
-          at: new Date(Date.now()).toISOString(),
-          scope: 'usd-to-ghs',
-        };
+        this.lastFailure = failureReport(
+          new UpstreamFailure(
+            `USD to GHS conversion failed: ${describeFailure(error)}`,
+          ),
+          'usd-to-ghs',
+        );
         throw new ServiceUnavailableException(
           'Crypto GHS conversion is temporarily unavailable',
         );

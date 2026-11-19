@@ -52,9 +52,9 @@ Search for banking facilities using various criteria.
 | Parameter | Type   | Required | Description                                           |
 | --------- | ------ | -------- | ----------------------------------------------------- |
 | `q`       | string | No       | Search query for bank name or type                    |
-| `lat`     | number | No       | Latitude for location-based search                    |
-| `lng`     | number | No       | Longitude for location-based search                   |
-| `radius`  | number | No       | Search radius in km (default: 5, max: 50)             |
+| `lat`     | number | No       | Latitude for location-based search, -90 to 90         |
+| `lng`     | number | No       | Longitude for location-based search, -180 to 180      |
+| `radius`  | number | No       | Search radius in km, 0.1 to 50 (default: 5)           |
 | `type`    | string | No       | Filter by type: `bank`, `atm`, `both` (default: both) |
 | `limit`   | number | No       | Number of results (default: 20, max: 100)             |
 
@@ -112,7 +112,7 @@ const searchBanks = async (query, location) => {
   }
 
   const response = await fetch(
-    `https://api.ghana-api.dev/api/v1/banking/search?${params}`
+    `https://api.ghana-api.dev/api/v1/banking/search?${params}`,
   );
 
   if (!response.ok) {
@@ -139,12 +139,14 @@ Find the nearest banking facilities to a specific location.
 
 #### Query Parameters
 
-| Parameter | Type   | Required | Description                               |
-| --------- | ------ | -------- | ----------------------------------------- |
-| `lat`     | number | Yes      | Latitude coordinate                       |
-| `lng`     | number | Yes      | Longitude coordinate                      |
-| `radius`  | number | No       | Search radius in km (default: 5, max: 50) |
-| `limit`   | number | No       | Number of results (default: 10, max: 100) |
+| Parameter | Type   | Required | Description                                 |
+| --------- | ------ | -------- | ------------------------------------------- |
+| `lat`     | number | Yes      | Latitude, -90 to 90, inside Ghana           |
+| `lng`     | number | Yes      | Longitude, -180 to 180, inside Ghana        |
+| `radius`  | number | No       | Search radius in km, 0.1 to 50 (default: 5) |
+| `limit`   | number | No       | Number of results, 1 to 100 (default: 10)   |
+
+A value outside these ranges, blank or not a number returns `400 Bad Request` with the reason. It is no longer silently changed to the nearest allowed value, and it is checked before the bank data is loaded, so a bad request is never reported as a data outage.
 
 #### Example
 
@@ -316,8 +318,8 @@ const BankLocator = () => {
     try {
       const response = await fetch(
         `https://api.ghana-api.dev/api/v1/banking/search?q=${encodeURIComponent(
-          query
-        )}&limit=10`
+          query,
+        )}&limit=10`,
       );
       const data = await response.json();
       setBanks(data.data);
@@ -340,7 +342,7 @@ const BankLocator = () => {
 
       try {
         const response = await fetch(
-          `https://api.ghana-api.dev/api/v1/banking/nearby?lat=${latitude}&lng=${longitude}&radius=5&limit=10`
+          `https://api.ghana-api.dev/api/v1/banking/nearby?lat=${latitude}&lng=${longitude}&radius=5&limit=10`,
         );
         const data = await response.json();
         setBanks(data);
@@ -377,7 +379,8 @@ const BankLocator = () => {
               border: "1px solid #ddd",
               margin: "10px",
               padding: "10px",
-            }}>
+            }}
+          >
             <h3>{bank.name}</h3>
             <p>
               <strong>Type:</strong> {bank.type.toUpperCase()}

@@ -171,7 +171,12 @@ describe('BankingController', () => {
 
       mockBankingService.getNearestBanks.mockResolvedValue(mockBanks);
 
-      const result = await controller.getNearestBanks(lat, lng, radius, limit);
+      const result = await controller.getNearestBanks({
+        lat,
+        lng,
+        radius,
+        limit,
+      });
 
       expect(service.getNearestBanks).toHaveBeenCalledWith(lat, lng, 10, 5);
       expect(result).toEqual(mockBanks);
@@ -181,7 +186,7 @@ describe('BankingController', () => {
       const lat = 51.5074; // London coordinates
       const lng = -0.1278;
 
-      await expect(controller.getNearestBanks(lat, lng)).rejects.toThrow(
+      await expect(controller.getNearestBanks({ lat, lng })).rejects.toThrow(
         new HttpException(
           'Coordinates appear to be outside Ghana. Please verify your location.',
           HttpStatus.BAD_REQUEST,
@@ -189,17 +194,17 @@ describe('BankingController', () => {
       );
     });
 
-    it('should apply radius and limit caps', async () => {
-      const lat = 5.6037;
-      const lng = -0.187;
-      const radius = 100; // Should be capped at 50
-      const limit = 200; // Should be capped at 100
-
+    it('should use a 5 km radius and 10 results when none are given', async () => {
       mockBankingService.getNearestBanks.mockResolvedValue([]);
 
-      await controller.getNearestBanks(lat, lng, radius, limit);
+      await controller.getNearestBanks({ lat: 5.6037, lng: -0.187 });
 
-      expect(service.getNearestBanks).toHaveBeenCalledWith(lat, lng, 50, 100);
+      expect(service.getNearestBanks).toHaveBeenCalledWith(
+        5.6037,
+        -0.187,
+        5,
+        10,
+      );
     });
   });
 

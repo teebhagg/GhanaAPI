@@ -117,6 +117,28 @@ describe('StockMarketController', () => {
       expect(result).toEqual(mockSearchResponse);
       expect(service.searchStocks).toHaveBeenCalledWith(query);
     });
+
+    it.each([
+      [
+        { minPrice: 10, maxPrice: 1 },
+        'minPrice must not be greater than maxPrice',
+      ],
+      [
+        { minMarketCap: 5e9, maxMarketCap: 1e9 },
+        'minMarketCap must not be greater than maxMarketCap',
+      ],
+    ])('rejects a reversed range %j with a 400', async (query, message) => {
+      await expect(controller.searchStocks(query)).rejects.toThrow(message);
+      await expect(controller.searchStocks(query)).rejects.toMatchObject({
+        status: 400,
+      });
+    });
+
+    it('accepts equal bounds', async () => {
+      await expect(
+        controller.searchStocks({ minPrice: 5, maxPrice: 5 }),
+      ).resolves.toEqual(mockSearchResponse);
+    });
   });
 
   describe('getStock', () => {

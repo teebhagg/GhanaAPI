@@ -1,6 +1,24 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+
+export const STOCK_SORT_FIELDS = [
+  'price',
+  'change',
+  'changePercent',
+  'volume',
+  'marketCap',
+  'symbol',
+  'name',
+] as const;
+export const STOCK_SORT_ORDERS = ['asc', 'desc'] as const;
 
 export class StockSearchQueryDto {
   @ApiProperty({
@@ -83,18 +101,10 @@ export class StockSearchQueryDto {
     description: 'Sort stocks by field',
     example: 'marketCap',
     required: false,
-    enum: [
-      'price',
-      'change',
-      'changePercent',
-      'volume',
-      'marketCap',
-      'symbol',
-      'name',
-    ],
+    enum: STOCK_SORT_FIELDS,
   })
   @IsOptional()
-  @IsString()
+  @IsIn(STOCK_SORT_FIELDS)
   sortBy?:
     | 'price'
     | 'change'
@@ -108,10 +118,10 @@ export class StockSearchQueryDto {
     description: 'Sort order',
     example: 'desc',
     required: false,
-    enum: ['asc', 'desc'],
+    enum: STOCK_SORT_ORDERS,
   })
   @IsOptional()
-  @IsString()
+  @IsIn(STOCK_SORT_ORDERS)
   sortOrder?: 'asc' | 'desc';
 
   @ApiProperty({

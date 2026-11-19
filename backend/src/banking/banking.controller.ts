@@ -7,16 +7,10 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BankingService } from './banking.service';
 import { BankSearchResponseDto } from './dto/bank-search-response.dto';
-import { BankSearchQueryDto } from './dto/bank-search.dto';
+import { BankSearchQueryDto, NearbyBanksQueryDto } from './dto/bank-search.dto';
 import { BankDto } from './dto/bank.dto';
 import {
   DataFreshnessInterceptor,
@@ -87,7 +81,8 @@ export class BankingController {
   })
   @ApiResponse({
     status: 503,
-    description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
+    description:
+      'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
   @FreshnessDatasets(['banks'])
   async getAllBanks(): Promise<BankDto[]> {
@@ -116,7 +111,8 @@ export class BankingController {
   })
   @ApiResponse({
     status: 503,
-    description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
+    description:
+      'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
   @FreshnessDatasets(['banks', 'atms'])
   async getAllATMs(): Promise<BankDto[]> {
@@ -150,7 +146,8 @@ export class BankingController {
   })
   @ApiResponse({
     status: 503,
-    description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
+    description:
+      'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
   @FreshnessDatasets(['banks'])
   async getBanksByRegion(@Param('region') region: string): Promise<BankDto[]> {
@@ -184,7 +181,8 @@ export class BankingController {
   })
   @ApiResponse({
     status: 503,
-    description: 'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
+    description:
+      'Bank data is temporarily unavailable from the upstream provider. No estimated data is returned.',
   })
   @FreshnessDatasets(['banks'])
   async getBanksByCity(@Param('city') city: string): Promise<BankDto[]> {
@@ -206,32 +204,6 @@ export class BankingController {
     summary: 'Find nearest banks and ATMs',
     description: 'Find the nearest banking facilities to a specific location',
   })
-  @ApiQuery({
-    name: 'lat',
-    type: 'number',
-    description: 'Latitude coordinate',
-    example: 5.6037,
-  })
-  @ApiQuery({
-    name: 'lng',
-    type: 'number',
-    description: 'Longitude coordinate',
-    example: -0.187,
-  })
-  @ApiQuery({
-    name: 'radius',
-    type: 'number',
-    required: false,
-    description: 'Search radius in kilometers (default: 5km, max: 50km)',
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: 'number',
-    required: false,
-    description: 'Maximum number of results (default: 10, max: 100)',
-    example: 10,
-  })
   @ApiResponse({
     status: 200,
     description: 'Successfully found nearest banking facilities',
@@ -242,20 +214,10 @@ export class BankingController {
     description: 'Invalid coordinates provided',
   })
   async getNearestBanks(
-    @Query('lat') lat: number,
-    @Query('lng') lng: number,
-    @Query('radius') radius?: number,
-    @Query('limit') limit?: number,
+    @Query() query: NearbyBanksQueryDto,
   ): Promise<BankDto[]> {
+    const { lat, lng } = query;
     try {
-      // Validate coordinates
-      if (typeof lat !== 'number' || typeof lng !== 'number') {
-        throw new HttpException(
-          'Valid latitude and longitude coordinates are required',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
       // Validate coordinate ranges for Ghana
       if (lat < 4.5 || lat > 11.5 || lng < -3.5 || lng > 1.5) {
         throw new HttpException(
@@ -264,14 +226,11 @@ export class BankingController {
         );
       }
 
-      const safeRadius = Math.min(radius || 5, 50);
-      const safeLimit = Math.min(limit || 10, 100);
-
       return await this.bankingService.getNearestBanks(
         lat,
         lng,
-        safeRadius,
-        safeLimit,
+        query.radius ?? 5,
+        query.limit ?? 10,
       );
     } catch (error) {
       if (error instanceof HttpException) {

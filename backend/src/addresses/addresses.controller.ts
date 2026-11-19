@@ -5,6 +5,7 @@ import {
   ApiTags,
   ApiOkResponse,
   ApiCreatedResponse,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { AddressesService } from './addresses.service';
 import { LookupQueryDto } from './dto/lookup-query.dto';
@@ -34,8 +35,9 @@ export class AddressesController {
   }
 
   @ApiOkResponse({
-    description: 'The nearest address, or an empty address when none is found',
-    type: AddressDto,
+    description:
+      'The nearest address, or null when neither geocoder finds one (the response body is then null)',
+    schema: { nullable: true, allOf: [{ $ref: getSchemaPath(AddressDto) }] },
   })
   @Get('lookup')
   @ApiOperation({

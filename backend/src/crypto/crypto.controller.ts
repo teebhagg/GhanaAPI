@@ -14,14 +14,22 @@ export class CryptoController {
   constructor(private readonly cryptoService: CryptoService) {}
 
   @ApiOkResponse({
-    description: 'Prices by coin id: USD and GHS',
+    description:
+      'Envelope with the source, the time, and prices by coin id (USD and GHS) under data',
     schema: {
       type: 'object',
-      additionalProperties: {
-        type: 'object',
-        properties: {
-          usd: { type: 'number', example: 65000 },
-          ghs: { type: 'number', example: 740000 },
+      properties: {
+        source: { type: 'string', example: 'coingecko' },
+        timestamp: { type: 'string', format: 'date-time' },
+        data: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            properties: {
+              usd: { type: 'number', example: 65000 },
+              ghs: { type: 'number', example: 740000 },
+            },
+          },
         },
       },
     },

@@ -156,6 +156,32 @@ describe('OpenAPI document accuracy', () => {
     }
   });
 
+  it('documents the crypto envelope, with the prices under data', () => {
+    const schema = pick(
+      successOf('get', '/api/v1/crypto'),
+      'content',
+      'application/json',
+      'schema',
+    ) as Record<string, unknown>;
+    expect(
+      pick(schema, 'properties', 'data', 'additionalProperties'),
+    ).toBeDefined();
+    expect(pick(schema, 'properties', 'source')).toMatchObject({
+      type: 'string',
+    });
+    expect(pick(schema, 'properties', 'timestamp')).toBeDefined();
+  });
+
+  it('documents a nullable address lookup, because the API returns null when nothing is found', () => {
+    const schema = pick(
+      successOf('get', '/api/v1/addresses/lookup'),
+      'content',
+      'application/json',
+      'schema',
+    );
+    expect(schema).toMatchObject({ nullable: true });
+  });
+
   it('documents the stop type filter with the values the API accepts', () => {
     expect(stopTypeFilterEnum()).toEqual([
       'bus_stop',

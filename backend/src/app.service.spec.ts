@@ -13,7 +13,15 @@ const OK: ServiceHealth = {
 };
 
 describe('AppService.getStatus', () => {
-  let prisma: any;
+  let prisma: {
+    $queryRaw: jest.Mock;
+    school: { count: jest.Mock; findFirst: jest.Mock };
+    exchangeRateHistory: {
+      count: jest.Mock;
+      groupBy: jest.Mock;
+      findFirst: jest.Mock;
+    };
+  };
   let reports: Record<
     'bank' | 'stock' | 'stops' | 'fuel' | 'crypto',
     ServiceHealth
@@ -220,6 +228,57 @@ describe('AppService.getStatus', () => {
           'stops/accra: overpass: HTTP 502 from overpass-api.de; fuel prices: npa-scraper: HTTP 404 from npa.gov.gh',
         at: '2026-11-18T12:05:00.000Z',
       });
+    });
+  });
+
+  describe('database statistics cache', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('counts the rate history once for calls within a minute', async () => {
+      await service.getStatus();
+      await service.getStatus();
+      await service.getStatus();
+
+      expect(prisma.exchangeRateHistory.count).toHaveBeenCalledTimes(1);
+      expect(prisma.exchangeRateHistory.groupBy).toHaveBeenCalledTimes(1);
+      expect(prisma.school.count).toHaveBeenCalledTimes(1);
+    });
+
+    it('still checks the database connection on every call', async () => {
+      await service.getStatus();
+      await service.getStatus();
+
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    });
+
+    it('shares one query between calls that overlap', async () => {
+      await Promise.all([
+        service.getStatus(),
+        service.getStatus(),
+        service.getStatus(),
+      ]);
+
+      expect(prisma.exchangeRateHistory.count).toHaveBeenCalledTimes(1);
+    });
+
+    it('counts again after the cache expires', async () => {
+      jest.useFakeTimers({ now: new Date('2026-11-19T10:00:00Z') });
+      await service.getStatus();
+      jest.setSystemTime(new Date('2026-11-19T10:00:00Z').getTime() + 60_001);
+      await service.getStatus();
+
+      expect(prisma.exchangeRateHistory.count).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not keep a failed query, so the next call recovers', async () => {
+      prisma.exchangeRateHistory.count.mockRejectedValueOnce(new Error('db'));
+
+      const first = await service.getStatus();
+      expect(first.health.services.exchangeRates).toBe('degraded');
+
+      const second = await service.getStatus();
+      expect(second.health.services.exchangeRates).toBe('healthy');
+      expect(second.statistics.exchangeRates.totalRecords).toBe(2);
     });
   });
 });

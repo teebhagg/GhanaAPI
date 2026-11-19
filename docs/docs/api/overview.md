@@ -331,7 +331,7 @@ const getCachedData = async (url, ttl = 300000) => {
 
 ## 🩺 Service Health
 
-`GET /api/v1/status` reports the health of the API and of each data service. It answers from what each service already knows, so it never calls a third-party provider and stays cheap.
+`GET /api/v1/status` reports the health of the API and of each data service. It answers from what each service already knows, so it never calls a third-party provider. The record counts for education and exchange rates come from the database and are reused for up to 60 seconds, because counting the rate history takes a second or more. A response can therefore show counts that are up to a minute old; `timestamp` is always the time of the request.
 
 ```json
 {

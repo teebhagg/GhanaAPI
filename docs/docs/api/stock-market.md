@@ -587,7 +587,8 @@ class GSEAnalyzer:
 
     def find_opportunities(self):
         # Find stocks with high dividend yield and low P/E ratio
-        response = requests.get(f"{self.base_url}/search?sortBy=dividendYield&sortOrder=desc&limit=50")
+        # dividendYield is not a sortBy field, so fetch the stocks and sort here
+        response = requests.get(f"{self.base_url}/search?limit=100")
         stocks = pd.DataFrame(response.json()['data'])
 
         opportunities = stocks[
@@ -596,7 +597,9 @@ class GSEAnalyzer:
             (stocks['changePercent'] > 0)
         ]
 
-        return opportunities[['symbol', 'name', 'price', 'dividendYield', 'peRatio', 'changePercent']]
+        return opportunities.sort_values('dividendYield', ascending=False)[
+            ['symbol', 'name', 'price', 'dividendYield', 'peRatio', 'changePercent']
+        ]
 
 # Usage
 analyzer = GSEAnalyzer()

@@ -6,13 +6,20 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
 import { SchoolSearchDto } from './dto/school-search.dto';
 import { SchoolDto } from './dto/school.dto';
 import { EducationService } from './education.service';
 import { SchoolCategory, SchoolGrade } from './entities/school.entity';
+import { EducationStatisticsDto } from '../common/swagger/response-schemas';
 
 @ApiTags('Education')
 @Controller('education')
@@ -83,6 +90,10 @@ export class EducationController {
     }
   }
 
+  @ApiOkResponse({
+    description: 'School counts by category, grade and region',
+    type: EducationStatisticsDto,
+  })
   @Get('schools/statistics')
   @ApiOperation({
     summary: 'Get school statistics',

@@ -1,17 +1,23 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { AppService, StatusResponse } from './app.service';
+import { StatusResponseDto } from './common/swagger/response-schemas';
 
 @Controller()
 @ApiTags('Status')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @ApiOkResponse({ description: 'Welcome message', schema: { type: 'string' } })
   @Get()
   getHello(): string {
     return this.appService.getHello();
   }
 
+  @ApiOkResponse({
+    description: 'Health and statistics',
+    type: StatusResponseDto,
+  })
   @Get('status')
   @ApiOperation({
     summary: 'Get API status and statistics',

@@ -7,21 +7,16 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
+  RouteDirectionsEnvelopeDto,
   RouteDirectionsQueryDto,
   RouteDirectionsResponseDto,
 } from './dto/route-directions.dto';
-import {
-  FuelPriceDto,
-  TravelCostDto,
-} from './dto/fuel-price.dto';
+import { FuelPriceDto, TravelCostDto } from './dto/fuel-price.dto';
 import {
   TravelCostQueryDto,
   TravelCostResponseDto,
 } from './dto/travel-cost.dto';
-import {
-  NearbyStopsQueryDto,
-  NearbyStopDto,
-} from './dto/nearby-stops.dto';
+import { NearbyStopsQueryDto, NearbyStopDto } from './dto/nearby-stops.dto';
 import {
   TransportStopsQueryDto,
   TransportStopsResponseDto,
@@ -59,8 +54,6 @@ const BUS_RATE = 1.0;
 export class TransportController {
   constructor(private readonly transportService: TransportService) {}
 
-
-
   @Get('stops')
   @ApiOperation({
     summary: 'Get transport stops',
@@ -76,7 +69,9 @@ export class TransportController {
   @ApiQuery({
     name: 'type',
     required: false,
-    description: 'Filter by stop type (bus_stop, platform, station)',
+    description:
+      'Filter by stop type (bus_stop, stop_position, platform, station)',
+    enum: ['bus_stop', 'stop_position', 'platform', 'station'],
   })
   @ApiResponse({
     status: 200,
@@ -150,8 +145,8 @@ export class TransportController {
           items: { $ref: '#/components/schemas/NearbyStopDto' },
         },
         count: { type: 'number', example: 5 },
-        center: { 
-          type: 'array', 
+        center: {
+          type: 'array',
           items: { type: 'number' },
           example: [5.6037, -0.187],
           minItems: 2,
@@ -241,15 +236,15 @@ export class TransportController {
       properties: {
         success: { type: 'boolean', example: true },
         data: { $ref: '#/components/schemas/RouteCalculationDto' },
-        start: { 
-          type: 'array', 
+        start: {
+          type: 'array',
           items: { type: 'number' },
           example: [5.6037, -0.187],
           minItems: 2,
           maxItems: 2,
         },
-        end: { 
-          type: 'array', 
+        end: {
+          type: 'array',
           items: { type: 'number' },
           example: [6.6885, -1.6244],
           minItems: 2,
@@ -386,8 +381,9 @@ export class TransportController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Route directions with detailed information',
-    type: RouteDirectionsResponseDto,
+    description:
+      'Route directions with detailed information, in a success/data envelope',
+    type: RouteDirectionsEnvelopeDto,
   })
   @ApiResponse({
     status: 400,
@@ -472,7 +468,8 @@ export class TransportController {
             throw new HttpException(
               {
                 success: false,
-                message: 'Fuel price data is temporarily unavailable. Please try again later.',
+                message:
+                  'Fuel price data is temporarily unavailable. Please try again later.',
               },
               HttpStatus.SERVICE_UNAVAILABLE,
             );
@@ -604,8 +601,6 @@ export class TransportController {
       );
     }
   }
-
-
 
   // ===== PRIVATE HELPER METHODS =====
 

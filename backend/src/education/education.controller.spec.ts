@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EducationController } from './education.controller';
 import { EducationService } from './education.service';
 import { SchoolCategory, SchoolGrade } from './entities/school.entity';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { SchoolSearchDto } from './dto/school-search.dto';
 import { SchoolSearchResponseDto } from './dto/school-search-response.dto';
 
@@ -55,6 +56,16 @@ describe('EducationController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('hands the page limit and offset to the service', async () => {
+    service.getAllSchools.mockResolvedValue([]);
+
+    await controller.getAllSchools(
+      Object.assign(new PaginationQueryDto(), { limit: 5, offset: 10 }),
+    );
+
+    expect(service.getAllSchools).toHaveBeenCalledWith(5, 10);
   });
 
   it('delegates searchSchools to the service', async () => {

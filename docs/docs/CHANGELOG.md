@@ -15,7 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Currency conversion from GHS**: converting from GHS to USD, EUR, GBP, CHF or CNY returned a result that was far too large, and GHS to JPY a result that was far too small. The Bank of Ghana sell rate (cedis per unit of the foreign currency) was multiplied instead of divided. For example, 100 GHS to USD returned about 1176 and now returns about 8.5, and 100 GHS to JPY returned about 7.4 and now returns about 1351.
 - **Naira (NGN) rates**: the Bank of Ghana publishes the naira as naira per cedi (pair GHSNGN), but it was read as cedis per naira. NGN to GHS conversions and the NGN rate from `/exchange-rates/current` were therefore inverted. For example, 100 NGN returned about 11,700 GHS and now returns about 0.85 GHS, and 1 GHS is now about 116.6 NGN, not 0.0086. GHS to NGN was nearly right but used the wrong side of the bank's spread, so it is about 0.4% lower now (100 GHS: about 11,704 NGN before, about 11,660 after).
-- The `rate` and `result` fields change for these pairs, so any client that worked around the old values must remove that workaround. Rows already stored in the rate history for NGN hold the inverted value. Conversions from a foreign currency to GHS and between two foreign currencies (other than NGN) were already correct.
+- The `rate` and `result` fields change for these pairs, so any client that worked around the old values must remove that workaround. Conversions from a foreign currency to GHS and between two foreign currencies (other than NGN) were already correct.
+- **Naira (NGN) rate history**: GHS to NGN rows saved by the Bank of Ghana provider before the naira fix hold the inverse of the real rate (about 0.0086 instead of about 116), so `/exchange-rates/historical` and `/exchange-rates/NGN/trend` showed a jump of about 13,500 times where the fix took effect. The migration `20261119100000_correct_inverted_ngn_history` inverts those rows (any GHS to NGN row below 1; rows from other providers, other currencies and the reverse pair are not touched). Take a backup before applying it. Rates have 8 decimals and inverting twice at that precision restores the original value, so it can be undone with this statement, which only touches Bank of Ghana rows saved before the fix went live on 2026-11-18 18:58 UTC:
+
+  ```sql
+  UPDATE exchange_rate_history
+  SET rate = ROUND(1 / rate, 8)
+  WHERE "baseCurrency" = 'GHS' AND "targetCurrency" = 'NGN'
+    AND provider = 'bank-of-ghana' AND rate > 1
+    AND "sourceTimestamp" < '2026-11-18 18:58:00';
+  ```
 - **Error responses**: a request body over the size limit now returns 413 Payload Too Large (it returned 500), an unsupported charset returns 415, and every error body has an `error` field (the HTTP status text unless the error sets its own name). Unexpected 500 errors no longer return the internal error name and message; they return `Internal server error` and the details are logged on the server. The API docs now describe the real error format.
 
 <details>

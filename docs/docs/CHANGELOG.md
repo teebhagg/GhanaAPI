@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     AND "sourceTimestamp" < '2026-11-18 18:58:00';
   ```
 - **Error responses**: a request body over the size limit now returns 413 Payload Too Large (it returned 500), an unsupported charset returns 415, and every error body has an `error` field (the HTTP status text unless the error sets its own name). Unexpected 500 errors no longer return the internal error name and message; they return `Internal server error` and the details are logged on the server. The API docs now describe the real error format.
+- **Upstream error text no longer reaches clients**: when every exchange rate provider fails, `/exchange-rates/current` and `/exchange-rates/convert` returned `503` with the providers' own error messages joined together (which can include hostnames, ports and URLs). They now return `Exchange rates are temporarily unavailable. Please try again later.` with the same `RATE_PROVIDER_FAILED` code. The stock endpoints no longer put the Ghana Stock Exchange client's error text in their messages either. The real error is logged on the server (exchange rate failures do not appear in `/status`) and, for the stock endpoints, is still kept as the cause that feeds `/status` `lastFailure`.
 
 <details>
 <summary><strong>🗺️ [0.5.5] - 2026-01-XX</strong> - Enhanced Address Service with OpenRouteService Integration</summary>

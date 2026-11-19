@@ -1,3 +1,4 @@
+import { AppException } from '../common/exceptions/app-exception';
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -347,6 +348,32 @@ describe('ExchangeRatesService', () => {
       expect(
         mockPrismaService.exchangeRateHistory.createMany,
       ).not.toHaveBeenCalled();
+    });
+
+    it('does not send provider error text to the client, but keeps it as the cause', async () => {
+      mockCacheManager.get.mockResolvedValue(null);
+      const last = new Error(
+        'connect ECONNREFUSED 10.0.0.7:5432 fixer key=abc',
+      );
+      mockBogProvider.fetchRates.mockRejectedValue(
+        new Error('BOG secret-host'),
+      );
+      mockExchangeRateApiProvider.fetchRates.mockRejectedValue(
+        new Error('ExchangeRateAPI https://v6.exchangerate-api.com/v6/KEY'),
+      );
+      mockFixerProvider.fetchRates.mockRejectedValue(last);
+
+      const error = await service
+        .getCurrentRates(['USD'])
+        .then(() => undefined)
+        .catch((e: unknown) => e as AppException);
+
+      expect(error).toBeInstanceOf(AppException);
+      expect(error?.getStatus()).toBe(503);
+      expect(JSON.stringify([error?.message, error?.details])).not.toMatch(
+        /ECONNREFUSED|secret-host|KEY|abc/,
+      );
+      expect(error?.cause).toBe(last);
     });
 
     it('should use default currencies when none provided', async () => {

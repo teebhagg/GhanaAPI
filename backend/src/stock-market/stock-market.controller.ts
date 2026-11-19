@@ -49,6 +49,14 @@ export class StockMarketController {
   async searchStocks(
     @Query() query: StockSearchQueryDto,
   ): Promise<StockSearchResponseDto> {
+    // A reversed range can never match. Say so before any stock data is loaded.
+    this.assertRange('minPrice', query.minPrice, 'maxPrice', query.maxPrice);
+    this.assertRange(
+      'minMarketCap',
+      query.minMarketCap,
+      'maxMarketCap',
+      query.maxMarketCap,
+    );
     try {
       return await this.stockMarketService.searchStocks(query);
     } catch (error) {
@@ -294,5 +302,19 @@ export class StockMarketController {
   })
   getSectors(): string[] {
     return this.stockMarketService.getSectors();
+  }
+
+  private assertRange(
+    minName: string,
+    min: number | undefined,
+    maxName: string,
+    max: number | undefined,
+  ): void {
+    if (min !== undefined && max !== undefined && min > max) {
+      throw new HttpException(
+        `${minName} must not be greater than ${maxName}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }

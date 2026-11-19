@@ -74,17 +74,19 @@ Search and filter stocks based on multiple criteria.
 
 #### Query Parameters
 
-| Parameter      | Type   | Required | Description                                                     |
-| -------------- | ------ | -------- | --------------------------------------------------------------- |
-| `q`            | string | No       | Stock symbol or company name to search for                      |
-| `sector`       | string | No       | Filter by sector (Banking, Mining, Telecommunications, etc.)    |
-| `minPrice`     | number | No       | Minimum stock price in GHS                                      |
-| `maxPrice`     | number | No       | Maximum stock price in GHS                                      |
-| `minMarketCap` | number | No       | Minimum market capitalization in GHS                            |
-| `maxMarketCap` | number | No       | Maximum market capitalization in GHS                            |
-| `sortBy`       | string | No       | Sort by field (price, change, changePercent, volume, marketCap) |
-| `sortOrder`    | string | No       | Sort order (asc, desc)                                          |
-| `limit`        | number | No       | Maximum results to return (1-100, default: 20)                  |
+| Parameter      | Type   | Required | Description                                                                   |
+| -------------- | ------ | -------- | ----------------------------------------------------------------------------- |
+| `q`            | string | No       | Stock symbol or company name to search for                                    |
+| `sector`       | string | No       | Filter by sector (Banking, Mining, Telecommunications, etc.)                  |
+| `minPrice`     | number | No       | Minimum stock price in GHS                                                    |
+| `maxPrice`     | number | No       | Maximum stock price in GHS                                                    |
+| `minMarketCap` | number | No       | Minimum market capitalization in GHS                                          |
+| `maxMarketCap` | number | No       | Maximum market capitalization in GHS                                          |
+| `sortBy`       | string | No       | Sort by field (price, change, changePercent, volume, marketCap, symbol, name) |
+| `sortOrder`    | string | No       | Sort order (asc, desc)                                                        |
+| `limit`        | number | No       | Maximum results to return (1-100, default: 20)                                |
+
+An unknown `sortBy` or `sortOrder`, or a minimum greater than its maximum (`minPrice` and `maxPrice`, `minMarketCap` and `maxMarketCap`), returns `400 Bad Request` with the reason. These are checked before the stock data is loaded, so a bad request is never reported as a data outage.
 
 #### Example Request
 
@@ -136,7 +138,7 @@ const searchStocks = async (filters = {}) => {
   try {
     const params = new URLSearchParams(filters);
     const response = await fetch(
-      `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`
+      `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`,
     );
     const result = await response.json();
 
@@ -358,14 +360,14 @@ const trackPortfolio = async (symbols) => {
   const stocks = await Promise.all(
     symbols.map((symbol) =>
       fetch(
-        `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`
-      ).then((res) => res.json())
-    )
+        `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`,
+      ).then((res) => res.json()),
+    ),
   );
 
   const totalValue = stocks.reduce(
     (sum, stock) => sum + stock.price * stock.volume,
-    0
+    0,
   );
 
   const totalChange =
@@ -388,13 +390,13 @@ const portfolio = await trackPortfolio(["GCB", "MTNGH", "GOIL", "NEWMONT"]);
 const createSectorDashboard = async () => {
   const [summary, sectorPerf, sectors] = await Promise.all([
     fetch("https://api.ghana-api.dev/api/v1/stock-market/market-summary").then(
-      (r) => r.json()
+      (r) => r.json(),
     ),
     fetch(
-      "https://api.ghana-api.dev/api/v1/stock-market/sector-performance"
+      "https://api.ghana-api.dev/api/v1/stock-market/sector-performance",
     ).then((r) => r.json()),
     fetch("https://api.ghana-api.dev/api/v1/stock-market/sectors").then((r) =>
-      r.json()
+      r.json(),
     ),
   ]);
 
@@ -423,7 +425,7 @@ const screenStocks = async (criteria) => {
   });
 
   const response = await fetch(
-    `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`
+    `https://api.ghana-api.dev/api/v1/stock-market/search?${params}`,
   );
 
   return response.json();
@@ -513,7 +515,7 @@ const StockWidget = ({ symbol }) => {
     const fetchStock = async () => {
       try {
         const response = await fetch(
-          `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`
+          `https://api.ghana-api.dev/api/v1/stock-market/stock/${symbol}`,
         );
         const stockData = await response.json();
         setStock(stockData);
@@ -585,7 +587,8 @@ class GSEAnalyzer:
 
     def find_opportunities(self):
         # Find stocks with high dividend yield and low P/E ratio
-        response = requests.get(f"{self.base_url}/search?sortBy=dividendYield&sortOrder=desc&limit=50")
+        # dividendYield is not a sortBy field, so fetch the stocks and sort here
+        response = requests.get(f"{self.base_url}/search?limit=100")
         stocks = pd.DataFrame(response.json()['data'])
 
         opportunities = stocks[
@@ -594,7 +597,9 @@ class GSEAnalyzer:
             (stocks['changePercent'] > 0)
         ]
 
-        return opportunities[['symbol', 'name', 'price', 'dividendYield', 'peRatio', 'changePercent']]
+        return opportunities.sort_values('dividendYield', ascending=False)[
+            ['symbol', 'name', 'price', 'dividendYield', 'peRatio', 'changePercent']
+        ]
 
 # Usage
 analyzer = GSEAnalyzer()

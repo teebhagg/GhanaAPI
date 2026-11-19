@@ -32,4 +32,6 @@ export type FallbackResult = {
   success: boolean;
   message: string;
   data: unknown[];
+  /** The last provider error. For logs and /status, never for clients. */
+  cause?: unknown;
 };

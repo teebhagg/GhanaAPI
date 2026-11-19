@@ -84,7 +84,7 @@ export class GSEApiProvider {
     } catch (error) {
       this.logger.error('Error fetching all stocks from GSE API:', error);
       throw new HttpException(
-        `Failed to fetch stock data from GSE API: ${error.message}`,
+        'Stock data is temporarily unavailable. Please try again later.',
         HttpStatus.SERVICE_UNAVAILABLE,
         { cause: error },
       );
@@ -122,8 +122,9 @@ export class GSEApiProvider {
     } catch (error) {
       this.logger.error(`Error fetching stock ${symbol} from GSE API:`, error);
       throw new HttpException(
-        `Failed to fetch stock ${symbol} from GSE API: ${error.message}`,
+        `Could not fetch stock ${symbol} from the Ghana Stock Exchange`,
         HttpStatus.NOT_FOUND,
+        { cause: error },
       );
     }
   }

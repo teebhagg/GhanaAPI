@@ -21,6 +21,8 @@ import {
   RateData,
 } from './providers/rate-provider.interface';
 
+const PROVIDERS_FAILED_MESSAGE =
+  'Exchange rates are temporarily unavailable. Please try again later.';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_RAW_RANGE_DAYS = 366;
 const MAX_DAILY_RANGE_DAYS = 5 * 366;
@@ -71,7 +73,11 @@ export class ExchangeRatesService {
     const merged = await this.getDataWithFallback(providers);
     if (!merged.success) {
       // prefer BoG-specific error code when scraping fails
-      throw AppException.rateProviderFailed(merged.message);
+      throw AppException.rateProviderFailed(
+        merged.message,
+        undefined,
+        merged.cause,
+      );
     }
 
     const rates = this.mapToExchangeRateDtos(merged.data as RateData[]);
@@ -218,6 +224,7 @@ export class ExchangeRatesService {
     providers: Array<() => Promise<any[]>>,
   ): Promise<FallbackResult> {
     const errors: string[] = [];
+    let cause: unknown;
     for (const p of providers) {
       try {
         const res = await p();
@@ -226,15 +233,21 @@ export class ExchangeRatesService {
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         errors.push(msg);
+        cause = e;
         continue;
       }
     }
-    // All threw: surface combined message to logs; return empty to avoid 500s in MVP
-
+    // All threw: the provider messages go to the log and to /status through
+    // the cause. They never reach the client, which gets a fixed message.
     this.logger.warn(
       `[ExchangeRates] All providers failed: ${errors.join(' | ')}`,
     );
-    return { success: false, message: errors.join(' | '), data: [] };
+    return {
+      success: false,
+      message: PROVIDERS_FAILED_MESSAGE,
+      data: [],
+      cause,
+    };
   }
 
   async convertCurrency(body: ConvertCurrencyDto) {
@@ -251,7 +264,11 @@ export class ExchangeRatesService {
     const result = await this.getDataWithFallbackForConversion(providers);
 
     if (!result.success) {
-      throw AppException.rateProviderFailed(result.message);
+      throw AppException.rateProviderFailed(
+        result.message,
+        undefined,
+        result.cause,
+      );
     }
 
     const conversion = result.data[0] as ConversionResult;
@@ -328,14 +345,26 @@ export class ExchangeRatesService {
   private async getDataWithFallbackForConversion(
     providers: Array<() => Promise<ConversionResult>>,
   ): Promise<FallbackResult> {
+    let cause: unknown;
     for (const p of providers) {
       try {
         const res = await p();
         if (res) return { success: true, message: '', data: [res] };
-      } catch {
+      } catch (e: unknown) {
+        cause = e;
         continue;
       }
     }
-    return { success: false, message: 'All providers failed', data: [] };
+    this.logger.warn(
+      `[ExchangeRates] All conversion providers failed: ${
+        cause instanceof Error ? cause.message : String(cause)
+      }`,
+    );
+    return {
+      success: false,
+      message: PROVIDERS_FAILED_MESSAGE,
+      data: [],
+      cause,
+    };
   }
 }

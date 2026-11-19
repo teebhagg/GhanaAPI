@@ -10,8 +10,12 @@ export class AppException extends HttpException {
   public readonly code: string;
   public readonly details?: unknown;
 
-  constructor(payload: AppErrorPayload, status: HttpStatus) {
-    super(payload.message, status);
+  constructor(
+    payload: AppErrorPayload,
+    status: HttpStatus,
+    options?: { cause?: unknown },
+  ) {
+    super(payload.message, status, options);
     this.code = payload.code;
     this.details = payload.details;
   }
@@ -33,10 +37,12 @@ export class AppException extends HttpException {
   static rateProviderFailed(
     message = 'All providers failed',
     details?: unknown,
+    cause?: unknown,
   ) {
     return new AppException(
       { code: 'RATE_PROVIDER_FAILED', message, details },
       HttpStatus.SERVICE_UNAVAILABLE,
+      { cause },
     );
   }
 

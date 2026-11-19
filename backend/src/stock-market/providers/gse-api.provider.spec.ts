@@ -143,4 +143,21 @@ describe('GSEApiProvider upstream load', () => {
       status: 503,
     });
   });
+
+  it('keeps the upstream error text out of the client message', async () => {
+    const failure = networkError(
+      'ECONNREFUSED',
+      'connect ECONNREFUSED 10.1.2.3:443',
+      'https://dev.kwayisi.org/apis/gse/live',
+    );
+    get.mockImplementation(() => throwError(() => failure));
+
+    const all = await provider.fetchAllStocks().catch((e: unknown) => e);
+    expect((all as Error).message).not.toMatch(/ECONNREFUSED|10\.1\.2\.3/);
+    expect((all as { cause?: unknown }).cause).toBe(failure);
+
+    const one = await provider.fetchStock('GCB').catch((e: unknown) => e);
+    expect((one as Error).message).not.toMatch(/ECONNREFUSED|10\.1\.2\.3/);
+    expect((one as { cause?: unknown }).cause).toBeDefined();
+  });
 });

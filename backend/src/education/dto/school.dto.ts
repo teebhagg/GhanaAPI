@@ -20,6 +20,7 @@ export class SchoolDto {
   name: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Common nickname or alias for the institution',
     example: 'Legon',
   })
@@ -45,6 +46,7 @@ export class SchoolDto {
   district: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Specific location or address',
     example: 'Achimota, Accra',
   })
@@ -72,36 +74,42 @@ export class SchoolDto {
   residency: Residency;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Contact email address',
     example: 'info@achimota.edu.gh',
   })
   email?: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Primary contact phone number',
     example: '+233 30 266 6962',
   })
   phone?: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Official website URL',
     example: 'https://achimota.edu.gh',
   })
   website?: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Postal or box address for the institution',
     example: 'P. O. BOX LG 25, Legon, Ghana',
   })
   boxAddress?: string;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Year the institution was established',
     example: 1948,
   })
   establishedYear?: number;
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Approximate student population or enrollment',
     example: 38000,
   })
@@ -115,6 +123,7 @@ export class SchoolDto {
   programsOffered: string[];
 
   @ApiPropertyOptional({
+    nullable: true,
     description: 'Additional metadata',
     example: { established: 1927, motto: 'Ut Omnes Unum Sint' },
   })

@@ -1,15 +1,29 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { AddressesService } from './addresses.service';
 import { LookupQueryDto } from './dto/lookup-query.dto';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { StandardizeDto } from './dto/standardize.dto';
+import { AddressDto } from './dto/address.dto';
+import { AddressValidationDto } from './dto/address-validation.dto';
+import { StandardizedAddressDto } from './dto/standardized-address.dto';
 
 @Controller('addresses')
 @ApiTags('Addresses')
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
 
+  @ApiOkResponse({
+    description: 'Format check of a digital code',
+    type: AddressValidationDto,
+  })
   @Get('validate/:code')
   @ApiOperation({
     summary: 'Validate Ghana Post Digital Address',
@@ -20,6 +34,16 @@ export class AddressesController {
     return this.addressesService.validateDigitalCode(code);
   }
 
+  @ApiOkResponse({
+    description:
+      'The nearest address. When neither geocoder finds one, the body is empty (no JSON). A repeat request for the same coordinates within a day is served from the cache and returns an array of addresses instead.',
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(AddressDto) },
+        { type: 'array', items: { $ref: getSchemaPath(AddressDto) } },
+      ],
+    },
+  })
   @Get('lookup')
   @ApiOperation({
     summary: 'Reverse geocoding nearest digital address',
@@ -30,6 +54,7 @@ export class AddressesController {
     return this.addressesService.lookupByCoordinates(query.lat, query.lng);
   }
 
+  @ApiOkResponse({ description: 'Matching addresses', type: [AddressDto] })
   @Get('search')
   @ApiOperation({
     summary: 'Search addresses and digital codes',
@@ -41,6 +66,10 @@ export class AddressesController {
     return this.addressesService.searchAddresses(query.q);
   }
 
+  @ApiCreatedResponse({
+    description: 'The standardised address',
+    type: StandardizedAddressDto,
+  })
   @Post('standardize')
   @ApiOperation({
     summary: 'Standardize a raw address string',

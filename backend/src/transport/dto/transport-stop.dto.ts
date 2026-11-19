@@ -27,9 +27,9 @@ export class TransportStopDetailDto {
   coordinates: [number, number];
 
   @ApiProperty({
-    description: 'Type of transport stop',
+    description:
+      'OpenStreetMap public_transport value of the stop (for example bus_stop, platform, station, stop_position). Other values can appear in the data.',
     example: 'bus_stop',
-    enum: ['bus_stop', 'platform', 'station', 'halt', 'tram_stop'],
   })
   @IsString()
   type: string;
@@ -76,7 +76,7 @@ export class TransportStopsQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by stop type',
     example: 'bus_stop',
-    enum: ['bus_stop', 'platform', 'station', 'halt', 'tram_stop'],
+    enum: ['bus_stop', 'stop_position', 'platform', 'station'],
   })
   @IsOptional()
   @IsString()

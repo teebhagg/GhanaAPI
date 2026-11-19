@@ -8,18 +8,26 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { ExchangeRatesService } from './exchange-rates.service';
 import { HistoricalQueryDto } from './dto/historical-query.dto';
 import { HistoricalRateDto } from './dto/historical-rate.dto';
 import { HistoricalRateLimitGuard } from './guards/historical-rate-limit.guard';
 import { ConvertCurrencyDto } from './dto/convert-currency.dto';
+import { ExchangeRateDto } from './dto/exchange-rate.dto';
+import { ConversionResultDto } from '../common/swagger/response-schemas';
 
 @Controller('exchange-rates')
 @ApiTags('Exchange Rates')
 export class ExchangeRatesController {
   constructor(private readonly exchangeRatesService: ExchangeRatesService) {}
 
+  @ApiOkResponse({ description: 'Current rates', type: [ExchangeRateDto] })
   @Get('current')
   @ApiOperation({ summary: 'Get current exchange rates' })
   @ApiQuery({ name: 'currencies', required: false })
@@ -31,6 +39,10 @@ export class ExchangeRatesController {
     return this.exchangeRatesService.getCurrentRates(list);
   }
 
+  @ApiOkResponse({
+    description: 'Stored rate snapshots in the range',
+    type: [HistoricalRateDto],
+  })
   @Get('historical')
   @UseGuards(HistoricalRateLimitGuard)
   @ApiOperation({
@@ -45,6 +57,10 @@ export class ExchangeRatesController {
     );
   }
 
+  @ApiOkResponse({
+    description: 'Rate snapshots for the last 7 days',
+    type: [HistoricalRateDto],
+  })
   @Get(':currency/trend')
   @UseGuards(HistoricalRateLimitGuard)
   @ApiOperation({
@@ -60,6 +76,7 @@ export class ExchangeRatesController {
     ) as unknown as HistoricalRateDto[];
   }
 
+  @ApiOkResponse({ description: 'The conversion', type: ConversionResultDto })
   @Post('convert')
   @HttpCode(200)
   @ApiOperation({ summary: 'Convert currency' })

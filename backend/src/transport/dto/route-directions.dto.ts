@@ -239,3 +239,10 @@ export class GeocodingResult {
   @IsOptional()
   place_type?: string;
 }
+
+/** The `{ success, data }` envelope that `GET /transport/directions` returns */
+export class RouteDirectionsEnvelopeDto {
+  @ApiProperty({ example: true }) success: boolean;
+  @ApiProperty({ type: () => RouteDirectionsResponseDto })
+  data: RouteDirectionsResponseDto;
+}

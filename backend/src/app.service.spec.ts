@@ -43,7 +43,7 @@ describe('AppService.getStatus', () => {
     };
     reports = { bank: OK, stock: OK, stops: OK, fuel: OK, crypto: OK };
     service = new AppService(
-      prisma as PrismaService,
+      prisma as unknown as PrismaService,
       { getHealth: () => reports.bank } as unknown as BankDataProviderService,
       { getHealth: () => reports.stock } as unknown as StockMarketService,
       { getHealth: () => reports.stops } as unknown as TransportStopsService,

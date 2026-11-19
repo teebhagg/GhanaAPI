@@ -60,6 +60,14 @@ chore: upgrade dependencies
 | `build`    | Build system     |
 | `revert`   | Revert changes   |
 
+## Allowed scopes
+
+The commit and PR title scope must be one of these (or left out):
+
+`api`, `frontend`, `backend`, `docs`, `ci`, `test`, `transport`, `exchange-rates`, `locations`, `addresses`
+
+Education and stock market changes use `backend` (or `api` for public API changes), because `education` and `stock-market` are not allowed scopes.
+
 ## 📝 Pull Request
 
 ### Title Format
@@ -127,7 +135,7 @@ git push origin main
 
 ```bash
 git branch -m feature/new-descriptive-name
-git push origin -u feature/new-descriptive-name
+git push -u origin feature/new-descriptive-name   # origin is your fork if you don't have push access
 git push origin --delete old-branch-name
 ```
 
@@ -149,10 +157,14 @@ git rebase -i HEAD~3
 
 ### Development Setup
 
+You need Node.js 18 or later and a PostgreSQL database. The full walkthrough is in [Contributing Overview](./overview#development-setup).
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/GhanaAPI.git
 cd GhanaAPI/backend
 npm install
+cp .env.example .env          # then set DATABASE_URL
+npm run prisma:migrate        # creates the tables
 npm run start:dev
 ```
 

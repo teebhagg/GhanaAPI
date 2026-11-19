@@ -41,21 +41,41 @@ Thank you for your interest in contributing to GhanaAPI! We welcome contribution
    npm install
    ```
 
-3. **Environment Setup**
+3. **Start a Local Database**
+
+   The API needs PostgreSQL. The quickest way is Docker:
+
+   ```bash
+   docker run --name ghanaapi-db -e POSTGRES_PASSWORD=postgres \
+     -e POSTGRES_DB=ghanaapi_local -p 5432:5432 -d postgres:16
+   ```
+
+   Stop and remove it when you're done with `docker rm -f ghanaapi-db`.
+
+4. **Environment Setup**
 
    ```bash
    cd backend
    cp .env.example .env
-   # Edit .env with your local configuration
    ```
 
-4. **Start Development Server**
+   `DATABASE_URL` in `.env` must point at the database from step 3. The other values are optional: without an API key, that data source is skipped.
+
+5. **Create the Database Tables**
+
+   ```bash
+   npm run prisma:migrate
+   ```
+
+6. **Start Development Server**
 
    ```bash
    npm run start:dev
    ```
 
-5. **Run Tests**
+   The API is at `http://localhost:3000/api/v1`, with Swagger at `http://localhost:3000/docs`.
+
+7. **Run Tests**
    ```bash
    npm test
    npm run test:watch  # For continuous testing
@@ -245,9 +265,16 @@ git commit -m "feat: add bulk address validation endpoint"
 git push origin feature/descriptive-feature-name
 ```
 
+If you don't have push access to `teebhagg/GhanaAPI` (most contributors don't), fork it on GitHub, push your branch to your fork, and open the pull request from the fork against `main`:
+
+```bash
+git remote add upstream https://github.com/teebhagg/GhanaAPI.git
+git push -u origin feature/descriptive-feature-name   # origin is your fork
+```
+
 Create a pull request with:
 
-- **Clear title** following [conventional commits format](./validation-workflows#1-pr-title-validation)
+- **Clear title** following [conventional commits format](./validation-workflows#1-pr-title-validation). Use one of the allowed scopes listed in [Quick Reference](./quick-reference#allowed-scopes).
 - **Detailed description** of what was added/changed (minimum 20 characters)
 - **Screenshots or examples** if applicable
 - **Reference to related issues**

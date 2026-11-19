@@ -146,6 +146,22 @@ describe('AddressesService', () => {
       );
     });
 
+    it('fills digitalCode from the address when reverse geocoding', async () => {
+      const axiosGet = (axios as unknown as { get: jest.Mock }).get;
+      axiosGet.mockResolvedValue({
+        data: {
+          display_name: 'Accra Mall, Accra, GD-110-6313, Ghana',
+          lat: '5.62',
+          lon: '-0.17',
+          address: { postcode: 'GD-110-6313' },
+        },
+      });
+
+      const result = await service.lookupByCoordinates(5.62, -0.17);
+
+      expect(result?.digitalCode).toBe('GD-110-6313');
+    });
+
     it('should handle nominatim API failures gracefully', async () => {
       mockCacheManager.get.mockResolvedValue(null);
       // Mock axios.get to reject (Nominatim API failure)
@@ -236,6 +252,43 @@ describe('AddressesService', () => {
         expect.any(Array),
         24 * 60 * 60,
       );
+    });
+
+    it('fills digitalCode from the address text or the postal code', async () => {
+      const axiosGet = (axios as unknown as { get: jest.Mock }).get;
+      axiosGet.mockResolvedValue({
+        data: [
+          {
+            display_name:
+              'Accra Mall, Spintex Road, Accra, Greater Accra Region, gd-110-6313, Ghana',
+            lat: '5.62',
+            lon: '-0.17',
+            address: { postcode: 'GD-110-6313' },
+          },
+          {
+            display_name: 'Kumasi, Ashanti Region, Ghana',
+            lat: '6.68',
+            lon: '-1.62',
+            address: { postcode: 'AK-039-5028' },
+          },
+          {
+            display_name: 'Tamale, Northern Region, Ghana',
+            lat: '9.4',
+            lon: '-0.84',
+            address: { postcode: '00233' },
+          },
+        ],
+      });
+
+      const result = await service.searchAddresses('Ghana');
+
+      expect(result.map((r) => r.digitalCode)).toEqual([
+        'GD-110-6313',
+        'AK-039-5028',
+        '',
+      ]);
+      // The address text is left as the geocoder wrote it
+      expect(result[0].addressLine1).toContain('gd-110-6313');
     });
 
     it('should handle non-array nominatim responses', async () => {

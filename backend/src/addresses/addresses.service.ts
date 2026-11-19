@@ -12,6 +12,7 @@ import { Logger } from '@nestjs/common';
 export class AddressesService {
   private readonly logger = new Logger(AddressesService.name);
   private readonly digitalCodeRegex = /^[A-Z]{2,3}-\d{3}-\d{4}$/;
+  private readonly digitalCodeSearchRegex = /\b[A-Z]{2,3}-\d{3}-\d{4}\b/;
   private readonly nominatim = 'https://nominatim.openstreetmap.org';
   private readonly nominatimReverse = `${this.nominatim}/reverse`;
   private readonly openRouteServiceAutocomplete =
@@ -55,7 +56,9 @@ export class AddressesService {
     if (orsResult.status === 'fulfilled' && orsResult.value)
       items.push(orsResult.value);
 
-    const uniqueItems = this.deduplicateAddresses(items);
+    const uniqueItems = this.deduplicateAddresses(items).map((addr) =>
+      this.withDigitalCode(addr),
+    );
 
     this.logger.log(uniqueItems);
 
@@ -90,7 +93,9 @@ export class AddressesService {
     }
 
     // Remove duplicates based on coordinates and address
-    const uniqueItems = this.deduplicateAddresses(items);
+    const uniqueItems = this.deduplicateAddresses(items).map((addr) =>
+      this.withDigitalCode(addr),
+    );
 
     await this.cache.set(key, uniqueItems, 24 * 60 * 60);
     return uniqueItems;
@@ -233,6 +238,25 @@ export class AddressesService {
     this.logger.log(result);
 
     return result;
+  }
+
+  /**
+   * The geocoders have no digital address field, but they put the code in the
+   * address text or the postal code (for example "..., GD-110-6313, Ghana").
+   * Pull it out so `digitalCode` is not empty when the code is there.
+   */
+  private withDigitalCode(address: AddressDto): AddressDto {
+    if (address.digitalCode) return address;
+    const text = [
+      address.addressLine1,
+      address.postalCode,
+      address.addressLine2,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toUpperCase();
+    const match = this.digitalCodeSearchRegex.exec(text);
+    return match ? { ...address, digitalCode: match[0] } : address;
   }
 
   private deduplicateAddresses(addresses: AddressDto[]): AddressDto[] {

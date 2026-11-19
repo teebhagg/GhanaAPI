@@ -85,7 +85,7 @@ curl -X GET "https://api.ghana-api.dev/api/v1/addresses/validate/GA-123-4567" \
 const validateAddress = async (digitalCode) => {
   try {
     const response = await fetch(
-      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
+      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`,
     );
     const result = await response.json();
 
@@ -114,10 +114,14 @@ Get address information from GPS coordinates (latitude and longitude).
 
 #### Query Parameters
 
-| Parameter | Type   | Required | Description          |
-| --------- | ------ | -------- | -------------------- |
-| `lat`     | number | Yes      | Latitude coordinate  |
-| `lng`     | number | Yes      | Longitude coordinate |
+| Parameter | Type   | Required | Description                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `lat`     | number | Yes      | Latitude in degrees, from -90 to 90    |
+| `lng`     | number | Yes      | Longitude in degrees, from -180 to 180 |
+
+A coordinate outside these ranges, missing, empty or not a number returns `400 Bad Request` with the reason.
+
+`digitalCode` in the result (here and in `/addresses/search`) is filled when the geocoder includes a Ghana Post code such as `GD-110-6313` in the address text or postal code. It is an empty string when no code is present. The address text itself is returned as the geocoder wrote it.
 
 #### Example Request
 
@@ -150,7 +154,7 @@ curl -X GET "https://api.ghana-api.dev/api/v1/addresses/lookup?lat=5.5600&lng=-0
 const lookupAddress = async (lat, lng) => {
   try {
     const response = await fetch(
-      `https://api.ghana-api.dev/api/v1/addresses/lookup?lat=${lat}&lng=${lng}`
+      `https://api.ghana-api.dev/api/v1/addresses/lookup?lat=${lat}&lng=${lng}`,
     );
     const result = await response.json();
 
@@ -225,8 +229,8 @@ const searchAddresses = async (query) => {
   try {
     const response = await fetch(
       `https://api.ghana-api.dev/api/v1/addresses/search?q=${encodeURIComponent(
-        query
-      )}`
+        query,
+      )}`,
     );
     const result = await response.json();
 
@@ -304,7 +308,7 @@ const standardizeAddress = async (rawAddress) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ rawAddress }),
-      }
+      },
     );
     const result = await response.json();
 
@@ -392,7 +396,7 @@ const findNearbyAddresses = async (centerLat, centerLng, radiusKm = 5) => {
       centerLat,
       centerLng,
       address.latitude,
-      address.longitude
+      address.longitude,
     );
     return distance <= radiusKm;
   });
@@ -471,7 +475,7 @@ const AddressValidator = () => {
 
     try {
       const response = await fetch(
-        `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
+        `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`,
       );
       const data = await response.json();
 
@@ -528,7 +532,7 @@ app.get("/validate/:digitalCode", async (req, res) => {
     const { digitalCode } = req.params;
 
     const response = await axios.get(
-      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`
+      `https://api.ghana-api.dev/api/v1/addresses/validate/${digitalCode}`,
     );
 
     res.json(response.data);
@@ -554,8 +558,8 @@ app.get("/search", async (req, res) => {
 
     const response = await axios.get(
       `https://api.ghana-api.dev/api/v1/addresses/search?q=${encodeURIComponent(
-        q
-      )}`
+        q,
+      )}`,
     );
 
     res.json(response.data);

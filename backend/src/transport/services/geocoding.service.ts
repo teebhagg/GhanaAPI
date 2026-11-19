@@ -15,6 +15,9 @@ export function toOverpassNamePattern(value: string): string {
   return value.replace(/[\\^$.|?*+()[\]{}"]/g, '.');
 }
 
+/** A geocoder answered, but had nothing for this place. Not an outage. */
+class NoResultsError extends Error {}
+
 // Per instance. The shared client tries three instances in turn, so the
 // worst case is about 3 x 8 s instead of 3 x 20 s inside a user request.
 const OVERPASS_GEOCODE_TIMEOUT_MS = 8_000;
@@ -30,6 +33,8 @@ export class GeocodingService {
   ) {}
 
   async geocodeLocation(locationName: string): Promise<GeocodingResult> {
+    let answered = false; // at least one geocoder replied, even with no match
+    let lastError: unknown;
     for (const api of this.geocodingApis) {
       try {
         this.logger.log(`Trying to geocode "${locationName}" using ${api}`);
@@ -44,10 +49,24 @@ export class GeocodingService {
         }
       } catch (error) {
         this.logger.warn(`${api} geocoding failed: ${error.message}`);
+        if (error instanceof NoResultsError) {
+          answered = true;
+        } else {
+          lastError = error;
+        }
         continue;
       }
     }
 
+    // A place nobody knows is a 404. If no geocoder could answer at all, the
+    // place may well exist: that is an outage, so say 503.
+    if (!answered) {
+      throw new HttpException(
+        'Location lookup is temporarily unavailable. Please try again later.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+        { cause: lastError },
+      );
+    }
     throw new HttpException(
       `Could not find coordinates for location: ${locationName}`,
       HttpStatus.NOT_FOUND,
@@ -78,7 +97,7 @@ export class GeocodingService {
     );
 
     if (!response.data || response.data.length === 0) {
-      throw new Error(`No results found for: ${locationName}`);
+      throw new NoResultsError(`No results found for: ${locationName}`);
     }
 
     const result = response.data[0];
@@ -110,7 +129,7 @@ export class GeocodingService {
     const data = await queryOverpass(query, OVERPASS_GEOCODE_TIMEOUT_MS);
 
     if (!data.elements || data.elements.length === 0) {
-      throw new Error(`No results found for: ${locationName}`);
+      throw new NoResultsError(`No results found for: ${locationName}`);
     }
 
     const element = data.elements[0];
@@ -119,7 +138,9 @@ export class GeocodingService {
     const lon = Number(element.lon ?? element.center?.lon);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      throw new Error(`Could not extract coordinates for: ${locationName}`);
+      throw new NoResultsError(
+        `Could not extract coordinates for: ${locationName}`,
+      );
     }
 
     return {

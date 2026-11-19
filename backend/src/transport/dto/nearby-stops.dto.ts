@@ -1,28 +1,55 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+import { blankIsInvalid } from '../../common/validation/blank-is-invalid';
+
+const FINITE = { allowNaN: false, allowInfinity: false };
 
 export class NearbyStopsQueryDto {
   @ApiProperty({
-    description: 'Latitude coordinate',
+    description: 'Latitude in degrees, from -90 to 90 (and inside Ghana)',
     example: 5.6037,
+    minimum: -90,
+    maximum: 90,
   })
-  @IsNumber()
+  @Type(() => Number)
+  @Transform(blankIsInvalid)
+  @IsNumber(FINITE)
+  @Min(-90)
+  @Max(90)
   lat: number;
 
   @ApiProperty({
-    description: 'Longitude coordinate',
+    description: 'Longitude in degrees, from -180 to 180 (and inside Ghana)',
     example: -0.187,
+    minimum: -180,
+    maximum: 180,
   })
-  @IsNumber()
+  @Type(() => Number)
+  @Transform(blankIsInvalid)
+  @IsNumber(FINITE)
+  @Min(-180)
+  @Max(180)
   lng: number;
 
   @ApiPropertyOptional({
-    description: 'Search radius in meters (default: 1000)',
+    description: 'Search radius in meters, greater than 0 (default: 1000)',
     example: 1000,
+    default: 1000,
   })
   @IsOptional()
-  @IsNumber()
-  radius?: number;
+  @Type(() => Number)
+  @Transform(blankIsInvalid)
+  @IsNumber(FINITE)
+  @IsPositive()
+  radius?: number = 1000;
 
   @ApiPropertyOptional({
     description: 'Filter by stop type',

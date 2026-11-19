@@ -1,30 +1,54 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsIn,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Min,
+} from 'class-validator';
+import { blankIsInvalid } from '../../common/validation/blank-is-invalid';
+
+export const TRAVEL_COST_MODES = ['car', 'taxi', 'trotro', 'bus'];
 
 export class TravelCostQueryDto {
   @ApiProperty({
-    description: 'Distance in kilometers',
+    description: 'Distance in kilometers, 0 or more',
     example: 15.5,
+    minimum: 0,
   })
-  @IsNumber()
+  @Type(() => Number)
+  @Transform(blankIsInvalid)
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   distance: number;
 
   @ApiPropertyOptional({
-    description: 'Transport mode',
+    description: 'Transport mode (not case sensitive)',
     example: 'car',
-    enum: ['car', 'taxi', 'trotro', 'bus'],
+    enum: TRAVEL_COST_MODES,
+    default: 'car',
   })
   @IsOptional()
-  @IsString()
-  mode?: string;
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsIn(TRAVEL_COST_MODES)
+  mode?: string = 'car';
 
   @ApiPropertyOptional({
-    description: 'Fuel efficiency in km/l for car mode',
+    description: 'Fuel efficiency in km/l for car mode, greater than 0',
     example: 12,
+    default: 12,
   })
   @IsOptional()
-  @IsNumber()
-  fuel_efficiency?: number;
+  @Type(() => Number)
+  @Transform(blankIsInvalid)
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @IsPositive()
+  fuel_efficiency?: number = 12;
 }
 
 export class TravelCostDataDto {

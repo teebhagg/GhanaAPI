@@ -93,12 +93,12 @@ Find transport stops within a specified radius of given coordinates.
 
 #### Query Parameters
 
-| Parameter | Type   | Required | Default | Description             |
-| --------- | ------ | -------- | ------- | ----------------------- |
-| `lat`     | number | Yes      | -       | Latitude coordinate     |
-| `lng`     | number | Yes      | -       | Longitude coordinate    |
-| `radius`  | number | No       | `1000`  | Search radius in meters |
-| `type`    | string | No       | -       | Filter by stop type     |
+| Parameter | Type   | Required | Default | Description                             |
+| --------- | ------ | -------- | ------- | --------------------------------------- |
+| `lat`     | number | Yes      | -       | Latitude, -90 to 90, inside Ghana       |
+| `lng`     | number | Yes      | -       | Longitude, -180 to 180, inside Ghana    |
+| `radius`  | number | No       | `1000`  | Search radius in meters, greater than 0 |
+| `type`    | string | No       | -       | Filter by stop type                     |
 
 #### Example Request
 
@@ -149,7 +149,7 @@ curl -X GET "https://api.ghana-api.dev/api/v1/transport/nearby-stops?lat=5.6037&
 
 #### Error Responses
 
-- **400 Bad Request** - Invalid coordinates or outside Ghana boundaries
+- **400 Bad Request** - Invalid or missing coordinates, a radius that is not greater than 0, an unknown stop type, or coordinates outside Ghana boundaries
 - **503 Service Unavailable** - Transport service is unavailable
 
 ---
@@ -164,10 +164,10 @@ Calculate optimal route, distance, and duration between two points.
 
 | Parameter   | Type   | Required | Default   | Description                                                         |
 | ----------- | ------ | -------- | --------- | ------------------------------------------------------------------- |
-| `start_lat` | number | Yes      | -         | Starting latitude                                                   |
-| `start_lng` | number | Yes      | -         | Starting longitude                                                  |
-| `end_lat`   | number | Yes      | -         | Ending latitude                                                     |
-| `end_lng`   | number | Yes      | -         | Ending longitude                                                    |
+| `start_lat` | number | Yes      | -         | Starting latitude, -90 to 90, inside Ghana                          |
+| `start_lng` | number | Yes      | -         | Starting longitude, -180 to 180, inside Ghana                       |
+| `end_lat`   | number | Yes      | -         | Ending latitude, -90 to 90, inside Ghana                            |
+| `end_lng`   | number | Yes      | -         | Ending longitude, -180 to 180, inside Ghana                         |
 | `mode`      | string | No       | `driving` | Transport mode (`driving`, `walking`, `cycling`, `publicTransport`) |
 
 #### Example Request
@@ -220,7 +220,7 @@ curl -X GET "https://api.ghana-api.dev/api/v1/transport/route-calculation?start_
 
 #### Error Responses
 
-- **400 Bad Request** - Invalid coordinates or outside Ghana boundaries
+- **400 Bad Request** - Invalid or missing coordinates, an unknown `mode`, or coordinates outside Ghana boundaries
 - **503 Service Unavailable** - Routing service is unavailable
 
 ---
@@ -327,8 +327,8 @@ curl -X GET "https://api.ghana-api.dev/api/v1/transport/directions?start_name=Kw
 #### Error Responses
 
 - **400 Bad Request** - Invalid input parameters or coordinates outside Ghana
-- **404 Not Found** - Could not find coordinates for provided place names
-- **503 Service Unavailable** - All routing services are unavailable
+- **404 Not Found** - A geocoder answered but knows no place with that name
+- **503 Service Unavailable** - All routing services are unavailable, or no geocoder could answer (the place may exist; try again later)
 
 ---
 
@@ -340,11 +340,11 @@ Estimate travel cost based on distance, fuel prices, and transport mode.
 
 #### Query Parameters
 
-| Parameter         | Type   | Required | Default | Description                                     |
-| ----------------- | ------ | -------- | ------- | ----------------------------------------------- |
-| `distance`        | number | Yes      | -       | Distance in kilometers                          |
-| `mode`            | string | No       | `car`   | Transport mode (`car`, `taxi`, `trotro`, `bus`) |
-| `fuel_efficiency` | number | No       | `12`    | Fuel efficiency in km/l (for car mode)          |
+| Parameter         | Type   | Required | Default | Description                                                         |
+| ----------------- | ------ | -------- | ------- | ------------------------------------------------------------------- |
+| `distance`        | number | Yes      | -       | Distance in kilometers, 0 or more                                   |
+| `mode`            | string | No       | `car`   | Transport mode (`car`, `taxi`, `trotro`, `bus`), not case sensitive |
+| `fuel_efficiency` | number | No       | `12`    | Fuel efficiency in km/l, greater than 0 (for car mode)              |
 
 #### Example Request
 
@@ -407,7 +407,7 @@ curl -X GET "https://api.ghana-api.dev/api/v1/transport/travel-cost?distance=247
 
 #### Error Responses
 
-- **400 Bad Request** - Invalid distance or unsupported transport mode
+- **400 Bad Request** - A negative or non-numeric distance, a fuel efficiency that is not greater than 0, or an unsupported transport mode. These are checked before fuel prices are looked up.
 - **503 Service Unavailable** - Pricing service is unavailable
 
 ---

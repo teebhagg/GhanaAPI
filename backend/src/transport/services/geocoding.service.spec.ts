@@ -1,4 +1,5 @@
 import { HttpService } from '@nestjs/axios';
+import { of } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { queryOverpass } from '../../common/overpass/overpass-client';
 import { GeocodingService, toOverpassNamePattern } from './geocoding.service';
@@ -90,6 +91,40 @@ describe('GeocodingService (Overpass fallback)', () => {
     });
 
     await expect(service.geocodeLocation('Nowhere')).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it('returns 503, not 404, when no geocoder could answer', async () => {
+    const overpassDown = new Error('connect ECONNREFUSED overpass');
+    mockedQuery.mockRejectedValue(overpassDown);
+
+    const error = (await service
+      .geocodeLocation('Kumasi')
+      .catch((e: unknown) => e)) as {
+      status: number;
+      cause: unknown;
+      message: string;
+    };
+
+    expect(error).toMatchObject({ status: 503, cause: overpassDown });
+    expect(error.message).not.toMatch(/ECONNREFUSED|overpass|nominatim/i);
+  });
+
+  it('returns 404 when a geocoder answered with no match, even if the other is down', async () => {
+    // Nominatim is down (see beforeEach); Overpass answers and has nothing
+    mockedQuery.mockResolvedValue({ elements: [] });
+
+    await expect(service.geocodeLocation('Atlantis')).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it('returns 404 when Nominatim answers with no match and Overpass is down', async () => {
+    httpService.get.mockReturnValue(of({ data: [] }));
+    mockedQuery.mockRejectedValue(new Error('overpass down'));
+
+    await expect(service.geocodeLocation('Atlantis')).rejects.toMatchObject({
       status: 404,
     });
   });

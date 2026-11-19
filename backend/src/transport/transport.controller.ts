@@ -3,7 +3,6 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  ParseFloatPipe,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -29,6 +28,7 @@ import {
 } from './dto/transport-stop.dto';
 import {
   RouteCalculationDto,
+  RouteCalculationQueryDto,
 } from './dto/route-calculation.dto';
 import {
   FuelPrice,
@@ -138,27 +138,6 @@ export class TransportController {
     description:
       'Find transport stops within a specified radius of given coordinates',
   })
-  @ApiQuery({
-    name: 'lat',
-    type: 'number',
-    description: 'Latitude',
-  })
-  @ApiQuery({
-    name: 'lng',
-    type: 'number',
-    description: 'Longitude',
-  })
-  @ApiQuery({
-    name: 'radius',
-    type: 'number',
-    required: false,
-    description: 'Search radius in meters (default: 1000)',
-  })
-  @ApiQuery({
-    name: 'type',
-    required: false,
-    description: 'Filter by stop type',
-  })
   @ApiResponse({
     status: 200,
     description: 'Nearby transport stops',
@@ -192,18 +171,15 @@ export class TransportController {
     description: 'Service unavailable',
     type: ErrorResponseDto,
   })
-  async getNearbyStops(
-    @Query('lat', ParseFloatPipe) lat: number,
-    @Query('lng', ParseFloatPipe) lng: number,
-    @Query('radius') radius: number = 1000,
-    @Query('type') type?: string,
-  ): Promise<{
+  async getNearbyStops(@Query() query: NearbyStopsQueryDto): Promise<{
     success: boolean;
     data: (TransportStop & { distance: number })[];
     count: number;
     center: [number, number];
     radius: number;
   }> {
+    const { lat, lng, type } = query;
+    const radius = query.radius ?? 1000;
     try {
       this.validateGhanaCoordinates(lat, lng);
 
@@ -257,32 +233,6 @@ export class TransportController {
     description:
       'Calculate optimal route, distance, and duration between start and end coordinates',
   })
-  @ApiQuery({
-    name: 'start_lat',
-    type: 'number',
-    description: 'Starting latitude',
-  })
-  @ApiQuery({
-    name: 'start_lng',
-    type: 'number',
-    description: 'Starting longitude',
-  })
-  @ApiQuery({
-    name: 'end_lat',
-    type: 'number',
-    description: 'Ending latitude',
-  })
-  @ApiQuery({
-    name: 'end_lng',
-    type: 'number',
-    description: 'Ending longitude',
-  })
-  @ApiQuery({
-    name: 'mode',
-    enum: TransportMode,
-    required: false,
-    description: 'Transport mode (default: driving)',
-  })
   @ApiResponse({
     status: 200,
     description: 'Route calculation result',
@@ -319,19 +269,20 @@ export class TransportController {
     description: 'Service unavailable',
     type: ErrorResponseDto,
   })
-  async calculateRoute(
-    @Query('start_lat', ParseFloatPipe) startLat: number,
-    @Query('start_lng', ParseFloatPipe) startLng: number,
-    @Query('end_lat', ParseFloatPipe) endLat: number,
-    @Query('end_lng', ParseFloatPipe) endLng: number,
-    @Query('mode') mode: TransportMode = TransportMode.DRIVING,
-  ): Promise<{
+  async calculateRoute(@Query() query: RouteCalculationQueryDto): Promise<{
     success: boolean;
     data: RouteCalculation;
     start: [number, number];
     end: [number, number];
     mode: string;
   }> {
+    const {
+      start_lat: startLat,
+      start_lng: startLng,
+      end_lat: endLat,
+      end_lng: endLng,
+    } = query;
+    const mode = query.mode ?? TransportMode.DRIVING;
     try {
       // Validate coordinates for Ghana bounds
       this.validateGhanaCoordinates(startLat, startLng);
@@ -351,6 +302,10 @@ export class TransportController {
         mode,
       };
     } catch (error) {
+      // Keep 4xx errors (coordinates outside Ghana) as they are.
+      if (error instanceof HttpException && error.getStatus() < 500) {
+        throw error;
+      }
       throw new HttpException(
         {
           success: false,
@@ -477,23 +432,6 @@ export class TransportController {
     description:
       'Estimate travel cost based on distance, fuel prices, and transport mode',
   })
-  @ApiQuery({
-    name: 'distance',
-    type: 'number',
-    description: 'Distance in kilometers',
-  })
-  @ApiQuery({
-    name: 'mode',
-    enum: ['car', 'taxi', 'trotro', 'bus'],
-    required: false,
-    description: 'Transport mode (default: car)',
-  })
-  @ApiQuery({
-    name: 'fuel_efficiency',
-    type: 'number',
-    required: false,
-    description: 'Fuel efficiency in km/l (default: 12)',
-  })
   @ApiResponse({
     status: 200,
     description: 'Travel cost estimation',
@@ -509,11 +447,7 @@ export class TransportController {
     description: 'Service unavailable',
     type: ErrorResponseDto,
   })
-  async estimateTravelCost(
-    @Query('distance', ParseFloatPipe) distance: number,
-    @Query('mode') mode: string = 'car',
-    @Query('fuel_efficiency') fuelEfficiency: number = 12,
-  ): Promise<{
+  async estimateTravelCost(@Query() query: TravelCostQueryDto): Promise<{
     success: boolean;
     data: {
       distance: number;
@@ -524,6 +458,9 @@ export class TransportController {
       breakdown: Record<string, string | number>;
     };
   }> {
+    const { distance } = query;
+    const mode = query.mode ?? 'car';
+    const fuelEfficiency = query.fuel_efficiency ?? 12;
     try {
       const fuelPrices = await this.transportService.getFuelPrices();
       let cost = 0;
@@ -598,6 +535,10 @@ export class TransportController {
         },
       };
     } catch (error) {
+      // Keep 4xx errors as they are.
+      if (error instanceof HttpException && error.getStatus() < 500) {
+        throw error;
+      }
       throw new HttpException(
         {
           success: false,

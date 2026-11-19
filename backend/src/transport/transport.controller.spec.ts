@@ -136,7 +136,10 @@ describe('TransportController', () => {
 
       mockTransportService.getTransportStops.mockResolvedValue(mockStops);
 
-      const result = await controller.getNearbyStops(5.6037, -0.187);
+      const result = await controller.getNearbyStops({
+        lat: 5.6037,
+        lng: -0.187,
+      });
 
       expect(result.success).toBe(true);
       expect(Array.isArray(result.data)).toBe(true);
@@ -147,7 +150,7 @@ describe('TransportController', () => {
       const validLng = -0.187;
 
       await expect(
-        controller.getNearbyStops(invalidLat, validLng),
+        controller.getNearbyStops({ lat: invalidLat, lng: validLng }),
       ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST });
     });
   });
@@ -166,12 +169,12 @@ describe('TransportController', () => {
 
       mockTransportService.calculateRoute.mockResolvedValue(mockRoute);
 
-      const result = await controller.calculateRoute(
-        5.6037,
-        -0.187,
-        6.6885,
-        -1.6244,
-      );
+      const result = await controller.calculateRoute({
+        start_lat: 5.6037,
+        start_lng: -0.187,
+        end_lat: 6.6885,
+        end_lng: -1.6244,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockRoute);
@@ -184,13 +187,36 @@ describe('TransportController', () => {
       const validEndLng = -1.6244;
 
       await expect(
-        controller.calculateRoute(
-          invalidStartLat,
-          validStartLng,
-          validEndLat,
-          validEndLng,
-        ),
+        controller.calculateRoute({
+          start_lat: invalidStartLat,
+          start_lng: validStartLng,
+          end_lat: validEndLat,
+          end_lng: validEndLng,
+        }),
       ).rejects.toThrow(HttpException);
+    });
+  });
+
+  describe('errors the client caused', () => {
+    it('keeps a 400 for coordinates outside Ghana in route-calculation', async () => {
+      await expect(
+        controller.calculateRoute({
+          start_lat: 5.6037,
+          start_lng: -0.187,
+          end_lat: 60,
+          end_lng: 0,
+        }),
+      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST });
+    });
+
+    it('still reports a fuel price outage for a valid request as 503', async () => {
+      mockTransportService.getFuelPrices.mockRejectedValue(
+        new Error('fuel down'),
+      );
+
+      await expect(
+        controller.estimateTravelCost({ distance: 10, mode: 'taxi' }),
+      ).rejects.toMatchObject({ status: HttpStatus.SERVICE_UNAVAILABLE });
     });
   });
 
@@ -240,7 +266,11 @@ describe('TransportController', () => {
 
       mockTransportService.getFuelPrices.mockResolvedValue(mockFuelPrices);
 
-      const result = await controller.estimateTravelCost(25.5, 'car', 10.5);
+      const result = await controller.estimateTravelCost({
+        distance: 25.5,
+        mode: 'car',
+        fuel_efficiency: 10.5,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.mode).toBe('car');
@@ -261,7 +291,10 @@ describe('TransportController', () => {
 
       mockTransportService.getFuelPrices.mockResolvedValue(mockFuelPrices);
 
-      const result = await controller.estimateTravelCost(15.2, 'trotro');
+      const result = await controller.estimateTravelCost({
+        distance: 15.2,
+        mode: 'trotro',
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.mode).toBe('trotro');

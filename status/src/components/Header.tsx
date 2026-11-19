@@ -1,37 +1,48 @@
-import { useRouterState } from '@tanstack/react-router'
-
 export default function Header() {
-  const router = useRouterState()
-  const location = router.location
-
-  const handleBrandClick = () => {
-    if (location.pathname === '/') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-6">
-        <button
-          type="button"
-          className="flex items-center space-x-3"
-          onClick={handleBrandClick}
+    <header className="border-b border-border">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-5">
+        <a
+          href="/"
+          className="flex shrink-0 items-center gap-2.5 font-semibold whitespace-nowrap"
         >
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
-            <img
-              src="/ghana-api.jpeg"
-              alt="GhanaAPI Logo"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold">GhanaAPI</span>
-            <span className="text-2xl font-bold text-muted-foreground">•</span>
-            <span className="text-lg font-bold text-muted-foreground">Status</span>
-          </div>
-        </button>
+          <img
+            src="/ghana-api.jpeg"
+            alt=""
+            width={24}
+            height={24}
+            className="size-6 rounded-full"
+          />
+          <span className="tracking-tight">GhanaAPI</span>
+          <span className="text-muted-foreground font-normal">Status</span>
+        </a>
+        <nav className="flex shrink-0 items-center gap-4 sm:gap-5 text-sm text-muted-foreground">
+          <a
+            className="link"
+            href="https://docs.ghana-api.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Docs
+          </a>
+          <a
+            className="link hidden sm:inline"
+            href="https://api.ghana-api.dev/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Playground
+          </a>
+          <a
+            className="link"
+            href="https://github.com/teebhagg/GhanaAPI"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        </nav>
       </div>
-    </nav>
+    </header>
   )
 }

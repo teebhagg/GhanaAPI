@@ -1,36 +1,34 @@
-// Fetch Status from Ghana API
+export type ServiceResult = {
+  status: 'operational' | 'down'
+  responseTime: number | null
+  httpStatus: number | null
+}
+
+const TIMEOUT_MS = 10_000
 
 export async function checkService(
   url: string,
   method: string = 'GET',
-  body: any = null,
-) {
-  if (body) {
-    console.log(url, method, JSON.stringify(body))
-  }
-
+  body: unknown = null,
+): Promise<ServiceResult> {
   const start = Date.now()
 
   try {
     const res = await fetch(url, {
       cache: 'no-store',
-      method: method,
+      method,
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : null,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     })
-    const time = Date.now() - start
+    const responseTime = Date.now() - start
 
-    if (method === 'POST') {
-      const data = await res.json()
-      console.log('POST response:', data)
+    return {
+      status: res.ok ? 'operational' : 'down',
+      responseTime,
+      httpStatus: res.status,
     }
-
-    if (!res.ok) {
-      return { status: 'down', responseTime: time, httpStatus: res.status }
-    }
-
-    return { status: 'operational', responseTime: time, httpStatus: res.status }
-  } catch (err) {
+  } catch {
     return { status: 'down', responseTime: null, httpStatus: null }
   }
 }

@@ -1,65 +1,68 @@
-# Frontend foundation and shell: implementation plan
+# Frontend foundation and shell: implementation plan (revision 2)
 
-Spec: `docs/superpowers/specs/2026-11-19-frontend-foundation-design.md`
-Branch: `design/frontend-foundation` (stacked on the spec commit). Implementation lands as one PR.
-All paths relative to `frontend/` unless noted. Verification after every task: `npm run build && npm run lint`.
+Spec: `docs/superpowers/specs/2026-11-19-frontend-foundation-design.md` (friendly, rounded, warm Ghana palette).
+Branch: `design/frontend-foundation`. Revision 1 (techy) is commit `6f4ef1f`; this plan reworks it in place.
+All paths relative to `frontend/`. After every task: `npm run build` and `npx eslint <touched files>`.
+**Gate: no PR is suggested until the user has inspected the running UI (free-port dev server) and approved.**
 
-## Findings that adjust the spec
+## Carry over from revision 1 (keep)
 
-- `next-themes` is installed but **unused**: no provider, no toggle. The plan adds `ThemeProvider` (`attribute="class"`, matching the existing `@custom-variant dark`) and a toggle.
-- The frontend has no status/health call. `StatusDot` pings one cheap existing endpoint via `API_BASE` in `src/lib/api.ts` (confirm the endpoint in Task 6).
-- Nav is duplicated in `navbar.tsx` (`featureLinks`) and `app-dock-layout.tsx` (`dockItems`), and `overview.tsx` has a third list.
-- `cobe` is only used by `ui/globe.tsx` (via `hero-globe.tsx`).
-- `App.tsx` renders `Navbar` and `Footer` outside the routed layout; `AppDockLayout` wraps routes.
+`ThemeProvider` + `theme-toggle.tsx`, `lib/sections.ts`, `hooks/use-api-status.ts`, `command-palette.tsx`, `FeaturePage` -> `PanelHeader` wiring, `API_BASE` export, removal of dock/globe/bento/cobe, per-page `endpoint` props.
+
+## Remove (techy leftovers)
+
+`shell/side-rail.tsx`, `shell/nav-list.tsx`, `shell/mobile-nav.tsx`, and the Geist font files in `public/fonts/` (`ui/response-viewer.tsx` is kept and softened).
 
 ## Tasks
 
-### 1. Tokens and fonts
-- Install `geist` (self-hosted fonts); import Sans and Mono in `main.tsx`.
-- Rewrite `:root` and `.dark` blocks in `src/index.css`: warm-neutral OKLCH scale, deep-green `--primary`/`--ring`, radius `0.3rem`, hairline `--border`. Keep every existing variable name.
-- Add `--font-sans` and `--font-mono` in `@theme inline`; set `body` font.
-- Add `@media (prefers-reduced-motion: reduce)` rule disabling transitions and animations.
-- Check: existing pages still render (colors change, layout unchanged).
+### 1. Tokens and font
+- Replace Geist with a self-hosted rounded sans (Plus Jakarta Sans variable woff2 into `public/fonts/`; update `@font-face` and `--font-sans`; drop `--font-mono` chrome usage).
+- Rewrite `:root` / `.dark` in `src/index.css`: cream background, warm charcoal text, gold primary with dark `primary-foreground`, flag green (`--success`) and red `--destructive`, warm brown-black dark mode. Keep every shadcn variable name; add `--success`, `--success-foreground`, `--shadow-soft`, `--shadow-lift`.
+- Radius base `1rem`; expose `--radius-pill`. Keep reduced-motion rule.
+- Contrast check: text on gold uses charcoal; links and active text use green or charcoal (WCAG AA).
 
-### 2. Theme provider and toggle
-- Wrap `<App />` in `ThemeProvider` in `main.tsx` (`attribute="class"`, `defaultTheme="system"`).
-- Add `components/shell/theme-toggle.tsx` (button, `aria-label`, sun/moon icons).
+### 2. Restyle primitives in place (`components/ui/`)
+- `button`: pill, soft shadow, spring press (`active:scale-[0.97]`), gold primary, soft secondary/outline variants.
+- `input`, `textarea` (1rem radius), `select` (trigger pill, content `rounded-2xl`, items `rounded-xl`), `checkbox`, `slider`, `progress`: rounded, soft focus ring.
+- `tabs`: pill track with sliding active pill (21st.dev style; framer-motion `layoutId` in `TabsTrigger` where practical, else CSS).
+- `badge`: pill. `card`: `rounded-3xl`, shadow instead of border, optional hover-lift variant.
+- `table`: rounded container, row hover, softened header.
+- `dialog`, `sheet`, `tooltip`, `skeleton`, `alert`: larger radii, soft shadows.
+- Add `ui/stat-card.tsx` (value, label, optional trend badge, icon).
+- Restyle `panel-header.tsx` (friendly title, "Copy endpoint" soft pill, no `GET` mono chip), `status-dot.tsx` (soft badge), soften `response-viewer.tsx`.
 
-### 3. Sections config
-- Add `src/lib/sections.ts`: array of `{ to, label, short, description, icon, endpoint }` for the 7 sections (overview, addresses, banking, stocks, exchange, transport, education) plus docs link.
+### 3. Pill nav shell
+- Add `shell/pill-nav.tsx`: 21st.dev tubelight/expandable-tabs style; items from `sections` plus Overview; framer-motion `layoutId` sliding indicator; icon + label (label collapses to icon on narrow desktop).
+  - Desktop: floating, centered, `sticky top-4`, rounded-full, soft shadow, blur-free solid surface.
+  - Mobile (<768px): fixed bottom pill bar, icon-only with active label.
+  - Right end: command-palette trigger, theme toggle, `StatusDot`.
+- Rewrite `shell/app-shell.tsx`: top spacing for nav, `pb-28` on mobile for the bottom bar, rounded soft footer.
+- Update `top-bar.tsx` into a slim brand mark (logo + "GhanaAPI") or fold into the pill nav; delete unused shell files listed above.
+- Restyle `command-palette.tsx` (rounded-3xl dialog, pill input, rounded items).
+- Keyboard: arrow-key focus, visible rings, `aria-current="page"`.
 
-### 4. Shell
-- Add `components/shell/top-bar.tsx`, `side-rail.tsx`, `mobile-nav.tsx` (uses existing `ui/sheet`), and `app-shell.tsx` composing them around `<Outlet />`.
-- Top bar: wordmark, command-palette trigger (opens a `ui/dialog` listing `sections`, filtered by input, Enter navigates, `/` or Cmd/Ctrl+K opens), GitHub link, theme toggle.
-- Rail: `NavLink` list with active state (accent text + 2px left border), mono endpoint hint, visible focus rings. Hidden below `md`.
-- Minimal footer line inside the shell; delete `footer.tsx`.
-- `App.tsx`: remove `Navbar`/`Footer`, swap `AppDockLayout` for `AppShell`. Routes unchanged.
+### 4. Overview
+- Rewrite `pages/overview.tsx`:
+  - Hero: headline "Open data for Ghana, ready to use", subcopy, primary "Explore the APIs" and secondary "API playground" pills, animated background (drifting blurred gold/green/red blobs, `useReducedMotion` aware).
+  - Stats strip using `StatCard` (e.g. 6 API areas, 100% open, REST/JSON; static values, no fake metrics).
+  - Feature grid: rounded cards from `sections` with icon chip, title, description, arrow; hover lift; staggered entrance (`framer-motion`).
+  - Keep `SEO` + `defaultStructuredData`.
+- Browse 21st.dev (in-app browser) for hero, card, nav and animation references; adapt code by hand to the tokens, citing nothing verbatim that needs a license beyond what the registry allows. Record source URLs in the PR body.
 
-### 5. Primitives
-- `ui/panel-header.tsx`: title, description, endpoint chip (mono) with copy-to-clipboard button and `sonner` toast.
-- `ui/response-viewer.tsx`: collapsible JSON tree/pre with token-colored keys, strings, numbers; copy button.
-- `ui/status-dot.tsx`: states `ok | down | unknown`, `title` + `aria-label`.
-- Adopt `PanelHeader` in the 6 feature pages/panels at their top-level heading only (no internal changes).
+### 5. Motion polish
+- Shared motion presets in `lib/motion.ts` (spring, stagger, fade-up) used by overview and cards.
+- Page transitions: light fade on route change only.
+- Verify `prefers-reduced-motion` disables springs and blobs.
 
-### 6. Overview rewrite
-- Replace `pages/overview.tsx` with a compact table/list from `sections`: name, mono endpoint, description, `StatusDot`, link. Keep `SEO` + `defaultStructuredData`.
-- Status check: one `fetch` with 4s `AbortController` timeout to a cheap existing endpoint under `API_BASE`; failure or timeout renders "unknown", never throws, never blocks render. Confirm the endpoint against the running backend before wiring.
+### 6. Verify
+- `npm run build` clean; eslint clean on touched files.
+- Dev server on a free port; check every route (`/`, `/addresses`, `/banking`, `/stocks`, `/exchange`, `/transport`, `/education`, `/docs`) light and dark, desktop and mobile; console clean apart from backend-offline fetches; keyboard-tab through nav, palette, tabs, selects.
+- Hand the user the URL and wait for feedback. Iterate until approved.
 
-### 7. Removals
-- Delete `app-dock-layout.tsx`, `navbar.tsx`, `hero-globe.tsx`, `ui/dock.tsx`, `ui/globe.tsx`, `ui/bento-grid.tsx`.
-- `npm uninstall cobe`.
-- Remove `framer-motion` entrance animations from touched files only (leave panel internals).
-- `grep -rnE "dock|globe|bento|cobe|app-dock-layout" src` returns nothing.
-
-### 8. Verify
-- `npm run build` and `npm run lint` clean.
-- Run the dev server; in the in-app browser load `/`, `/addresses`, `/banking`, `/stocks`, `/exchange`, `/transport`, `/education`, `/docs` in light and dark, at desktop (1280) and mobile (375). Check console for errors, tab through rail and palette for focus visibility, and toggle OS reduced-motion.
-- Screenshots of overview and one panel, light and dark, attached to the PR.
-
-### 9. Ship
-- Commit in logical steps (tokens, shell, primitives, overview, removals).
-- Open PR; bind with the PR tools. No attribution lines in commits or PR body.
+### 7. Ship (only after user approval)
+- Commit in logical steps; push and open the PR only when the user says so. No attribution lines.
 
 ## Risks
-- Panels hard-code violet or `bg-primary/..` classes; the accent change may leave odd contrast. Fix only contrast regressions here, defer the rest to per-panel PRs.
-- `geist` package bundles Next-oriented exports; use the font files from `geist/dist/fonts` via CSS `@font-face` if the JS entry is unsuitable for Vite.
+- Panels carry hard-coded classes (`bg-primary/..`, violet-era gradients, `rounded-3xl` cards with blur); expect contrast tweaks after the palette change. Fix regressions only; defer cleanup to per-panel PRs.
+- Gold primary on cream is low contrast for text; enforce the fill-only rule.
+- Sliding tab indicator via `layoutId` needs unique ids per `Tabs` instance.

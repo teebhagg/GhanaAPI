@@ -125,7 +125,14 @@
   .footer,
   .table-of-contents__link,
   .breadcrumbs__link,
-  .card {
+  .card,
+  blockquote,
+  details,
+  .tabs__item,
+  .dropdown__menu,
+  .dropdown__link,
+  .theme-doc-markdown img,
+  kbd {
     corner-shape: squircle;
   }
 }
@@ -482,6 +489,72 @@ code {
 .admonition-danger {
   --ifm-alert-background-color: color-mix(in srgb, var(--gh-destructive) 13%, var(--gh-card));
   --ifm-alert-foreground-color: var(--gh-foreground);
+}
+
+/* Blockquotes, collapsibles, tabs, images and menus: always soft corners */
+.theme-doc-markdown blockquote {
+  border: none;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--gh-accent) 50%, var(--gh-card));
+  box-shadow: none;
+  color: var(--gh-foreground);
+  padding: 1rem 1.4rem;
+  margin: 1.25rem 0;
+}
+
+.theme-doc-markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+details,
+.theme-doc-markdown details {
+  border: 1px solid var(--gh-border);
+  border-radius: 1.5rem;
+  background: var(--gh-card);
+  padding: 0.9rem 1.25rem;
+  --docusaurus-details-decoration-color: var(--gh-primary-ink);
+}
+
+.tabs {
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: var(--gh-muted);
+  display: inline-flex;
+  margin-bottom: 1rem;
+}
+
+.tabs__item {
+  border: none !important;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+}
+
+.tabs__item--active {
+  background: var(--gh-card);
+  color: var(--gh-foreground);
+  box-shadow: var(--gh-shadow-soft);
+}
+
+.theme-doc-markdown img {
+  border-radius: 1.5rem;
+}
+
+.dropdown__menu {
+  border: 1px solid var(--gh-border);
+  border-radius: 1.25rem;
+  box-shadow: var(--gh-shadow-lift);
+  background: var(--gh-card);
+  padding: 0.4rem;
+}
+
+.dropdown__link {
+  border-radius: 0.8rem;
+}
+
+kbd {
+  border-radius: 0.5rem;
 }
 
 /* Pagination cards */

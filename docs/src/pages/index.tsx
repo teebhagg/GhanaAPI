@@ -7,6 +7,8 @@ import {
   Banknote,
   Bitcoin,
   BookOpen,
+  Check,
+  Copy,
   DollarSign,
   GraduationCap,
   Landmark,
@@ -15,7 +17,7 @@ import {
   Route,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import styles from "./index.module.css";
 
@@ -77,20 +79,114 @@ const services: {
   },
 ];
 
-const example = `# Current USD rate against the cedi
-curl "${BASE}/exchange-rates/current?currencies=USD"
+type Cmd = { comment: string; url: string; output?: boolean };
 
-# Search addresses in Accra
-curl "${BASE}/addresses/search?q=Accra"
+const commands: Cmd[] = [
+  {
+    comment: "Current USD rate against the cedi",
+    url: `${BASE}/exchange-rates/current?currencies=USD`,
+    output: true,
+  },
+  { comment: "Search addresses in Accra", url: `${BASE}/addresses/search?q=Accra` },
+  {
+    comment: "Nearest address to a coordinate",
+    url: `${BASE}/addresses/lookup?lat=5.6037&lng=-0.187`,
+  },
+  {
+    comment: "Grade A schools in Ashanti",
+    url: `${BASE}/education/schools/search?region=Ashanti&grade=A`,
+  },
+  { comment: "All regions", url: `${BASE}/locations/regions` },
+];
 
-# Nearest address to a coordinate
-curl "${BASE}/addresses/lookup?lat=5.6037&lng=-0.187"
+const copyText = commands
+  .map((c) => `# ${c.comment}\ncurl "${c.url}"`)
+  .join("\n\n");
 
-# Grade A schools in Ashanti
-curl "${BASE}/education/schools/search?region=Ashanti&grade=A"
+function Url({ url }: { url: string }) {
+  const [path, query] = url.split("?");
+  return (
+    <span className={styles.tUrl}>
+      "<span className={styles.tBase}>{BASE}</span>
+      <span className={styles.tPath}>{path.slice(BASE.length)}</span>
+      {query && (
+        <>
+          ?
+          {query.split("&").map((kv, i) => {
+            const [k, v] = kv.split("=");
+            return (
+              <span key={kv}>
+                {i > 0 && "&"}
+                <span className={styles.tKey}>{k}</span>=
+                <span className={styles.tVal}>{v}</span>
+              </span>
+            );
+          })}
+        </>
+      )}
+      "
+    </span>
+  );
+}
 
-# All regions
-curl "${BASE}/locations/regions"`;
+function Terminal() {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  return (
+    <div className={styles.terminal}>
+      <div className={styles.termBar}>
+        <span className={styles.termDots}>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className={styles.termTitle}>~/ghana-api: zsh</span>
+        <button type="button" className={styles.copyBtn} onClick={copy} aria-label="Copy commands">
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div className={styles.termBody}>
+        {commands.map((c, i) => (
+          <div key={c.url} className={styles.cmd} style={{ "--i": i } as React.CSSProperties}>
+            <div className={styles.tComment}># {c.comment}</div>
+            <div>
+              <span className={styles.tPrompt}>$</span>
+              <span className={styles.tCurl}>curl</span> <Url url={c.url} />
+            </div>
+            {c.output && (
+              <div className={styles.out}>
+                <span className={styles.outHead}>200 OK</span>
+                {"[{ "}
+                <span className={styles.jKey}>"targetCurrency"</span>:{" "}
+                <span className={styles.jStr}>"USD"</span>,{" "}
+                <span className={styles.jKey}>"rate"</span>:{" "}
+                <span className={styles.jNum}>0.0849</span>,{" "}
+                <span className={styles.jKey}>"provider"</span>:{" "}
+                <span className={styles.jStr}>"bank-of-ghana"</span>
+                {" }]"}
+              </div>
+            )}
+          </div>
+        ))}
+        <div className={styles.cmd} style={{ "--i": commands.length } as React.CSSProperties}>
+          <span className={styles.tPrompt}>$</span>
+          <span className={styles.cursor} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Hero() {
   return (
@@ -134,19 +230,7 @@ function Hero() {
           </div>
         </div>
 
-        <div className={styles.codeCard}>
-          <div className={styles.codeHead}>
-            <span className={styles.codeDots}>
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>Try it in your terminal</span>
-          </div>
-          <pre className={styles.code}>
-            <code>{example}</code>
-          </pre>
-        </div>
+        <Terminal />
       </div>
     </header>
   );

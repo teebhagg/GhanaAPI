@@ -231,7 +231,7 @@ h4 {
 /* ---------- Buttons ---------- */
 .button {
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 400;
   border-width: 0;
   transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s;
 }
@@ -374,7 +374,7 @@ code {
   background: var(--gh-card);
   color: var(--gh-muted-foreground);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1;
   opacity: 1;
   box-shadow: var(--gh-shadow-soft);

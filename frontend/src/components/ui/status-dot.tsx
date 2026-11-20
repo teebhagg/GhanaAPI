@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 const styles: Record<ApiStatus, { dot: string; label: string }> = {
   ok: { dot: "bg-success", label: "All systems go" },
+  degraded: { dot: "bg-primary", label: "Some services degraded" },
   down: { dot: "bg-destructive", label: "Having trouble" },
   unknown: { dot: "bg-muted-foreground/50", label: "Status unknown" },
 };

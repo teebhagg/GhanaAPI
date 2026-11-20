@@ -144,7 +144,9 @@ export function AddressesPanel() {
     setLoading(true);
     try {
       const res = await api.reverseGeocode(Number(lat), Number(lng));
-      setItems(Array.isArray(res) ? res : []);
+      // The API returns one object on a cache miss and an array on a cache hit.
+      const list: AddressDto[] = Array.isArray(res) ? res : res ? [res] : [];
+      setItems(list);
       setSearched(true);
     } finally {
       setLoading(false);

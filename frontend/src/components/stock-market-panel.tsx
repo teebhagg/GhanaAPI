@@ -308,6 +308,18 @@ export function StockMarketPanel() {
         </motion.div>
       </motion.div>
 
+      {error && stocks.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-3xl bg-destructive/10 p-4 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+          <p>
+            Couldn't refresh stock data ({error.replace(/[.\s]+$/, "")}). The
+            figures below may be out of date.
+          </p>
+        </div>
+      )}
+
       <FeatureSurface
         icon={Activity}
         title="All listings"

@@ -265,8 +265,8 @@ export const api = {
       lat: String(lat),
       lng: String(lng),
     }).toString();
-    // Production returns an array of candidate addresses for a coordinate.
-    return http<AddressDto[]>(`/addresses/lookup?${q}`);
+    // One object on a cache miss, an array of candidates on a cache hit.
+    return http<AddressDto | AddressDto[] | null>(`/addresses/lookup?${q}`);
   },
   searchAddresses(q: string) {
     const qs = new URLSearchParams({ q }).toString();

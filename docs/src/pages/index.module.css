@@ -396,3 +396,37 @@
 .cta .buttons {
   justify-content: center;
 }
+
+/* Smooth (squircle) corners for every card and container on the homepage.
+   Module class names are hashed, so the global rule in custom.css can't reach
+   them. Radii are a touch larger because squircles read tighter. */
+@supports (corner-shape: squircle) {
+  .card,
+  .cta,
+  .terminal,
+  .out,
+  .iconChip,
+  .copyBtn {
+    corner-shape: squircle;
+  }
+
+  .card {
+    border-radius: 2.5rem;
+  }
+
+  .cta {
+    border-radius: 3rem;
+  }
+
+  .terminal {
+    border-radius: 2.25rem;
+  }
+
+  .iconChip {
+    border-radius: 1.25rem;
+  }
+
+  .out {
+    border-radius: 1.25rem;
+  }
+}

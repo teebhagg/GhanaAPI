@@ -193,10 +193,6 @@ function Hero() {
     <header className={styles.hero}>
       <div className={styles.heroInner}>
         <div className={styles.heroText}>
-          <span className={styles.pill}>
-            <span className={styles.dot} />
-            Free and open source
-          </span>
           <Heading as="h1" className={styles.title}>
             Open data for Ghana, ready to use
           </Heading>

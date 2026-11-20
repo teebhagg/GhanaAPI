@@ -46,27 +46,8 @@
   }
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 1rem;
-  border-radius: 999px;
-  background: var(--gh-accent);
-  color: var(--gh-accent-foreground);
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: var(--gh-success);
-}
-
 .title {
-  margin: 1.25rem 0 1rem;
+  margin: 0 0 1rem;
   font-size: clamp(2.4rem, 5vw, 3.75rem);
   line-height: 1.05;
   font-weight: 800;

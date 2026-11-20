@@ -1,30 +1,628 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * GhanaAPI docs theme.
+ * Colours are hex (converted from the app's oklch tokens) because the docs
+ * build rewrites oklch into P3 fallbacks that break the dark-mode overrides.
+ * Mirrors the app's design tokens (cream and gold, squircle corners,
+ * Plus Jakarta Sans) and maps them onto Docusaurus's Infima variables.
  */
 
-/* You can override the default Infima variables here. */
-:root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSans-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+:root {
+  /* Shared tokens (same values as frontend/src/index.css) */
+  --gh-radius: 1.125rem;
+  --gh-background: #fdf9f0;
+  --gh-foreground: #291f18;
+  --gh-card: #fffefb;
+  --gh-primary: #f0b21b;
+  --gh-primary-foreground: #2c1b09;
+  --gh-primary-ink: #7b4800;
+  --gh-secondary: #f6efe1;
+  --gh-muted: #f5f0e4;
+  --gh-muted-foreground: #695b4b;
+  --gh-accent: #fbeac2;
+  --gh-accent-foreground: #472c0b;
+  --gh-success: #137738;
+  --gh-destructive: #d4212d;
+  --gh-border: #e9e2d4;
+  --gh-shadow-soft: 0 1px 2px rgb(59 42 23 / 0.05),
+    0 4px 16px rgb(59 42 23 / 0.06);
+  --gh-shadow-lift: 0 2px 4px rgb(59 42 23 / 0.06),
+    0 12px 32px rgb(59 42 23 / 0.12);
+
+  /* Infima mapping */
+  --ifm-font-family-base: "Plus Jakarta Sans", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --ifm-heading-font-weight: 700;
+  --ifm-font-weight-semibold: 600;
+  --ifm-background-color: var(--gh-background);
+  --ifm-background-surface-color: var(--gh-card);
+  --ifm-font-color-base: var(--gh-foreground);
+  --ifm-font-color-secondary: var(--gh-muted-foreground);
+  --ifm-color-content: var(--gh-foreground);
+  --ifm-color-content-secondary: var(--gh-muted-foreground);
+  --ifm-global-radius: var(--gh-radius);
+  --ifm-code-border-radius: 0.6rem;
+  --ifm-code-font-size: 92%;
+  --ifm-link-color: var(--gh-primary-ink);
+  --ifm-link-hover-color: var(--gh-foreground);
+  --ifm-toc-border-color: var(--gh-border);
+  --ifm-table-border-color: var(--gh-border);
+  --ifm-table-stripe-background: var(--gh-muted);
+  --ifm-hr-border-color: var(--gh-border);
+  --ifm-navbar-background-color: color-mix(in srgb, var(--gh-background) 82%, transparent);
+  --ifm-navbar-shadow: none;
+  --ifm-navbar-height: 4.25rem;
+  --ifm-menu-color-background-active: var(--gh-accent);
+  --ifm-menu-color-background-hover: var(--gh-muted);
+  --ifm-menu-color-active: var(--gh-accent-foreground);
+  --ifm-footer-background-color: var(--gh-card);
+  --ifm-footer-color: var(--gh-foreground);
+  --ifm-footer-link-color: var(--gh-muted-foreground);
+  --ifm-footer-title-color: var(--gh-foreground);
+
+  /* Primary scale: ink for text and links, gold for fills */
+  --ifm-color-primary: #7b4800;
+  --ifm-color-primary-dark: #6c3e00;
+  --ifm-color-primary-darker: #643a00;
+  --ifm-color-primary-darkest: #4f2c00;
+  --ifm-color-primary-light: #8e5400;
+  --ifm-color-primary-lighter: #995c00;
+  --ifm-color-primary-lightest: #af7100;
+
+  --docusaurus-highlighted-code-line-bg: rgb(240 178 27 / 0.18);
+}
+
 [data-theme="dark"] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --gh-background: #18130e;
+  --gh-foreground: #f2eee6;
+  --gh-card: #231d18;
+  --gh-primary: #f7b828;
+  --gh-primary-foreground: #271605;
+  --gh-primary-ink: #f8c655;
+  --gh-secondary: #2f2721;
+  --gh-muted: #2f2721;
+  --gh-muted-foreground: #ada393;
+  --gh-accent: #3e311a;
+  --gh-accent-foreground: #fbe6b3;
+  --gh-success: #4dbf74;
+  --gh-destructive: #ff645f;
+  --gh-border: rgb(255 254 240 / 0.11);
+  --gh-shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
+  --gh-shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+
+  --ifm-color-primary: #f8c655;
+  --ifm-color-primary-dark: #e7b643;
+  --ifm-color-primary-darker: #ddac37;
+  --ifm-color-primary-darkest: #b68b16;
+  --ifm-color-primary-light: #ffd16b;
+  --ifm-color-primary-lighter: #ffd87d;
+  --ifm-color-primary-lightest: #ffe7a5;
+  --ifm-link-color: var(--gh-primary-ink);
+  --ifm-link-hover-color: var(--gh-foreground);
+  --ifm-toc-border-color: var(--gh-border);
+  --ifm-table-border-color: var(--gh-border);
+  --ifm-hr-border-color: var(--gh-border);
+  --docusaurus-highlighted-code-line-bg: rgb(247 184 40 / 0.2);
+}
+
+/* Squircle corners where supported (falls back to normal rounding) */
+@supports (corner-shape: squircle) {
+  .navbar__link,
+  .button,
+  .menu__link,
+  .pagination-nav__link,
+  .theme-doc-markdown table,
+  .theme-code-block,
+  .alert,
+  .admonition,
+  .footer,
+  .table-of-contents__link,
+  .breadcrumbs__link,
+  .card,
+  blockquote,
+  details,
+  .tabs__item,
+  .dropdown__menu,
+  .dropdown__link,
+  .theme-doc-markdown img,
+  kbd {
+    corner-shape: squircle;
+  }
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  background: var(--gh-background);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Navbar ---------- */
+.navbar {
+  border-bottom: 1px solid var(--gh-border);
+  padding: 0.5rem 1.25rem;
+}
+
+/* Blur lives on a pseudo-element: a backdrop-filter on .navbar itself makes it
+   the containing block for the fixed mobile sidebar and collapses the drawer. */
+.navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.navbar-sidebar {
+  background: var(--gh-background);
+}
+
+.navbar__inner {
+  gap: 1rem;
+}
+
+.navbar__items {
+  gap: 0.5rem;
+}
+
+.navbar__items--right {
+  gap: 0.6rem;
+}
+
+.navbar__brand {
+  margin-right: 1.5rem;
+}
+
+.navbar__brand {
+  gap: 0.6rem;
+}
+
+.navbar__logo img {
+  border-radius: 999px;
+  box-shadow: var(--gh-shadow-soft);
+}
+
+.navbar__title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.navbar__link {
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  margin: 0 0.1rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  background: var(--gh-accent);
+  color: var(--gh-accent-foreground);
+}
+
+.navbar__items--right .navbar__link:last-of-type {
+  background: var(--gh-foreground);
+  color: var(--gh-background);
+}
+
+.navbar__items--right .navbar__link:last-of-type:hover {
+  background: var(--gh-primary);
+  color: var(--gh-primary-foreground);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  border-radius: 999px;
+  font-weight: 400;
+  border-width: 0;
+  transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button.button--primary {
+  background: var(--gh-primary);
+  color: var(--gh-primary-foreground);
+  box-shadow: var(--gh-shadow-soft);
+}
+
+.button.button--primary:hover {
+  background: var(--gh-primary);
+  color: var(--gh-primary-foreground);
+  box-shadow: var(--gh-shadow-lift);
+  filter: brightness(0.97);
+}
+
+.button.button--secondary,
+.button.button--outline {
+  background: var(--gh-card);
+  color: var(--gh-foreground);
+  border: 1px solid var(--gh-border);
+  box-shadow: var(--gh-shadow-soft);
+}
+
+.button.button--secondary:hover,
+.button.button--outline:hover {
+  background: var(--gh-accent);
+  color: var(--gh-accent-foreground);
+}
+
+/* ---------- Sidebar ---------- */
+.menu__link {
+  border-radius: 0.9rem;
+  font-weight: 500;
+  padding: 0.45rem 0.8rem;
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  font-weight: 700;
+  color: var(--gh-accent-foreground);
+}
+
+.theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link {
+  font-weight: 700;
+}
+
+@media (min-width: 997px) {
+  .theme-doc-sidebar-container {
+    border-right: 1px solid var(--gh-border) !important;
+  }
+}
+
+/* ---------- Content ---------- */
+.theme-doc-markdown a:not(.button) {
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.breadcrumbs__link {
+  border-radius: 999px;
+  background: var(--gh-muted);
+  padding: 0.25rem 0.75rem;
+}
+
+.breadcrumbs__item--active .breadcrumbs__link {
+  background: var(--gh-accent);
+  color: var(--gh-accent-foreground);
+}
+
+.table-of-contents__link--active {
+  color: var(--gh-primary-ink);
+  font-weight: 700;
+}
+
+code {
+  background: var(--gh-muted);
+  border: none;
+  color: var(--gh-foreground);
+  padding: 0.15em 0.45em;
+}
+
+/* Code blocks */
+.theme-code-block {
+  --prism-background-color: var(--gh-muted) !important;
+  --prism-color: var(--gh-foreground) !important;
+  border-radius: 1.5rem;
+  box-shadow: none;
+  border: 1px solid var(--gh-border);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .theme-code-block {
+  --prism-background-color: #130e0a !important;
+}
+
+.theme-code-block {
+  --ifm-pre-padding: 1.35rem 1.6rem;
+  --ifm-code-font-size: 95%;
+  margin: 1.25rem 0 1.75rem;
+}
+
+.theme-code-block pre {
+  background: transparent;
+  line-height: 1.75;
+}
+
+.theme-code-block pre code {
+  background: transparent;
+  padding: var(--ifm-pre-padding);
+}
+
+.theme-code-block [class*="codeBlockTitle"] {
+  padding: 0.85rem 1.6rem;
+  border-bottom: 1px solid var(--gh-border);
+  font-weight: 600;
+}
+
+/* Copy button: always visible pill with a label and a clear "Copied" state */
+.theme-code-block [class*="buttonGroup"] {
+  opacity: 1;
+  top: 0.75rem;
+  right: 0.75rem;
+  column-gap: 0.4rem;
+}
+
+.theme-code-block [class*="buttonGroup"] button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: auto;
+  height: auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--gh-border);
+  border-radius: 999px;
+  background: var(--gh-card);
+  color: var(--gh-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 1;
+  box-shadow: var(--gh-shadow-soft);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s,
+    transform 0.15s;
+}
+
+.theme-code-block [class*="buttonGroup"] button:hover {
+  background: var(--gh-accent);
+  color: var(--gh-accent-foreground);
+  border-color: transparent;
+}
+
+.theme-code-block [class*="buttonGroup"] button:active {
+  transform: scale(0.96);
+}
+
+.theme-code-block [class*="buttonGroup"] button[aria-label*="opy"]::after {
+  content: "Copy";
+}
+
+.theme-code-block [class*="copyButtonCopied"] {
+  background: color-mix(in srgb, var(--gh-success) 16%, var(--gh-card)) !important;
+  color: var(--gh-success) !important;
+  border-color: transparent !important;
+}
+
+.theme-code-block [class*="copyButtonCopied"]::after {
+  content: "Copied" !important;
+}
+
+.theme-code-block [class*="copyButtonIcon"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Leave room so the pill never overlaps the first line of code */
+.theme-code-block pre code {
+  padding-right: 6.5rem;
+}
+
+/* Tables: scroll inside their own rounded container at every width */
+.theme-doc-markdown table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--gh-border);
+  border-radius: 1.25rem;
+}
+
+.theme-doc-markdown table th {
+  background: var(--gh-muted);
+  font-weight: 700;
+}
+
+.theme-doc-markdown table th,
+.theme-doc-markdown table td {
+  border: none;
+  border-bottom: 1px solid var(--gh-border);
+  padding: 0.7rem 1rem;
+}
+
+.theme-doc-markdown table tr:last-child td {
+  border-bottom: none;
+}
+
+.theme-doc-markdown table tr:nth-child(2n) {
+  background: transparent;
+}
+
+/* Admonitions */
+.alert,
+.admonition {
+  border: none;
+  border-radius: 1.5rem;
+  box-shadow: none;
+  --ifm-alert-border-width: 0;
+  --ifm-alert-border-left-width: 0;
+  padding: 1rem 1.25rem;
+}
+
+.alert--info,
+.admonition-info,
+.admonition-note {
+  --ifm-alert-background-color: color-mix(in srgb, var(--gh-accent) 55%, var(--gh-card));
+  --ifm-alert-foreground-color: var(--gh-foreground);
+}
+
+.alert--success,
+.admonition-tip {
+  --ifm-alert-background-color: color-mix(in srgb, var(--gh-success) 14%, var(--gh-card));
+  --ifm-alert-foreground-color: var(--gh-foreground);
+}
+
+.alert--warning,
+.admonition-warning,
+.admonition-caution {
+  --ifm-alert-background-color: color-mix(in srgb, var(--gh-primary) 24%, var(--gh-card));
+  --ifm-alert-foreground-color: var(--gh-foreground);
+}
+
+.alert--danger,
+.admonition-danger {
+  --ifm-alert-background-color: color-mix(in srgb, var(--gh-destructive) 13%, var(--gh-card));
+  --ifm-alert-foreground-color: var(--gh-foreground);
+}
+
+/* Blockquotes, collapsibles, tabs, images and menus: always soft corners */
+.theme-doc-markdown blockquote {
+  border: none;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--gh-accent) 50%, var(--gh-card));
+  box-shadow: none;
+  color: var(--gh-foreground);
+  padding: 1rem 1.4rem;
+  margin: 1.25rem 0;
+}
+
+.theme-doc-markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+details,
+.theme-doc-markdown details {
+  border: 1px solid var(--gh-border);
+  border-radius: 1.5rem;
+  background: var(--gh-card);
+  padding: 0.9rem 1.25rem;
+  --docusaurus-details-decoration-color: var(--gh-primary-ink);
+}
+
+.tabs {
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: var(--gh-muted);
+  display: inline-flex;
+  margin-bottom: 1rem;
+}
+
+.tabs__item {
+  border: none !important;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+}
+
+.tabs__item--active {
+  background: var(--gh-card);
+  color: var(--gh-foreground);
+  box-shadow: var(--gh-shadow-soft);
+}
+
+.theme-doc-markdown img {
+  border-radius: 1.5rem;
+}
+
+.dropdown__menu {
+  border: 1px solid var(--gh-border);
+  border-radius: 1.25rem;
+  box-shadow: var(--gh-shadow-lift);
+  background: var(--gh-card);
+  padding: 0.4rem;
+}
+
+.dropdown__link {
+  border-radius: 0.8rem;
+}
+
+kbd {
+  border-radius: 0.5rem;
+}
+
+/* Pagination cards */
+.pagination-nav__link {
+  border: 1px solid var(--gh-border);
+  border-radius: 1.5rem;
+  background: var(--gh-card);
+  box-shadow: var(--gh-shadow-soft);
+  padding: 1rem 1.25rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pagination-nav__link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gh-shadow-lift);
+  border-color: var(--gh-border);
+}
+
+.pagination-nav__sublabel {
+  color: var(--gh-muted-foreground);
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  position: relative;
+  margin: 3rem auto 1.5rem;
+  width: calc(100% - 2rem);
+  max-width: 80rem;
+  border: 1px solid var(--gh-border);
+  border-radius: 2.25rem;
+  box-shadow: var(--gh-shadow-soft);
+  padding: 3rem 1.5rem 2rem;
+  overflow: hidden;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--gh-destructive) 0 33.33%,
+    var(--gh-primary) 33.33% 66.66%,
+    var(--gh-success) 66.66% 100%
+  );
+}
+
+.footer__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gh-muted-foreground);
+}
+
+.footer__link-item {
+  font-weight: 500;
+}
+
+.footer__link-item:hover {
+  color: var(--gh-foreground);
+  text-decoration: none;
+}
+
+.footer__copyright {
+  color: var(--gh-muted-foreground);
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

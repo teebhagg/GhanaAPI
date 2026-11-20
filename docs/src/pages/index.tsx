@@ -1,288 +1,292 @@
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Heading from "@theme/Heading";
 import Layout from "@theme/Layout";
-import clsx from "clsx";
-import type { ReactNode } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Banknote,
+  Bitcoin,
+  BookOpen,
+  Check,
+  Copy,
+  DollarSign,
+  GraduationCap,
+  Landmark,
+  Map,
+  MapPinned,
+  Route,
+  type LucideIcon,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
 
 import styles from "./index.module.css";
 
-function HomepageHeader() {
-  const { siteConfig } = useDocusaurusContext();
+const BASE = "https://api.ghana-api.dev/api/v1";
+
+const services: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  to: string;
+}[] = [
+  {
+    icon: MapPinned,
+    title: "Addresses",
+    description: "Search addresses and reverse-geocode coordinates across Ghana.",
+    to: "/docs/api/addresses",
+  },
+  {
+    icon: Banknote,
+    title: "Banking & ATMs",
+    description: "Find banks and ATMs by name, region, city or distance.",
+    to: "/docs/api/banking",
+  },
+  {
+    icon: DollarSign,
+    title: "Exchange rates",
+    description: "Live GHS rates, conversion and history from Bank of Ghana.",
+    to: "/docs/api/exchange-rates",
+  },
+  {
+    icon: Bitcoin,
+    title: "Crypto prices",
+    description: "Cryptocurrency prices in USD and GHS with caching and fallbacks.",
+    to: "/docs/api/crypto",
+  },
+  {
+    icon: Landmark,
+    title: "Stock market",
+    description: "Ghana Stock Exchange prices, sectors and market summaries.",
+    to: "/docs/api/stock-market",
+  },
+  {
+    icon: Route,
+    title: "Transport",
+    description: "Route planning, stops, fuel prices and travel cost estimates.",
+    to: "/docs/api/transport",
+  },
+  {
+    icon: GraduationCap,
+    title: "Education",
+    description: "National school directory with filters and statistics.",
+    to: "/docs/api/education",
+  },
+  {
+    icon: Map,
+    title: "Locations",
+    description: "Regions, districts and administrative metadata.",
+    to: "/docs/api/locations",
+  },
+];
+
+type Cmd = { comment: string; url: string; output?: boolean };
+
+const commands: Cmd[] = [
+  {
+    comment: "Current USD rate against the cedi",
+    url: `${BASE}/exchange-rates/current?currencies=USD`,
+    output: true,
+  },
+  { comment: "Search addresses in Accra", url: `${BASE}/addresses/search?q=Accra` },
+  {
+    comment: "Nearest address to a coordinate",
+    url: `${BASE}/addresses/lookup?lat=5.6037&lng=-0.187`,
+  },
+  {
+    comment: "Grade A schools in Ashanti",
+    url: `${BASE}/education/schools/search?region=Ashanti&grade=A`,
+  },
+  { comment: "All regions", url: `${BASE}/locations/regions` },
+];
+
+const copyText = commands
+  .map((c) => `# ${c.comment}\ncurl "${c.url}"`)
+  .join("\n\n");
+
+function Url({ url }: { url: string }) {
+  const [path, query] = url.split("?");
   return (
-    <div className={clsx("hero", styles.heroBanner)}>
-      <div className="container">
-        <div className={styles.heroContent}>
-          <div className={styles.heroText}>
-            <div className={styles.badge}>
-              <span>🚀 Version 0.5.5</span>
+    <span className={styles.tUrl}>
+      "<span className={styles.tBase}>{BASE}</span>
+      <span className={styles.tPath}>{path.slice(BASE.length)}</span>
+      {query && (
+        <>
+          ?
+          {query.split("&").map((kv, i) => {
+            const [k, v] = kv.split("=");
+            return (
+              <span key={kv}>
+                {i > 0 && "&"}
+                <span className={styles.tKey}>{k}</span>=
+                <span className={styles.tVal}>{v}</span>
+              </span>
+            );
+          })}
+        </>
+      )}
+      "
+    </span>
+  );
+}
+
+function Terminal() {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  return (
+    <div className={styles.terminal}>
+      <div className={styles.termBar}>
+        <span className={styles.termDots}>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className={styles.termTitle}>~/ghana-api: zsh</span>
+        <button type="button" className={styles.copyBtn} onClick={copy} aria-label="Copy commands">
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div className={styles.termBody}>
+        {commands.map((c, i) => (
+          <div key={c.url} className={styles.cmd} style={{ "--i": i } as React.CSSProperties}>
+            <div className={styles.tComment}># {c.comment}</div>
+            <div>
+              <span className={styles.tPrompt}>$</span>
+              <span className={styles.tCurl}>curl</span> <Url url={c.url} />
             </div>
-            <Heading as="h1" className={styles.heroTitle}>
-              Ghana API
-            </Heading>
-            <p className={styles.heroSubtitle}>
-              The definitive REST API for Ghanaian services. Access
-              comprehensive data for education, addresses, banking facilities,
-              exchange rates, crypto prices, stock market information,
-              transport & logistics, and administrative insights with our
-              reliable, developer-friendly platform.
-            </p>
-            <div className={styles.heroStats}>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>35+</span>
-                <span className={styles.statLabel}>API Endpoints</span>
+            {c.output && (
+              <div className={styles.out}>
+                <span className={styles.outHead}>200 OK</span>
+                {"[{ "}
+                <span className={styles.jKey}>"targetCurrency"</span>:{" "}
+                <span className={styles.jStr}>"USD"</span>,{" "}
+                <span className={styles.jKey}>"rate"</span>:{" "}
+                <span className={styles.jNum}>0.0849</span>,{" "}
+                <span className={styles.jKey}>"provider"</span>:{" "}
+                <span className={styles.jStr}>"bank-of-ghana"</span>
+                {" }]"}
               </div>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>8</span>
-                <span className={styles.statLabel}>Core Services</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>16</span>
-                <span className={styles.statLabel}>Regions Covered</span>
-              </div>
-            </div>
-            <div className={styles.heroButtons}>
-              <Link
-                className={clsx(
-                  "button button--primary button--lg",
-                  styles.primaryButton
-                )}
-                to="/docs/intro">
-                🚀 Get Started
-              </Link>
-              <Link
-                className={clsx(
-                  "button button--outline button--lg",
-                  styles.secondaryButton
-                )}
-                to="/docs/api/overview">
-                📚 View Documentation
-              </Link>
-            </div>
+            )}
           </div>
-          <div className={styles.heroVisual}>
-            <div className={styles.codeBlock}>
-              <div className={styles.codeHeader}>
-                <span className={styles.codeDot}></span>
-                <span className={styles.codeDot}></span>
-                <span className={styles.codeDot}></span>
-                <span className={styles.codeTitle}>api-example.js</span>
-              </div>
-              <pre className={styles.codeContent}>
-                <code>{`// Get exchange rates
-const rates = await fetch(
-  'https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD'
-);
-
-// Search addresses
-const addresses = await fetch(
-  'https://api.ghana-api.dev/api/v1/addresses/search?q=Accra'
-);
-
-// Get Ghana Stock Exchange data
-const stocks = await fetch(
-  'https://api.ghana-api.dev/api/v1/stock-market/search?sector=Banking'
-);
-
-// Search national schools directory
-const schools = await fetch(
-  'https://api.ghana-api.dev/api/v1/education/schools/search?region=Ashanti&grade=A'
-);
-
-// Find nearby banks and ATMs
-const banks = await fetch(
-  'https://api.ghana-api.dev/api/v1/banking/nearby?lat=5.6037&lng=-0.187'
-);
-
-// Calculate route
-const route = await fetch(
-  'https://api.ghana-api.dev/api/v1/transport/route-calculation?start_lat=5.6037&start_lng=-0.187&end_lat=6.6885&end_lng=-1.6244'
-);
-
-// Get fuel prices
-const fuel = await fetch(
-  'https://api.ghana-api.dev/api/v1/transport/fuel-prices'
-);
-
-// Get regions
-const regions = await fetch(
-  'https://api.ghana-api.dev/api/v1/locations/regions'
-);
-
-// Reverse geocoding
-const location = await fetch(
-  'https://api.ghana-api.dev/api/v1/addresses/reverse?lat=5.6037&lng=-0.1870'
-);
-
-// Currency conversion
-const conversion = await fetch(
-  'https://api.ghana-api.dev/api/v1/exchange-rates/convert?from=USD&to=GHS&amount=100'
-);
-
-// Get crypto prices
-const crypto = await fetch(
-  'https://api.ghana-api.dev/api/v1/crypto?ids=bitcoin,ethereum'
-);`}</code>
-              </pre>
-            </div>
-          </div>
+        ))}
+        <div className={styles.cmd} style={{ "--i": commands.length } as React.CSSProperties}>
+          <span className={styles.tPrompt}>$</span>
+          <span className={styles.cursor} />
         </div>
       </div>
     </div>
   );
 }
 
-function FeaturesSection() {
+function Hero() {
   return (
-    <section className={styles.featuresSection}>
-      <div className="container">
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>What We Offer</h2>
-          <p className={styles.sectionSubtitle}>
-            Comprehensive APIs designed specifically for Ghanaian developers and
-            businesses
+    <header className={styles.hero}>
+      <div className={styles.heroInner}>
+        <div className={styles.heroText}>
+          <Heading as="h1" className={styles.title}>
+            Open data for Ghana, ready to use
+          </Heading>
+          <p className={styles.subtitle}>
+            One friendly REST API for addresses, banks, markets, exchange rates,
+            transport and schools. No key needed to get started.
           </p>
-        </div>
-        <div className={styles.featuresGrid}>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🏠</div>
-            <h3>Address Services</h3>
-            <p>
-              Search and validate Ghana Post Digital Addresses with precise
-              geocoding capabilities
-            </p>
-            <Link to="/docs/api/addresses" className={styles.featureLink}>
-              Learn More →
+          <div className={styles.buttons}>
+            <Link className="button button--primary button--lg" to="/docs/intro">
+              Get started <ArrowRight size={18} />
+            </Link>
+            <Link
+              className="button button--secondary button--lg"
+              href="https://api.ghana-api.dev/docs">
+              API playground <ArrowUpRight size={18} />
             </Link>
           </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🏦</div>
-            <h3>Banking & ATM Locator</h3>
-            <p>
-              Find banks and ATMs across Ghana with location-based search and
-              real-time facility information
-            </p>
-            <Link to="/docs/api/banking" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>💱</div>
-            <h3>Exchange Rates</h3>
-            <p>
-              Real-time currency exchange rates from Bank of Ghana and multiple
-              providers
-            </p>
-            <Link to="/docs/api/exchange-rates" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>₿</div>
-            <h3>Crypto Prices</h3>
-            <p>
-              Live cryptocurrency pricing in USD and GHS with CoinGecko-backed
-              data, short-term caching, and fallback support
-            </p>
-            <Link to="/docs/api/crypto" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>📈</div>
-            <h3>Stock Market Data</h3>
-            <p>
-              Live Ghana Stock Exchange (GSE) prices, market sectors, historical
-              data, and real-time trading information
-            </p>
-            <Link to="/docs/api/stock-market" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🚗</div>
-            <h3>Transport & Logistics</h3>
-            <p>
-              Route planning, transport stops, fuel prices, and travel cost
-              estimation for major Ghanaian cities
-            </p>
-            <Link to="/docs/api/transport" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🎓</div>
-            <h3>Education Data</h3>
-            <p>
-              National directory of Ghanaian educational institutions with
-              advanced filtering and analytics
-            </p>
-            <Link to="/docs/api/education" className={styles.featureLink}>
-              Learn More →
-            </Link>
-          </div>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🗺️</div>
-            <h3>Location Data</h3>
-            <p>
-              Comprehensive administrative and geographic information for all
-              Ghanaian regions
-            </p>
-            <Link to="/docs/api/locations" className={styles.featureLink}>
-              Learn More →
-            </Link>
+          <div className={styles.stats}>
+            <div>
+              <strong>35+</strong>
+              <span>Endpoints</span>
+            </div>
+            <div>
+              <strong>8</strong>
+              <span>Services</span>
+            </div>
+            <div>
+              <strong>16</strong>
+              <span>Regions</span>
+            </div>
           </div>
         </div>
+
+        <Terminal />
+      </div>
+    </header>
+  );
+}
+
+function Services() {
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHead}>
+        <Heading as="h2">What you can build with</Heading>
+        <p>Eight services that share the same conventions and response shapes.</p>
+      </div>
+      <div className={styles.grid}>
+        {services.map(({ icon: Icon, title, description, to }) => (
+          <Link key={to} to={to} className={styles.card}>
+            <span className={styles.iconChip}>
+              <Icon size={22} />
+            </span>
+            <h3>{title}</h3>
+            <p>{description}</p>
+            <span className={styles.cardLink}>
+              Read the docs <ArrowRight size={16} />
+            </span>
+          </Link>
+        ))}
       </div>
     </section>
   );
 }
 
-function CTASection() {
+function Cta() {
   return (
-    <section className={styles.ctaSection}>
-      <div className="container">
-        <div className={styles.ctaContent}>
-          <h2>Ready to Get Started?</h2>
-          <p>
-            Join the Ghana developer community building amazing applications
-            with Ghana API. Contribute code, improve documentation, or add new
-            features!
-          </p>
-          <div className={styles.ctaButtons}>
-            <Link
-              className={clsx(
-                "button button--primary button--lg",
-                styles.ctaPrimaryButton
-              )}
-              to="/docs/contributing/overview">
-              🤝 Start Contributing
-            </Link>
-            <Link
-              className={clsx(
-                "button button--outline button--lg",
-                styles.ctaSecondaryButton
-              )}
-              to="/docs/intro">
-              📚 View Documentation
-            </Link>
-          </div>
-        </div>
+    <section className={styles.cta}>
+      <BookOpen size={28} />
+      <Heading as="h2">Help shape Ghana's open data</Heading>
+      <p>
+        Contribute code, improve the docs or add a new data source. Every pull
+        request helps developers across the country.
+      </p>
+      <div className={styles.buttons}>
+        <Link className="button button--primary button--lg" to="/docs/contributing/overview">
+          Start contributing
+        </Link>
+        <Link className="button button--secondary button--lg" to="/docs/api/overview">
+          Read the API overview
+        </Link>
       </div>
     </section>
   );
 }
 
 export default function Home(): ReactNode {
-  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title="Ghana API - Address Services, Banking, Exchange Rates, Transport & Location Data"
-      description="Comprehensive APIs for Ghana including address validation, bank & ATM locator, real-time exchange rates, transport & logistics, and administrative location data. Free to use with reliable data from Bank of Ghana and official sources.">
-      <HomepageHeader />
-      <main className={styles.main}>
-        <FeaturesSection />
-        <CTASection />
+      title="GhanaAPI: open data for Ghana"
+      description="A free REST API for Ghanaian addresses, banks, exchange rates, stocks, transport, education and location data.">
+      <Hero />
+      <main>
+        <Services />
+        <Cta />
       </main>
     </Layout>
   );

@@ -26,18 +26,21 @@ export function EnhancedTransportExplorer() {
         value={activeTab}
         onValueChange={handleTabChange}
         className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="mx-auto flex h-auto w-fit max-w-full justify-center">
           <TabsTrigger value="directions" className="flex items-center gap-2">
             <RouteIcon className="h-4 w-4" />
-            Route Directions
+            <span className="sm:hidden">Route</span>
+            <span className="hidden sm:inline">Route Directions</span>
           </TabsTrigger>
           <TabsTrigger value="fuel" className="flex items-center gap-2">
             <Fuel className="h-4 w-4" />
-            Fuel Prices
+            <span className="sm:hidden">Fuel</span>
+            <span className="hidden sm:inline">Fuel Prices</span>
           </TabsTrigger>
           <TabsTrigger value="stops" className="flex items-center gap-2">
             <Bus className="h-4 w-4" />
-            Nearby Stops
+            <span className="sm:hidden">Stops</span>
+            <span className="hidden sm:inline">Nearby Stops</span>
           </TabsTrigger>
         </TabsList>
 

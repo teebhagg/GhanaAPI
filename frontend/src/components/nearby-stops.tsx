@@ -278,7 +278,7 @@ export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
+              <div key={i} className="h-20 bg-muted rounded-2xl animate-pulse" />
             ))}
           </div>
         )}
@@ -291,7 +291,7 @@ export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
               {stops.map((stop, index) => (
                 <div
                   key={stop.id || index}
-                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  className="p-4 border rounded-2xl hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm truncate">
@@ -346,7 +346,7 @@ export const NearbyStopsCard = forwardRef<NearbyStopsCardRef>((_, ref) => {
                 <MapPin className="h-4 w-4" />
                 Map View
               </h4>
-              <div className="h-96 rounded-lg overflow-hidden border">
+              <div className="h-96 rounded-2xl overflow-hidden border">
                 {searchCenter ? (
                   <Map
                     ref={mapRef}

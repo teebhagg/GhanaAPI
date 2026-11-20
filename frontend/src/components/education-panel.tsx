@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   Table,
   TableBody,
@@ -94,33 +95,6 @@ const getResidencyDisplay = (school: SchoolDto): string =>
     ? "NOT APPLICABLE"
     : school.residency.replace("_", " & ");
 
-function StatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: ElementType;
-}) {
-  return (
-    <Card className="border border-border/70 bg-card/70">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-primary" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
 function DetailCard({
   icon: Icon,
   label,
@@ -132,7 +106,7 @@ function DetailCard({
 }) {
   if (!value) return null;
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+    <div className="rounded-2xl bg-muted/60 p-4">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <Icon className="h-4 w-4" />
         {label}
@@ -288,45 +262,37 @@ export function EducationPanel() {
   return (
     <section className="space-y-10">
       <div>
-        <h2 className="mb-4 text-lg font-semibold">Education Statistics</h2>
+        <h2 className="mb-4 text-lg font-bold tracking-tight">At a glance</h2>
         {statsLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, idx) => (
-              <Skeleton key={idx} className="h-28 w-full rounded-xl" />
+              <Skeleton key={idx} className="h-24 w-full rounded-3xl" />
             ))}
           </div>
         ) : stats ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Total Schools"
-              value={stats.totalSchools}
-              description="Institutions in the national registry"
+              value={stats.totalSchools.toLocaleString()}
+              label="Schools in the national registry"
               icon={School}
             />
             <StatCard
-              title="Top Category"
               value={
                 Object.entries(stats.byCategory).sort(
                   (a, b) => b[1] - a[1]
                 )[0]?.[0] || "N/A"
               }
-              description="Most represented category"
+              label="Most common category"
               icon={LibraryBig}
             />
             <StatCard
-              title="Top Grade"
-              value={
-                Object.entries(stats.byGrade).sort(
-                  (a, b) => b[1] - a[1]
-                )[0]?.[0] || "N/A"
-              }
-              description="Highest count grade"
+              value={(stats.byGrade["A"] ?? 0).toLocaleString()}
+              label="Grade A schools"
               icon={GraduationCap}
             />
             <StatCard
-              title="Regions Tracked"
-              value={Object.keys(stats.byRegion).length}
-              description="Regional coverage"
+              value={String(Object.keys(stats.byRegion).length)}
+              label="Regions covered"
               icon={BarChart3}
             />
           </div>
@@ -337,18 +303,19 @@ export function EducationPanel() {
         )}
       </div>
 
-      <Card className="border border-border/70 bg-card/60">
+      <Card className="rounded-[2rem] border-border/60 p-2 md:p-4">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">
+          <CardTitle className="text-lg font-bold tracking-tight">
             Search Schools
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="name">School Name</Label>
               <Input
                 id="name"
+                className="h-12 px-5"
                 placeholder="e.g. Achimota"
                 value={filters.name}
                 onChange={(e) =>
@@ -356,10 +323,11 @@ export function EducationPanel() {
                 }
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="region">Region</Label>
               <Input
                 id="region"
+                className="h-12 px-5"
                 placeholder="e.g. Greater Accra"
                 value={filters.region}
                 onChange={(e) =>
@@ -367,10 +335,11 @@ export function EducationPanel() {
                 }
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="district">District</Label>
               <Input
                 id="district"
+                className="h-12 px-5"
                 placeholder="e.g. Accra Metropolis"
                 value={filters.district}
                 onChange={(e) =>
@@ -378,7 +347,7 @@ export function EducationPanel() {
                 }
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-3">
               <Label>Category</Label>
               <Select
                 value={filters.category ?? ALL_OPTION}
@@ -391,7 +360,7 @@ export function EducationPanel() {
                         : (value as SchoolCategory),
                   }))
                 }>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 w-full px-5">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -404,7 +373,7 @@ export function EducationPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-3">
               <Label>Grade</Label>
               <Select
                 value={filters.grade ?? ALL_OPTION}
@@ -415,7 +384,7 @@ export function EducationPanel() {
                       value === ALL_OPTION ? undefined : (value as SchoolGrade),
                   }))
                 }>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 w-full px-5">
                   <SelectValue placeholder="All grades" />
                 </SelectTrigger>
                 <SelectContent>
@@ -431,6 +400,7 @@ export function EducationPanel() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button
+              size="lg"
               onClick={() => {
                 setSortState(null);
                 void fetchSearch({}, 0);
@@ -441,6 +411,7 @@ export function EducationPanel() {
             </Button>
             <Button
               variant="outline"
+              size="lg"
               onClick={handleReset}
               disabled={loading || !hasFilters}>
               <RefreshCcw className="h-4 w-4" />
@@ -449,16 +420,16 @@ export function EducationPanel() {
             {loading && (
               <span className="text-sm text-muted-foreground">Loading…</span>
             )}
-            {error && <span className="text-sm text-red-500">{error}</span>}
+            {error && <span className="text-sm text-destructive">{error}</span>}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border border-border/70 bg-card/60">
+      <Card className="rounded-[2rem] border-border/60 p-2 md:p-4">
         <CardHeader className="pb-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
-              <CardTitle className="text-lg font-semibold">
+              <CardTitle className="text-lg font-bold tracking-tight">
                 Search Results
               </CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -708,7 +679,7 @@ export function EducationPanel() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+              <div className="rounded-2xl bg-muted/60 p-4">
                 <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   Campus & Contact
@@ -726,7 +697,7 @@ export function EducationPanel() {
                       <Mail className="h-4 w-4" />
                       <a
                         href={`mailto:${selectedSchool.email}`}
-                        className="hover:text-primary">
+                        className="hover:text-primary-ink">
                         {selectedSchool.email}
                       </a>
                     </div>
@@ -736,7 +707,7 @@ export function EducationPanel() {
                       <Phone className="h-4 w-4" />
                       <a
                         href={`tel:${selectedSchool.phone}`}
-                        className="hover:text-primary">
+                        className="hover:text-primary-ink">
                         {selectedSchool.phone}
                       </a>
                     </div>
@@ -754,7 +725,7 @@ export function EducationPanel() {
                         href={selectedSchool.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-primary">
+                        className="hover:text-primary-ink">
                         {selectedSchool.website}
                       </a>
                     </div>

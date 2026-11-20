@@ -145,13 +145,13 @@ export function ExchangeRateHistoryChart() {
   const isPositive = stats ? stats.change >= 0 : false;
 
   return (
-    <Card className="w-full rounded-3xl shadow-none border">
+    <Card className="w-full rounded-[2rem] border-border/60 p-2 md:p-4">
       <CardHeader>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-2">
           <CardTitle className="text-xl font-semibold">
             Exchange Rate History
           </CardTitle>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Select
               value={selectedCurrency}
               onValueChange={setSelectedCurrency}>
@@ -226,7 +226,7 @@ export function ExchangeRateHistoryChart() {
             {/* Statistics */}
             {stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 border rounded-lg bg-muted/50">
+                <div className="p-4 rounded-3xl bg-muted/60">
                   <div className="text-xs text-muted-foreground mb-1">
                     Current Rate
                   </div>
@@ -243,19 +243,19 @@ export function ExchangeRateHistoryChart() {
                         )} ${selectedCurrency}`}
                   </div>
                 </div>
-                <div className="p-4 border rounded-lg bg-muted/50">
+                <div className="p-4 rounded-3xl bg-muted/60">
                   <div className="text-xs text-muted-foreground mb-1">
                     {isPositive ? "↑ Gain" : "↓ Loss"}
                   </div>
                   <div
                     className={`text-2xl font-semibold ${
-                      isPositive ? "text-green-600" : "text-red-600"
+                      isPositive ? "text-success" : "text-destructive"
                     }`}>
                     {isPositive ? "+" : ""}
                     {stats.change.toFixed(4)} ({changePercent}%)
                   </div>
                 </div>
-                <div className="p-4 border rounded-lg bg-muted/50">
+                <div className="p-4 rounded-3xl bg-muted/60">
                   <div className="text-xs text-muted-foreground mb-1">
                     Average Rate
                   </div>
@@ -263,7 +263,7 @@ export function ExchangeRateHistoryChart() {
                     {stats.average.toFixed(4)}
                   </div>
                 </div>
-                <div className="p-4 border rounded-lg bg-muted/50">
+                <div className="p-4 rounded-3xl bg-muted/60">
                   <div className="text-xs text-muted-foreground mb-1">
                     Range (Min - Max)
                   </div>
@@ -285,14 +285,14 @@ export function ExchangeRateHistoryChart() {
                       <stop
                         offset="5%"
                         stopColor={
-                          isPositive ? "hsl(142 76% 36%)" : "hsl(0 84% 60%)"
+                          isPositive ? "var(--success)" : "var(--destructive)"
                         }
                         stopOpacity={0.8}
                       />
                       <stop
                         offset="95%"
                         stopColor={
-                          isPositive ? "hsl(142 76% 36%)" : "hsl(0 84% 60%)"
+                          isPositive ? "var(--success)" : "var(--destructive)"
                         }
                         stopOpacity={0.1}
                       />
@@ -305,7 +305,7 @@ export function ExchangeRateHistoryChart() {
                   <XAxis
                     dataKey="date"
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "var(--muted-foreground)" }}
                     tickFormatter={(_value, index) => {
                       // Show only month, and only when the month changes
                       const dataPoint = displayData[index];
@@ -322,7 +322,7 @@ export function ExchangeRateHistoryChart() {
                   />
                   <YAxis
                     className="text-xs"
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fill: "var(--muted-foreground)" }}
                     tickFormatter={(value) => {
                       // Format based on the magnitude of the value
                       if (value === 0) return "0";
@@ -339,7 +339,7 @@ export function ExchangeRateHistoryChart() {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
+                          <div className="rounded-2xl border border-border/60 bg-card p-3 shadow-[var(--shadow-lift)]">
                             <div className="grid gap-2">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-xs text-muted-foreground">
@@ -385,7 +385,7 @@ export function ExchangeRateHistoryChart() {
                   <Area
                     type="monotone"
                     dataKey="rate"
-                    stroke={isPositive ? "hsl(142 76% 36%)" : "hsl(0 84% 60%)"}
+                    stroke={isPositive ? "var(--success)" : "var(--destructive)"}
                     strokeWidth={2}
                     fill="url(#colorRate)"
                   />

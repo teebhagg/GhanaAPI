@@ -340,9 +340,9 @@ export function TransportExplorer() {
                 {SAMPLE_LOCATIONS.slice(0, 3).map((location) => (
                   <Button
                     key={location.name}
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="h-8 px-3 text-xs"
                     onClick={() => handleSampleLocation(location, true)}>
                     {location.name.split(",")[0]}
                   </Button>
@@ -386,9 +386,9 @@ export function TransportExplorer() {
                 {SAMPLE_LOCATIONS.slice(2, 5).map((location) => (
                   <Button
                     key={location.name}
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="h-8 px-3 text-xs"
                     onClick={() => handleSampleLocation(location, false)}>
                     {location.name.split(",")[0]}
                   </Button>
@@ -523,7 +523,7 @@ export function TransportExplorer() {
 
                 {/* Cost Estimation */}
                 {routeData.estimated_cost && (
-                  <div className="p-3 bg-secondary rounded-lg">
+                  <div className="p-3 bg-secondary rounded-2xl">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                       <Fuel className="h-4 w-4" />
                       Estimated Fuel Cost
@@ -567,7 +567,7 @@ export function TransportExplorer() {
                       <h4 className="font-medium text-sm">
                         Turn-by-turn Directions
                       </h4>
-                      <div className="max-h-48 overflow-y-auto space-y-2">
+                      <div className="max-h-72 overflow-y-auto space-y-3 pr-2 pb-4">
                         {routeData.steps.map((step, index) => (
                           <div key={index} className="flex gap-3 text-sm">
                             <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
@@ -600,7 +600,7 @@ export function TransportExplorer() {
       </div>
 
       {/* Interactive Map */}
-      <Card className="rounded-3xl shadow-none">
+      <Card className="overflow-hidden rounded-[2rem] shadow-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
@@ -615,7 +615,7 @@ export function TransportExplorer() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="h-96 w-full rounded-b-lg overflow-hidden">
+          <div className="h-96 w-full rounded-b-[2rem] overflow-hidden">
             <Map
               ref={mapRef}
               {...viewState}

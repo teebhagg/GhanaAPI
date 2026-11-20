@@ -1,8 +1,7 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Link2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { externalLinks } from "@/lib/sections";
 
 export function EndpointChip({ path }: { path: string }) {
@@ -21,23 +20,14 @@ export function EndpointChip({ path }: { path: string }) {
   };
 
   return (
-    <div className="inline-flex max-w-full items-center gap-1 rounded-md border bg-card py-0.5 pl-2.5 pr-0.5 font-mono text-xs">
-      <span className="text-primary">GET</span>
-      <span className="truncate text-muted-foreground">/api/v1{path}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="size-7"
-        aria-label="Copy endpoint URL"
-        onClick={copy}>
-        {copied ? (
-          <Check className="h-3.5 w-3.5" />
-        ) : (
-          <Copy className="h-3.5 w-3.5" />
-        )}
-      </Button>
-    </div>
+    <button
+      type="button"
+      onClick={copy}
+      aria-label="Copy endpoint URL"
+      className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-all hover:shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]">
+      {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+      {copied ? "Copied" : "Copy endpoint"}
+    </button>
   );
 }
 
@@ -51,13 +41,15 @@ export function PanelHeader({
   endpoint?: string;
 }) {
   return (
-    <header className="space-y-3 border-b pb-6">
-      <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-        {title}
-      </h1>
-      <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-        {description}
-      </p>
+    <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+          {title}
+        </h1>
+        <p className="max-w-2xl text-muted-foreground md:text-lg">
+          {description}
+        </p>
+      </div>
       {endpoint && <EndpointChip path={endpoint} />}
     </header>
   );

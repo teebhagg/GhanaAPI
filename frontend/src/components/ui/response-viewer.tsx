@@ -17,7 +17,7 @@ function highlight(json: string): ReactNode[] {
     const [text, str, colon, lit, num] = m;
     let cls = "";
     if (str && colon) cls = "text-foreground";
-    else if (str) cls = "text-primary";
+    else if (str) cls = "text-primary-ink";
     else if (lit) cls = "text-chart-4";
     else if (num) cls = "text-chart-2";
     out.push(

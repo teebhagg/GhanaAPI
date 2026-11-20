@@ -1,4 +1,10 @@
+import { motion } from "framer-motion";
+import { Compass, Landmark, MapPinned, Tag, X } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Chip, FeatureSurface } from "@/components/ui/feature-surface";
 import {
   Select,
   SelectContent,
@@ -6,10 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 
 type Region = { code: string; label: string };
 type District = {
@@ -18,6 +23,28 @@ type District = {
   category: string;
   capital: string;
 };
+
+function DistrictCard({ district }: { district: District }) {
+  return (
+    <motion.article
+      variants={fadeUp}
+      className="group flex flex-col gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-semibold leading-snug">{district.label}</h3>
+        <Chip icon={Tag} className="shrink-0">
+          {district.category}
+        </Chip>
+      </div>
+      <div className="mt-auto flex items-center gap-2 text-sm text-muted-foreground">
+        <Landmark className="size-4 shrink-0 text-primary-ink" />
+        <span className="truncate">
+          Capital:{" "}
+          <span className="font-medium text-foreground">{district.capital}</span>
+        </span>
+      </div>
+    </motion.article>
+  );
+}
 
 export function LocationsPanel() {
   const [regions, setRegions] = useState<Region[]>([]);
@@ -35,6 +62,7 @@ export function LocationsPanel() {
     api
       .getDistricts(region)
       .then(setDistricts)
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, [region]);
 
@@ -43,78 +71,83 @@ export function LocationsPanel() {
     setDistricts([]);
   }
 
+  const regionLabel = regions.find((r) => r.code === region)?.label;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
         viewport={{ once: true }}>
-        <div className="p-6 border rounded-3xl bg-background">
-          <h3 className="font-semibold mb-2">Ghana Regions & Districts</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select a region to view all its districts and administrative
-            information
-          </p>
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground block">
-              Choose Region
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              <Select value={region} onValueChange={setRegion}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a region to explore..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {regions.map((r) => (
-                    <SelectItem key={r.code} value={r.code}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={clearAll}
-                size="icon"
-                disabled={!region && districts.length === 0}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
+        <FeatureSurface
+          icon={MapPinned}
+          title="Choose a region"
+          description="See every district in a region, with its category and capital.">
+          <div className="flex gap-2">
+            <Select value={region} onValueChange={setRegion}>
+              <SelectTrigger className="h-12 flex-1 rounded-full px-5">
+                <SelectValue placeholder="Choose a region…" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                {regions.map((r) => (
+                  <SelectItem key={r.code} value={r.code}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Clear region"
+              className="size-12"
+              onClick={clearAll}
+              disabled={!region && districts.length === 0}>
+              <X className="size-4" />
+            </Button>
           </div>
-        </div>
+        </FeatureSurface>
       </motion.div>
 
-      <motion.div
-        className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: { transition: { staggerChildren: 0.05 } },
-        }}>
-        {loading && (
-          <div className="text-sm opacity-70">Loading districts...</div>
-        )}
-        {!loading && districts.length === 0 && (
-          <div className="text-sm opacity-70">
-            Select a region to view its districts.
+      <section aria-live="polite" className="space-y-4">
+        {regionLabel && !loading && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-bold tracking-tight">{regionLabel}</h2>
+            <Chip>{districts.length} districts</Chip>
           </div>
         )}
-        {districts.map((d) => (
+
+        {!region ? (
+          <EmptyState
+            icon={MapPinned}
+            title="Pick a region"
+            description="Its districts and capitals will appear here."
+          />
+        ) : loading ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-28 rounded-3xl" />
+            ))}
+          </div>
+        ) : districts.length === 0 ? (
+          <EmptyState
+            icon={Compass}
+            title="No districts found"
+            description="This region has no district data yet."
+          />
+        ) : (
           <motion.div
-            key={d.code}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}>
-            <div className="p-4 border rounded-3xl bg-background hover:bg-accent/50 transition-colors">
-              <div className="font-medium">{d.label}</div>
-              <div className="text-xs text-muted-foreground">{d.category}</div>
-              <div className="text-sm mt-1 text-muted-foreground">
-                Capital: {d.capital}
-              </div>
-            </div>
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show">
+            {districts.map((d, i) => (
+              <DistrictCard key={`${d.code}-${i}`} district={d} />
+            ))}
           </motion.div>
-        ))}
-      </motion.div>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,93 +1,117 @@
-import { ArrowUpRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Database, Globe2, Layers, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { BentoGrid } from "@/components/overview/bento-grid";
 import { SEO, defaultStructuredData } from "@/components/seo";
-import { EndpointChip } from "@/components/ui/panel-header";
-import { StatusDot } from "@/components/ui/status-dot";
-import { useApiStatus } from "@/hooks/use-api-status";
-import { externalLinks, sections } from "@/lib/sections";
+import { Button } from "@/components/ui/button";
+import { DiaTextReveal } from "@/components/ui/dia-text-reveal";
+import { StatCard } from "@/components/ui/stat-card";
+import { fadeUp, staggerContainer } from "@/lib/motion";
+import { externalLinks } from "@/lib/sections";
 
-export function OverviewPage() {
-  const status = useApiStatus();
+function HeroBackdrop() {
+  const reduce = useReducedMotion();
+  const drift = (x: number, y: number, d: number) =>
+    reduce
+      ? {}
+      : {
+          animate: { x: [0, x, 0], y: [0, y, 0] },
+          transition: { duration: d, repeat: Infinity, ease: "easeInOut" as const },
+        };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-10">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2.5rem]">
+      <motion.div
+        className="absolute -left-16 -top-20 h-72 w-72 rounded-full bg-primary/40 blur-3xl"
+        {...drift(40, 30, 14)}
+      />
+      <motion.div
+        className="absolute -right-10 top-10 h-64 w-64 rounded-full bg-success/25 blur-3xl"
+        {...drift(-30, 40, 17)}
+      />
+      <motion.div
+        className="absolute bottom-[-4rem] left-1/3 h-56 w-56 rounded-full bg-destructive/20 blur-3xl"
+        {...drift(30, -30, 19)}
+      />
+    </div>
+  );
+}
+
+export function OverviewPage() {
+  return (
+    <div className="space-y-12">
       <SEO structuredData={defaultStructuredData} />
 
-      <header className="space-y-4 border-b pb-8">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            GhanaAPI
-          </h1>
-          <StatusDot status={status} showLabel />
-        </div>
-        <p className="max-w-2xl text-muted-foreground">
-          Open REST APIs for Ghana: addresses, banking, markets, exchange rates,
-          transport and education. Try each one here, or call it directly.
-        </p>
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Base URL
-          </p>
-          <code className="inline-block rounded-md border bg-card px-2.5 py-1 font-mono text-sm">
-            {externalLinks.apiBase}
-          </code>
-        </div>
-      </header>
-
-      <section aria-labelledby="endpoints-heading" className="space-y-3">
-        <h2
-          id="endpoints-heading"
-          className="text-sm font-medium text-muted-foreground">
-          Endpoints
-        </h2>
-        <ul className="divide-y rounded-md border bg-card">
-          {sections.map(({ to, label, description, endpoint, icon: Icon }) => (
-            <li key={to}>
-              <Link
-                to={to}
-                className="group grid items-center gap-x-6 gap-y-2 px-4 py-4 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-ring md:grid-cols-[10rem_1fr_auto]">
-                <span className="flex items-center gap-2.5 font-medium">
-                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                  {label}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {description}
-                </span>
-                <span className="flex items-center gap-3">
-                  <span className="hidden font-mono text-xs text-muted-foreground lg:inline">
-                    {endpoint}
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </span>
+      <section className="relative isolate overflow-hidden rounded-[2.5rem] border border-border/60 bg-card px-6 py-16 text-center shadow-[var(--shadow-soft)] md:px-16 md:py-24">
+        <HeroBackdrop />
+        <motion.div
+          className="relative mx-auto max-w-2xl space-y-6"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show">
+          <motion.p
+            variants={fadeUp}
+            className="text-lg font-bold tracking-tight md:text-xl">
+            <DiaTextReveal
+              text={[
+                "Free and open source",
+                "Built for Ghana",
+                "Ready for your next app",
+              ]}
+              colors={["#ce1126", "#fcd116", "#00a859", "#fcd116", "#ce1126"]}
+              duration={1.8}
+              repeat
+              repeatDelay={1.8}
+            />
+          </motion.p>
+          <motion.h1
+            variants={fadeUp}
+            className="text-4xl font-extrabold tracking-tight md:text-6xl">
+            Open data for Ghana, ready to use
+          </motion.h1>
+          <motion.p
+            variants={fadeUp}
+            className="text-lg text-muted-foreground md:text-xl">
+            Addresses, banks, markets, exchange rates, transport and schools in
+            one friendly API. Explore it here, then build with it.
+          </motion.p>
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button size="lg" asChild>
+              <Link to="/addresses">
+                Start exploring <ArrowRight className="h-4 w-4" />
               </Link>
-            </li>
-          ))}
-        </ul>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a
+                href={externalLinks.playground}
+                target="_blank"
+                rel="noopener noreferrer">
+                API playground
+              </a>
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Quick start</h2>
-        <EndpointChip path="/exchange-rates/current" />
-        <p className="text-sm text-muted-foreground">
-          Full reference in the{" "}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={externalLinks.playground}
-            target="_blank"
-            rel="noopener noreferrer">
-            API playground
-          </a>{" "}
-          and{" "}
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={externalLinks.docs}
-            target="_blank"
-            rel="noopener noreferrer">
-            documentation
-          </a>
-          .
-        </p>
+      <section className="grid gap-4 sm:grid-cols-3">
+        <StatCard value="6" label="Data areas to explore" icon={Layers} />
+        <StatCard value="REST + JSON" label="Simple to integrate" icon={Zap} />
+        <StatCard value="Open" label="Free for everyone" icon={Globe2} />
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+            <Database className="h-5 w-5" />
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight">What you can explore</h2>
+        </div>
+        <BentoGrid />
       </section>
     </div>
   );

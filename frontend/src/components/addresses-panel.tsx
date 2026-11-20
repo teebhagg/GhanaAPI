@@ -1,39 +1,61 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { api, type AddressDto } from "@/lib/api";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Navigation, Search, X } from "lucide-react";
+import {
+  Compass,
+  Hash,
+  Mailbox,
+  MapPin,
+  Navigation,
+  Search,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Chip, FeatureSurface } from "@/components/ui/feature-surface";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api, type AddressDto } from "@/lib/api";
+import { fadeUp, staggerContainer } from "@/lib/motion";
+
+const hasCoords = (n: unknown): n is number =>
+  typeof n === "number" && Number.isFinite(n);
+
 function AddressCard({ item }: { item: AddressDto }) {
+  // Show the postal code only when it adds information beyond the digital code.
+  const showPostal =
+    Boolean(item.postalCode) && item.postalCode !== item.digitalCode;
   return (
-    <div className="p-6 border rounded-3xl bg-background hover:bg-accent/30 transition-all duration-200 group">
+    <motion.article
+      variants={fadeUp}
+      className="group flex h-full flex-col gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-          <MapPin className="w-5 h-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-base">{item.addressLine1}</div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+          <MapPin className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p
+            className="line-clamp-3 font-semibold leading-snug"
+            title={item.addressLine1}>
+            {item.addressLine1 || "Unnamed location"}
+          </p>
           {item.addressLine2 && (
-            <div className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1 text-sm text-muted-foreground">
               {item.addressLine2}
-            </div>
+            </p>
           )}
-          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Navigation className="w-3 h-3" />
-              {item.latitude.toFixed(5)}, {item.longitude.toFixed(5)}
-            </div>
-            {item.postalCode && (
-              <div className="flex items-center gap-1">
-                <Mail className="w-3 h-3" />
-                {item.postalCode}
-              </div>
-            )}
-          </div>
         </div>
       </div>
-    </div>
+      <div className="mt-auto flex flex-wrap gap-2">
+        {item.digitalCode && <Chip icon={Hash}>{item.digitalCode}</Chip>}
+        {hasCoords(item.latitude) && hasCoords(item.longitude) && (
+          <Chip icon={Navigation}>
+            {item.latitude.toFixed(5)}, {item.longitude.toFixed(5)}
+          </Chip>
+        )}
+        {showPostal && <Chip icon={Mailbox}>{item.postalCode}</Chip>}
+      </div>
+    </motion.article>
   );
 }
 
@@ -66,6 +88,7 @@ function handleGeolocationError(error: unknown) {
 export function AddressesPanel() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [items, setItems] = useState<AddressDto[]>([]);
   const [lat, setLat] = useState<string>("");
   const [lng, setLng] = useState<string>("");
@@ -82,6 +105,7 @@ export function AddressesPanel() {
     try {
       const res = await api.searchAddresses(q.trim());
       setItems(res);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
@@ -120,7 +144,8 @@ export function AddressesPanel() {
     setLoading(true);
     try {
       const res = await api.reverseGeocode(Number(lat), Number(lng));
-      setItems(res ? [res] : []);
+      setItems(Array.isArray(res) ? res : []);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
@@ -129,12 +154,14 @@ export function AddressesPanel() {
   function clearSearch() {
     setQ("");
     setItems([]);
+    setSearched(false);
   }
 
   function clearReverse() {
     setLat("");
     setLng("");
     setItems([]);
+    setSearched(false);
   }
 
   function clearAll() {
@@ -142,167 +169,179 @@ export function AddressesPanel() {
     setLat("");
     setLng("");
     setItems([]);
+    setSearched(false);
   }
+
+  const hasAnything = Boolean(q || lat || lng || items.length > 0);
 
   return (
     <div className="space-y-8">
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}>
-          <div className="p-8 border rounded-3xl bg-background/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Search className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Search Addresses</h3>
-                <p className="text-sm text-muted-foreground">
-                  Find addresses and digital codes
-                </p>
-              </div>
-            </div>
-            <form onSubmit={onSearch} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-3">
-                  Search Query
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}>
+          <FeatureSurface
+            icon={Search}
+            title="Search addresses"
+            description="Look up by name, landmark or area.">
+            <form onSubmit={onSearch} className="flex flex-col gap-4">
+              <div className="space-y-2">
+                <label htmlFor="address-query" className="text-sm font-semibold">
+                  Search query
                 </label>
                 <Input
-                  placeholder="Enter address, landmark, or area (e.g., Accra, Osu, Ring Road)"
+                  id="address-query"
+                  className="h-12 px-5"
+                  placeholder="Accra, Osu, Ring Road…"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" disabled={!q || loading}>
-                  <Search className="w-4 h-4" />
-                  {loading ? "Searching..." : "Search Addresses"}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="flex-1 sm:flex-none"
+                  disabled={!q.trim() || loading}>
+                  <Search className="size-4" />
+                  {loading ? "Searching…" : "Search addresses"}
                 </Button>
                 <Button
                   type="button"
-                  size={"icon"}
+                  size="icon"
                   variant="outline"
+                  aria-label="Clear search"
+                  className="size-12"
                   onClick={clearSearch}
                   disabled={!q && items.length === 0}>
-                  <X className="w-4 h-4" />
+                  <X className="size-4" />
                 </Button>
               </div>
             </form>
-          </div>
+          </FeatureSurface>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}>
-          <div className="p-8 border rounded-3xl bg-background/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Navigation className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Reverse Geocode</h3>
-                <p className="text-sm text-muted-foreground">
-                  Get the nearest address from coordinates
-                </p>
-              </div>
-            </div>
-            <form onSubmit={onReverse} className="space-y-4">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-foreground">
-                  Coordinates
-                </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={getCurrentLocation}
-                  disabled={locationLoading}>
-                  <MapPin className="w-4 h-4" />
-                  {locationLoading ? "Getting..." : "Use My Location"}
-                </Button>
-              </div>
+          transition={{ delay: 0.08 }}>
+          <FeatureSurface
+            icon={Navigation}
+            title="Reverse geocode"
+            description="Get the nearest address from coordinates.">
+            <form onSubmit={onReverse} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium text-foreground block mb-2">
+                <div className="space-y-2">
+                  <label htmlFor="lat" className="text-sm font-semibold">
                     Latitude
                   </label>
                   <Input
-                    placeholder="e.g., 5.5600"
+                    id="lat"
+                    className="h-12 px-5"
+                    placeholder="5.5600"
+                    inputMode="decimal"
                     value={lat}
                     onChange={(e) => setLat(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground block mb-2">
+                <div className="space-y-2">
+                  <label htmlFor="lng" className="text-sm font-semibold">
                     Longitude
                   </label>
                   <Input
-                    placeholder="e.g., -0.2057"
+                    id="lng"
+                    className="h-12 px-5"
+                    placeholder="-0.2057"
+                    inputMode="decimal"
                     value={lng}
                     onChange={(e) => setLng(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" disabled={!validLatLng || loading}>
-                  <Navigation className="w-4 h-4" />
-                  {loading ? "Looking up..." : "Find Address"}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="flex-1 sm:flex-none"
+                  disabled={!validLatLng || loading}>
+                  <Navigation className="size-4" />
+                  {loading ? "Looking up…" : "Find address"}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  size={"icon"}
+                  size="lg"
+                  onClick={getCurrentLocation}
+                  disabled={locationLoading}>
+                  <MapPin className="size-4" />
+                  {locationLoading ? "Getting…" : "Use my location"}
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  aria-label="Clear coordinates"
+                  className="size-12"
                   onClick={clearReverse}
                   disabled={!lat && !lng && items.length === 0}>
-                  <X className="w-4 h-4" />
+                  <X className="size-4" />
                 </Button>
               </div>
             </form>
-          </div>
+          </FeatureSurface>
         </motion.div>
       </div>
 
-      <motion.div
-        className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: { transition: { staggerChildren: 0.05 } },
-        }}>
-        {items.map((it, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}>
-            <AddressCard item={it} />
-          </motion.div>
-        ))}
-        {!loading && items.length === 0 && (
-          <div className="text-sm opacity-70">
-            No results yet. Try searching or reverse geocoding.
+      <section aria-live="polite" className="space-y-4">
+        {items.length > 0 && !loading && (
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold tracking-tight">Results</h2>
+            <Chip>
+              {items.length} {items.length === 1 ? "match" : "matches"}
+            </Chip>
           </div>
         )}
-      </motion.div>
 
-      {(q || lat || lng || items.length > 0) && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center">
-          <Button
-            variant="outline"
-            size={"icon"}
-            onClick={clearAll}
-            className="flex items-center gap-2">
-            <X className="w-4 h-4" />
+        {loading ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-40 rounded-3xl" />
+            ))}
+          </div>
+        ) : items.length > 0 ? (
+          <motion.div
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show">
+            {items.map((it, idx) => (
+              <AddressCard key={`${it.digitalCode || "addr"}-${idx}`} item={it} />
+            ))}
+          </motion.div>
+        ) : (
+          <EmptyState
+            icon={searched ? Compass : MapPin}
+            title={searched ? "No addresses found" : "Ready when you are"}
+            description={
+              searched
+                ? "Try a broader area or a different spelling."
+                : "Search by name, or enter coordinates, to see matching addresses here."
+            }
+          />
+        )}
+      </section>
+
+      {hasAnything && (
+        <div className="flex justify-center">
+          <Button variant="ghost" onClick={clearAll}>
+            <X className="size-4" />
+            Clear everything
           </Button>
-        </motion.div>
+        </div>
       )}
     </div>
   );

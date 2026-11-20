@@ -82,12 +82,12 @@ export function CommandPalette() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8 gap-2 text-muted-foreground"
+        className="h-10 gap-2 text-muted-foreground"
         onClick={() => setOpen(true)}
         aria-label="Open command palette">
         <Search className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Search</span>
-        <kbd className="hidden rounded border bg-muted px-1.5 font-mono text-[10px] sm:inline">
+        <kbd className="hidden rounded-full bg-muted px-2 text-[10px] font-semibold sm:inline">
           /
         </kbd>
       </Button>
@@ -100,7 +100,7 @@ export function CommandPalette() {
             setActive(0);
           }
         }}>
-        <DialogContent className="gap-0 p-0 sm:max-w-md" showCloseButton={false}>
+        <DialogContent className="gap-0 p-0 sm:max-w-lg" showCloseButton={false}>
           <DialogTitle className="sr-only">Command palette</DialogTitle>
           <DialogDescription className="sr-only">
             Search sections and links. Use arrow keys and Enter.
@@ -126,9 +126,9 @@ export function CommandPalette() {
             }}
             placeholder="Go to…"
             aria-label="Search sections"
-            className="w-full border-b bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
+            className="w-full border-b bg-transparent px-6 py-4 text-base outline-none placeholder:text-muted-foreground"
           />
-          <ul role="listbox" className="max-h-72 overflow-auto p-1">
+          <ul role="listbox" className="max-h-80 overflow-auto p-2">
             {results.length === 0 && (
               <li className="px-3 py-6 text-center text-sm text-muted-foreground">
                 No matches
@@ -142,11 +142,11 @@ export function CommandPalette() {
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(item)}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between rounded-sm px-3 py-2 text-sm",
+                  "flex cursor-pointer items-center justify-between rounded-2xl px-4 py-2.5 text-sm font-medium",
                   i === active && "bg-accent text-accent-foreground",
                 )}>
                 <span>{item.label}</span>
-                <span className="font-mono text-xs text-muted-foreground">
+                <span className="text-xs font-normal text-muted-foreground">
                   {item.hint}
                 </span>
               </li>

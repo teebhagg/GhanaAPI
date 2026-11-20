@@ -77,4 +77,9 @@ export const externalLinks = {
   docs: "https://docs.ghana-api.dev",
   playground: "https://api.ghana-api.dev/docs",
   apiBase: "https://api.ghana-api.dev/api/v1",
+  issues: "https://github.com/teebhagg/GhanaAPI/issues",
+  readme: "https://github.com/teebhagg/GhanaAPI/blob/main/README.md",
+  email: "mailto:support@ghana-api.dev",
+  privacy: "https://ghana-api.dev/privacy",
+  terms: "https://ghana-api.dev/terms",
 };

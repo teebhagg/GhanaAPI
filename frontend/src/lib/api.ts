@@ -265,7 +265,8 @@ export const api = {
       lat: String(lat),
       lng: String(lng),
     }).toString();
-    return http<AddressDto | null>(`/addresses/lookup?${q}`);
+    // Production returns an array of candidate addresses for a coordinate.
+    return http<AddressDto[]>(`/addresses/lookup?${q}`);
   },
   searchAddresses(q: string) {
     const qs = new URLSearchParams({ q }).toString();
@@ -282,7 +283,7 @@ export const api = {
     });
     return http<BankSearchResponseDto>(`/banking/search?${params}`);
   },
-  getNearbyBanks(lat: number, lng: number, radius = 5000) {
+  getNearbyBanks(lat: number, lng: number, radius = 5) {  // km, max 50
     const params = new URLSearchParams({
       lat: lat.toString(),
       lng: lng.toString(),

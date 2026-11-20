@@ -97,7 +97,16 @@ export function LocationsPanel() {
           title="Choose a region"
           description="See every district in a region, with its category and capital.">
           <div className="flex gap-2">
-            <Select value={region} onValueChange={setRegion}>
+            <Select
+              value={region}
+              onValueChange={(v) => {
+                // Clear immediately so the new heading never sits above the old
+                // region's districts for a render.
+                setDistricts([]);
+                setError(null);
+                setLoading(true);
+                setRegion(v);
+              }}>
               <SelectTrigger className="h-12 flex-1 rounded-full px-5">
                 <SelectValue placeholder="Choose a region…" />
               </SelectTrigger>

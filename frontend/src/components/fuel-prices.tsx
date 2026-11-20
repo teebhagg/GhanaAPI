@@ -78,6 +78,18 @@ export function FuelPricesCard() {
         </Button>
       </CardHeader>
       <CardContent>
+        {error && fuelPrices && (
+          <div
+            role="alert"
+            className="mb-4 flex items-start gap-3 rounded-2xl bg-destructive/10 p-4 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <p>
+              Couldn't refresh fuel prices ({error.replace(/[.\s]+$/, "")}). The
+              prices below may be out of date.
+            </p>
+          </div>
+        )}
+
         {error && !fuelPrices && !loading && (
           <EmptyState
             compact

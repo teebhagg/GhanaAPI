@@ -325,10 +325,26 @@ code {
   --prism-background-color: #130e0a !important;
 }
 
-.theme-code-block pre,
-.theme-code-block code {
+.theme-code-block {
+  --ifm-pre-padding: 1.35rem 1.6rem;
+  --ifm-code-font-size: 95%;
+  margin: 1.25rem 0 1.75rem;
+}
+
+.theme-code-block pre {
   background: transparent;
-  padding: 0;
+  line-height: 1.75;
+}
+
+.theme-code-block pre code {
+  background: transparent;
+  padding: var(--ifm-pre-padding);
+}
+
+.theme-code-block [class*="codeBlockTitle"] {
+  padding: 0.85rem 1.6rem;
+  border-bottom: 1px solid var(--gh-border);
+  font-weight: 600;
 }
 
 /* Tables */

@@ -18,11 +18,11 @@ function checkStatus(): Promise<ApiStatus> {
       });
       if (!res.ok) return "down";
       // /status answers 200 even when services are unhealthy, so read the payload.
-      const body = (await res.json().catch(() => null)) as { status?: string } | null;
+      const body = (await res.json()) as { status?: string };
       const state = body?.status?.toLowerCase();
       if (state === "ok" || state === "healthy") return "ok";
       if (state === "degraded") return "degraded";
-      return state ? "down" : "ok";
+      return state ? "down" : "unknown";
     } catch {
       return "unknown";
     } finally {

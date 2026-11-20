@@ -8,6 +8,7 @@ import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import {
   Sheet,
   SheetContent,
+  SheetClose,
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -169,6 +170,12 @@ export function MenuSheet() {
             }
           }}
           className="w-full gap-0 rounded-none border-0 p-0 ease-[cubic-bezier(0.32,0.72,0,1)] data-[state=closed]:duration-500 data-[state=open]:duration-500 shadow-[var(--shadow-lift)] sm:inset-y-3 sm:right-3 sm:h-[calc(100%-1.5rem)] sm:w-[27rem] sm:max-w-none sm:rounded-[2rem] sm:border sm:border-border/60">
+        {/* Keyboard users can't Tab to the floating button (it sits outside the
+            focus trap), so keep a close control inside the dialog. */}
+        <SheetClose className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:left-6 focus-visible:top-24 focus-visible:z-20 focus-visible:rounded-full focus-visible:bg-foreground focus-visible:px-4 focus-visible:py-2 focus-visible:text-sm focus-visible:font-semibold focus-visible:text-background">
+          Close menu
+        </SheetClose>
+
         {/* Scrolling list sits under both blurred edges */}
         <div className="h-full overflow-y-auto overscroll-contain rounded-[inherit] pb-24 pt-24">
           <motion.nav

@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { externalLinks, overviewSection, sections } from "@/lib/sections";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const items = useMemo<Item[]>(() => {
     const go = (to: string) => () => navigate(to);
@@ -71,6 +73,13 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Keep the highlighted option visible while arrowing through a long list.
+  useEffect(() => {
+    listRef.current
+      ?.querySelector<HTMLElement>(`[id="palette-opt-${active}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [active, open]);
+
   const choose = (item: Item | undefined) => {
     if (!item) return;
     setOpen(false);
@@ -79,18 +88,6 @@ export function CommandPalette() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-10 gap-2 text-muted-foreground"
-        onClick={() => setOpen(true)}
-        aria-label="Open command palette">
-        <Search className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Search</span>
-        <kbd className="hidden rounded-full bg-muted px-2 text-[10px] font-semibold sm:inline">
-          /
-        </kbd>
-      </Button>
       <Dialog
         open={open}
         onOpenChange={(o) => {
@@ -100,6 +97,20 @@ export function CommandPalette() {
             setActive(0);
           }
         }}>
+        {/* DialogTrigger gives Radix a target to return focus to on close. */}
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 gap-2 text-muted-foreground"
+            aria-label="Open command palette">
+            <Search className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Search</span>
+            <kbd className="hidden rounded-full bg-muted px-2 text-[10px] font-semibold sm:inline">
+              /
+            </kbd>
+          </Button>
+        </DialogTrigger>
         <DialogContent className="gap-0 p-0 sm:max-w-lg" showCloseButton={false}>
           <DialogTitle className="sr-only">Command palette</DialogTitle>
           <DialogDescription className="sr-only">
@@ -125,10 +136,15 @@ export function CommandPalette() {
               }
             }}
             placeholder="Go to…"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="palette-list"
+            aria-autocomplete="list"
+            aria-activedescendant={results[active] ? `palette-opt-${active}` : undefined}
             aria-label="Search sections"
             className="w-full border-b bg-transparent px-6 py-4 text-base outline-none placeholder:text-muted-foreground"
           />
-          <ul role="listbox" className="max-h-80 overflow-auto p-2">
+          <ul id="palette-list" ref={listRef} role="listbox" className="max-h-80 overflow-auto p-2">
             {results.length === 0 && (
               <li className="px-3 py-6 text-center text-sm text-muted-foreground">
                 No matches
@@ -137,6 +153,7 @@ export function CommandPalette() {
             {results.map((item, i) => (
               <li
                 key={item.label}
+                id={`palette-opt-${i}`}
                 role="option"
                 aria-selected={i === active}
                 onMouseEnter={() => setActive(i)}

@@ -14,7 +14,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -175,24 +175,31 @@ export function BankingPanel() {
   );
   const radiusKm = Math.min(Math.max(Number(radius) || 0, 0.1), MAX_RADIUS_KM);
 
+  const requestId = useRef(0);
+
   async function run<T>(
     request: () => Promise<T>,
     onOk: (res: T) => void,
     fallbackMessage: string
   ) {
+    const id = ++requestId.current;
     setLoading(true);
     setError(null);
     setShowAll(false);
     try {
-      onOk(await request());
+      const res = await request();
+      if (id === requestId.current) onOk(res);
     } catch (err) {
       console.error(err);
+      if (id !== requestId.current) return;
       setItems([]);
       setTotal(null);
       setError(err instanceof Error ? err.message : fallbackMessage);
     } finally {
-      setSearched(true);
-      setLoading(false);
+      if (id === requestId.current) {
+        setSearched(true);
+        setLoading(false);
+      }
     }
   }
 
@@ -302,7 +309,19 @@ export function BankingPanel() {
   return (
     <div className="space-y-8">
       <div className="flex justify-center">
-        <Tabs value={kind} onValueChange={(v) => setKind(v as Kind)}>
+        <Tabs
+          value={kind}
+          onValueChange={(v) => {
+            // Results belong to the type they were fetched for, so reset them.
+            requestId.current++;
+            setKind(v as Kind);
+            setItems([]);
+            setTotal(null);
+            setSearched(false);
+            setError(null);
+            setLoading(false);
+            setShowAll(false);
+          }}>
           <TabsList>
             <TabsTrigger value="bank" className="gap-2">
               <Building2 className="size-4" />

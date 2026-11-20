@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Compass, Landmark, MapPinned, Tag, X } from "lucide-react";
+import { AlertTriangle, Compass, Landmark, MapPinned, Tag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,7 @@ export function LocationsPanel() {
   const [region, setRegion] = useState<string>("");
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.getRegions().then(setRegions).catch(console.error);
@@ -58,17 +59,28 @@ export function LocationsPanel() {
 
   useEffect(() => {
     if (!region) return;
+    // Ignore completions from regions the user has since moved away from.
+    let active = true;
     setLoading(true);
+    setError(null);
+    setDistricts([]);
     api
       .getDistricts(region)
-      .then(setDistricts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .then((d) => active && setDistricts(d))
+      .catch((err) => {
+        console.error(err);
+        if (active) setError(err instanceof Error ? err.message : "Failed to load districts");
+      })
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
   }, [region]);
 
   function clearAll() {
     setRegion("");
     setDistricts([]);
+    setError(null);
   }
 
   const regionLabel = regions.find((r) => r.code === region)?.label;
@@ -130,6 +142,12 @@ export function LocationsPanel() {
               <Skeleton key={i} className="h-28 rounded-3xl" />
             ))}
           </div>
+        ) : error ? (
+          <EmptyState
+            icon={AlertTriangle}
+            title="Couldn't load districts"
+            description={`${error.replace(/[.\s]+$/, "")}. Please try again.`}
+          />
         ) : districts.length === 0 ? (
           <EmptyState
             icon={Compass}

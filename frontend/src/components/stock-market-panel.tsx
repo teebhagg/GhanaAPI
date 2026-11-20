@@ -236,6 +236,9 @@ export function StockMarketPanel() {
   }, [stocks, search, sector, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  React.useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const start = (page - 1) * perPage;
   const pageRows = rows.slice(start, start + perPage);
 

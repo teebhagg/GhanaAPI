@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export function AddressesPage() {
   return (
     <FeaturePage
-      endpoint="/addresses"
+      endpoint="/addresses/search?q=Accra"
       title="Address & Region Explorer"
       description="Search and validate GhanaPost GPS addresses, then dive into regions and districts with authoritative datasets.">
       <Tabs defaultValue="addresses" className="space-y-6">

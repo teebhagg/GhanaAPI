@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { AlertTriangle, ArrowLeftRight, Calculator, Coins, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -62,11 +62,13 @@ export function ExchangeRatesPanel() {
   const [amount, setAmount] = useState("100");
   const [result, setResult] = useState<ConversionResult | null>(null);
   const [converting, setConverting] = useState(false);
+  const convertId = useRef(0);
   const [convertError, setConvertError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selected.length === 0) {
       setRates([]);
+      setRatesError(null);
       setRatesLoading(false);
       return;
     }
@@ -96,26 +98,33 @@ export function ExchangeRatesPanel() {
     e.preventDefault();
     const amt = Number(amount);
     if (!isFinite(amt) || amount.trim() === "") return;
+    const id = ++convertId.current;
     setConverting(true);
     setConvertError(null);
     try {
-      setResult(await api.convertCurrency({ from, to, amount: amt }));
+      const res = await api.convertCurrency({ from, to, amount: amt });
+      if (id === convertId.current) setResult(res);
     } catch (err) {
       console.error("Failed to convert currency:", err);
+      if (id !== convertId.current) return;
       setConvertError(err instanceof Error ? err.message : "Failed to convert currency");
       setResult(null);
     } finally {
-      setConverting(false);
+      if (id === convertId.current) setConverting(false);
     }
   }
 
   function swap() {
+    convertId.current++;
+    setConverting(false);
     setFrom(to);
     setTo(from);
     setResult(null);
   }
 
   function resetConverter() {
+    convertId.current++;
+    setConverting(false);
     setFrom("GHS");
     setTo("USD");
     setAmount("100");

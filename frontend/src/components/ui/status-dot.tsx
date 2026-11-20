@@ -20,6 +20,7 @@ export function StatusDot({
   const { dot, label } = styles[status];
   return (
     <span
+      role="status"
       className={cn(
         "inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground",
         className,

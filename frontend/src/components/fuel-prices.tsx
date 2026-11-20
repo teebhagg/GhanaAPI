@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api, type FuelPrice } from "@/lib/api";
-import { Building2, Clock, Fuel, RefreshCw } from "lucide-react";
+import { AlertTriangle, Building2, Clock, Fuel, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function FuelPricesCard() {
@@ -78,24 +78,39 @@ export function FuelPricesCard() {
         </Button>
       </CardHeader>
       <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+        {error && fuelPrices && (
+          <div
+            role="alert"
+            className="mb-4 flex items-start gap-3 rounded-2xl bg-destructive/10 p-4 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <p>
+              Couldn't refresh fuel prices ({error.replace(/[.\s]+$/, "")}). The
+              prices below may be out of date.
+            </p>
+          </div>
+        )}
+
+        {error && !fuelPrices && !loading && (
+          <EmptyState
+            compact
+            icon={AlertTriangle}
+            title="Fuel prices are unavailable"
+            description={`${error.replace(/[.\s]+$/, "")}. Please try again in a few minutes.`}
+          />
         )}
 
         {loading && !fuelPrices && (
           <div className="space-y-3">
-            <div className="h-16 bg-muted rounded-lg animate-pulse" />
-            <div className="h-16 bg-muted rounded-lg animate-pulse" />
-            <div className="h-16 bg-muted rounded-lg animate-pulse" />
+            <div className="h-16 bg-muted rounded-2xl animate-pulse" />
+            <div className="h-16 bg-muted rounded-2xl animate-pulse" />
+            <div className="h-16 bg-muted rounded-2xl animate-pulse" />
           </div>
         )}
 
         {fuelPrices && (
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-2xl">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Petrol
@@ -110,7 +125,7 @@ export function FuelPricesCard() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-2xl">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Diesel
@@ -126,7 +141,7 @@ export function FuelPricesCard() {
               </div>
 
               {fuelPrices.lpg && (
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border rounded-2xl">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       LPG

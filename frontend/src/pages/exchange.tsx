@@ -4,6 +4,7 @@ import { FeaturePage } from "@/components/feature-page";
 export function ExchangePage() {
   return (
     <FeaturePage
+      endpoint="/exchange-rates/current"
       title="Currency Exchange & Rates"
       description="Retrieve real-time forex rates, compute conversions, and compare historical trends for major currency pairs."
     >

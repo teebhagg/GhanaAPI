@@ -242,7 +242,7 @@ export type SchoolStatistics = {
   timestamp: string;
 };
 
-const API_BASE =
+export const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE) ||
   "http://localhost:3000/api/v1";
 
@@ -265,7 +265,8 @@ export const api = {
       lat: String(lat),
       lng: String(lng),
     }).toString();
-    return http<AddressDto | null>(`/addresses/lookup?${q}`);
+    // One object on a cache miss, an array of candidates on a cache hit.
+    return http<AddressDto | AddressDto[] | null>(`/addresses/lookup?${q}`);
   },
   searchAddresses(q: string) {
     const qs = new URLSearchParams({ q }).toString();
@@ -282,7 +283,7 @@ export const api = {
     });
     return http<BankSearchResponseDto>(`/banking/search?${params}`);
   },
-  getNearbyBanks(lat: number, lng: number, radius = 5000) {
+  getNearbyBanks(lat: number, lng: number, radius = 5) {  // km, max 50
     const params = new URLSearchParams({
       lat: lat.toString(),
       lng: lng.toString(),

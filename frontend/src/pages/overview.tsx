@@ -1,159 +1,118 @@
-import {
-  ArrowRight,
-  Banknote,
-  BookText,
-  DollarSign,
-  GraduationCap,
-  Landmark,
-  MapPinned,
-  Route,
-} from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Database, Globe2, Layers, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { BentoGrid } from "@/components/overview/bento-grid";
 import { SEO, defaultStructuredData } from "@/components/seo";
-import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+import { Button } from "@/components/ui/button";
+import { DiaTextReveal } from "@/components/ui/dia-text-reveal";
+import { StatCard } from "@/components/ui/stat-card";
+import { fadeUp, staggerContainer } from "@/lib/motion";
+import { externalLinks } from "@/lib/sections";
 
-const features = [
-  {
-    name: "Address & Regions",
-    description:
-      "Validate GhanaPost GPS addresses, explore districts, and enrich location metadata in one interface.",
-    to: "/addresses",
-    cta: "Explore addresses",
-    Icon: MapPinned,
-    className: "md:col-span-1 md:row-span-2",
-    background: (
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-16 top-10 h-48 w-48 rounded-full bg-primary/20 blur-3xl transition-all duration-300 group-hover:bg-primary/30" />
-        <div className="absolute top-6 right-6 rounded-2xl border border-primary/20 bg-background/80 px-4 py-3 text-left text-xs font-mono text-primary/80 shadow-sm">
-          <p>GET /addresses/search</p>
-          <p className="text-muted-foreground">region=Ashanti</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    name: "Banking Coverage",
-    description:
-      "Surface institutions, ATM availability, and service metadata for every banking agent.",
-    to: "/banking",
-    cta: "Open banking data",
-    Icon: Banknote,
-    className: "md:col-span-1 md:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-6">
-        <div className="h-28 w-28 rounded-full bg-emerald-200/40 blur-2xl transition-all duration-300 group-hover:bg-emerald-200/60" />
-      </div>
-    ),
-  },
-  {
-    name: "Market Pulse",
-    description:
-      "Monitor Ghana Stock Exchange listings with quotes, market caps, and trading volumes.",
-    to: "/stocks",
-    cta: "View stock data",
-    Icon: Landmark,
-    className: "md:col-span-1 md:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-24 w-36 rounded-full bg-amber-200/40 blur-2xl transition-all duration-300 group-hover:bg-amber-200/60" />
-      </div>
-    ),
-  },
-  {
-    name: "Forex Benchmarks",
-    description:
-      "Stream daily FX rates and conversions across the top traded currency pairs.",
-    to: "/exchange",
-    cta: "Check FX rates",
-    Icon: DollarSign,
-    className: "lg:col-span-2 lg:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-6">
-        <div className="h-20 w-32 rounded-full bg-sky-200/40 blur-2xl transition-all duration-300 group-hover:bg-sky-200/60" />
-      </div>
-    ),
-  },
-  {
-    name: "Education Insights",
-    description:
-      "Search Ghana Education Service data to track institutions by grade, category, and regional stats.",
-    to: "/education",
-    cta: "Explore schools",
-    Icon: GraduationCap,
-    className: "lg:col-span-1 lg:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-24 w-24 rounded-full bg-rose-200/40 blur-3xl transition-all duration-300 group-hover:bg-rose-200/60" />
-      </div>
-    ),
-  },
-  {
-    name: "Transport Planner",
-    description:
-      "Plot routes, inspect stops, and price journeys with Ghana's multimodal transport feed.",
-    to: "/transport",
-    cta: "Plan transport",
-    Icon: Route,
-    className: "lg:col-span-1 lg:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -bottom-10 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-purple-200/40 blur-3xl transition-all duration-300 group-hover:bg-purple-200/60" />
-        <div className="absolute right-6 top-6 rounded-full border border-purple-300/40 bg-background/70 px-3 py-1 text-xs uppercase tracking-wide text-purple-800/70">
-          GTFS feeds
-        </div>
-      </div>
-    ),
-  },
-  {
-    name: "API Reference",
-    description:
-      "Track documentation updates, SDK releases, and schema changes for every module.",
-    to: "/docs",
-    cta: "Read docs",
-    Icon: BookText,
-    className: "md:col-span-1 md:row-span-1",
-    background: (
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-20 w-36 rounded-xl border border-dashed border-neutral-300/60 bg-neutral-100/40 text-[10px] uppercase tracking-[0.2em] text-neutral-500 transition-all duration-300 group-hover:border-neutral-400">
-          <div className="flex h-full w-full items-center justify-center">
-            docs.wip
-          </div>
-        </div>
-      </div>
-    ),
-  },
-];
+function HeroBackdrop() {
+  const reduce = useReducedMotion();
+  const drift = (x: number, y: number, d: number) =>
+    reduce
+      ? {}
+      : {
+          animate: { x: [0, x, 0], y: [0, y, 0] },
+          transition: { duration: d, repeat: Infinity, ease: "easeInOut" as const },
+        };
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2.5rem]">
+      <motion.div
+        className="absolute -left-16 -top-20 h-72 w-72 rounded-full bg-primary/40 blur-3xl"
+        {...drift(40, 30, 14)}
+      />
+      <motion.div
+        className="absolute -right-10 top-10 h-64 w-64 rounded-full bg-success/25 blur-3xl"
+        {...drift(-30, 40, 17)}
+      />
+      <motion.div
+        className="absolute bottom-[-4rem] left-1/3 h-56 w-56 rounded-full bg-destructive/20 blur-3xl"
+        {...drift(30, -30, 19)}
+      />
+    </div>
+  );
+}
 
 export function OverviewPage() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <SEO structuredData={defaultStructuredData} />
-      <div className="space-y-4 text-center md:text-left">
-        <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between">
-          <div className="space-y-2 text-center md:text-left">
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Build with trusted Ghana data APIs
-            </h2>
-            <p className="text-muted-foreground text-base md:text-lg">
-              Choose a capability to deep dive via the dock or jump straight in
-              below.
-            </p>
-          </div>
-          <Link
-            to="/docs"
-            className="hidden items-center gap-2 text-sm font-medium text-primary transition hover:text-primary/80 md:flex">
-            View documentation updates
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
 
-      <BentoGrid className="sm:auto-rows-[18rem] md:auto-rows-[20rem] lg:auto-rows-[22rem]">
-        {features.map((feature) => (
-          <BentoCard key={feature.name} {...feature} />
-        ))}
-      </BentoGrid>
+      <section className="relative isolate overflow-hidden rounded-[2.5rem] border border-border/60 bg-card px-6 py-16 text-center shadow-[var(--shadow-soft)] md:px-16 md:py-24">
+        <HeroBackdrop />
+        <motion.div
+          className="relative mx-auto max-w-2xl space-y-6"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show">
+          <motion.p
+            variants={fadeUp}
+            className="text-lg font-bold tracking-tight md:text-xl">
+            <DiaTextReveal
+              text={[
+                "Free and open source",
+                "Built for Ghana",
+                "Ready for your next app",
+              ]}
+              colors={["#ce1126", "#fcd116", "#00a859", "#fcd116", "#ce1126"]}
+              duration={1.8}
+              repeat
+              repeatDelay={1.8}
+            />
+          </motion.p>
+          <motion.h1
+            variants={fadeUp}
+            className="text-4xl font-extrabold tracking-tight md:text-6xl">
+            Open data for Ghana, ready to use
+          </motion.h1>
+          <motion.p
+            variants={fadeUp}
+            className="text-lg text-muted-foreground md:text-xl">
+            Addresses, banks, markets, exchange rates, transport and schools in
+            one friendly API. Explore it here, then build with it.
+          </motion.p>
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button size="lg" asChild>
+              <Link to="/addresses">
+                Start exploring <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a
+                href={externalLinks.playground}
+                target="_blank"
+                rel="noopener noreferrer">
+                API playground
+              </a>
+            </Button>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <StatCard value="6" label="Data areas to explore" icon={Layers} />
+        <StatCard value="REST + JSON" label="Simple to integrate" icon={Zap} />
+        <StatCard value="Open" label="Free for everyone" icon={Globe2} />
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+            <Database className="h-5 w-5" />
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight">What you can explore</h2>
+        </div>
+        <BentoGrid />
+      </section>
     </div>
   );
 }

@@ -1,12 +1,23 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Activity,
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  BarChart3,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Search,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Chip, FeatureSurface } from "@/components/ui/feature-surface";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   Table,
   TableBody,
@@ -23,21 +36,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Activity,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  RefreshCw,
-  Search,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import * as React from "react";
+import { API_BASE } from "@/lib/api";
+import { fadeUp, staggerContainer } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
-// Stock data interface
 export interface Stock {
   id: string;
   symbol: string;
@@ -51,487 +53,152 @@ export interface Stock {
   status: string;
 }
 
-interface StockTableProps {
-  stocks: Stock[];
-  searchTerm: string;
-  sectorFilter: string;
-  onSearchChange: (value: string) => void;
-  onSectorChange: (value: string) => void;
-  showPagination?: boolean;
+type ApiStock = Partial<Stock> & { symbol: string };
+
+const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+
+function formatMarketCap(marketCap: number) {
+  if (marketCap >= 1e9) return `₵${(marketCap / 1e9).toFixed(1)}B`;
+  if (marketCap >= 1e6) return `₵${(marketCap / 1e6).toFixed(1)}M`;
+  if (marketCap > 0) return `₵${(marketCap / 1e3).toFixed(0)}K`;
+  return "–";
 }
 
-function StockTable({
-  stocks,
-  searchTerm,
-  sectorFilter,
-  onSearchChange,
-  onSectorChange,
-  showPagination = true,
-}: StockTableProps) {
-  const [sortField, setSortField] = React.useState<keyof Stock>("symbol");
-  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
-    "asc"
-  );
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [itemsPerPage, setItemsPerPage] = React.useState(10);
-
-  // Get unique sectors for filter
-  const sectors = React.useMemo(() => {
-    return Array.from(new Set(stocks.map((stock) => stock.sector))).sort();
-  }, [stocks]);
-
-  // Filter and sort stocks
-  const filteredAndSortedStocks = React.useMemo(() => {
-    let filtered = stocks.filter((stock) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stock.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesSector =
-        sectorFilter === "" ||
-        sectorFilter === "all" ||
-        stock.sector === sectorFilter;
-
-      return matchesSearch && matchesSector;
-    });
-
-    return filtered.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
-    });
-  }, [stocks, searchTerm, sectorFilter, sortField, sortDirection]);
-
-  // Reset to first page when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, sectorFilter]);
-
-  // Pagination calculations
-  const totalItems = filteredAndSortedStocks.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedStocks = showPagination
-    ? filteredAndSortedStocks.slice(startIndex, endIndex)
-    : filteredAndSortedStocks;
-
-  const handleSort = (field: keyof Stock) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const formatMarketCap = (marketCap: number) => {
-    if (marketCap >= 1e9) return `₵${(marketCap / 1e9).toFixed(1)}B`;
-    if (marketCap >= 1e6) return `₵${(marketCap / 1e6).toFixed(1)}M`;
-    return `₵${(marketCap / 1e3).toFixed(0)}K`;
-  };
-
+function Change({ stock, compact = false }: { stock: Stock; compact?: boolean }) {
+  const up = stock.change >= 0;
+  const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search stocks by symbol or name..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <Select value={sectorFilter} onValueChange={onSectorChange}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="All Sectors" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sectors</SelectItem>
-            {sectors.map((sector) => (
-              <SelectItem key={sector} value={sector}>
-                {sector}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[150px]">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("symbol")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Stock
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("price")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Price (₵)
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("change")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Change
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("volume")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Volume
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("marketCap")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Market Cap
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("sector")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent">
-                    Sector
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedStocks.length > 0 ? (
-                paginatedStocks.map((stock) => {
-                  const isPositive = stock.change >= 0;
-                  return (
-                    <TableRow key={stock.id} className="hover:bg-muted/50">
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm">
-                            {stock.symbol}
-                          </span>
-                          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-                            {stock.name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        ₵{stock.price.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div
-                          className={`font-mono flex items-center justify-end gap-1 text-sm ${
-                            isPositive
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
-                          }`}>
-                          {isPositive ? (
-                            <TrendingUp className="h-3 w-3" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3" />
-                          )}
-                          <div className="flex flex-col text-right">
-                            <span>
-                              {isPositive ? "+" : ""}₵{stock.change.toFixed(2)}
-                            </span>
-                            <span className="text-xs">
-                              ({isPositive ? "+" : ""}
-                              {stock.changePercent.toFixed(2)}%)
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {stock.volume.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {formatMarketCap(stock.marketCap)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {stock.sector}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No stocks found matching your criteria.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {showPagination && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Show</span>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1); // Reset to first page when changing page size
-              }}>
-              <SelectTrigger className="w-auto">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-muted-foreground">per page</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Showing {totalItems === 0 ? 0 : startIndex + 1} to{" "}
-              {Math.min(endIndex, totalItems)} of {totalItems} results
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage <= 1}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            {/* Page numbers */}
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNumber;
-                if (totalPages <= 5) {
-                  pageNumber = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNumber = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNumber = totalPages - 4 + i;
-                } else {
-                  pageNumber = currentPage - 2 + i;
-                }
-
-                return (
-                  <Button
-                    key={pageNumber}
-                    variant={currentPage === pageNumber ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNumber)}
-                    className="w-8">
-                    {pageNumber}
-                  </Button>
-                );
-              })}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage >= totalPages}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 font-semibold tabular-nums",
+        up ? "text-success" : "text-destructive"
+      )}>
+      <Icon className="size-4 shrink-0" />
+      {up ? "+" : ""}
+      {stock.changePercent.toFixed(2)}%
+      {!compact && (
+        <span className="text-xs font-medium opacity-75">
+          ({up ? "+" : ""}₵{stock.change.toFixed(2)})
+        </span>
       )}
+    </span>
+  );
+}
 
-      {!showPagination && (
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredAndSortedStocks.length} of {stocks.length} stocks
-        </div>
+function MoversCard({
+  title,
+  icon: Icon,
+  stocks,
+  tone,
+}: {
+  title: string;
+  icon: typeof ArrowUpRight;
+  stocks: Stock[];
+  tone: "up" | "down";
+}) {
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <div className="mb-3 flex items-center gap-3">
+        <span
+          className={cn(
+            "flex size-10 items-center justify-center rounded-2xl",
+            tone === "up" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+          )}>
+          <Icon className="size-5" />
+        </span>
+        <h3 className="font-bold">{title}</h3>
+      </div>
+      {stocks.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nothing to show right now.</p>
+      ) : (
+        <ul className="divide-y divide-border/60">
+          {stocks.map((s) => (
+            <li key={s.id} className="flex items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="font-semibold">{s.symbol}</p>
+                <p className="truncate text-xs text-muted-foreground">{s.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold tabular-nums">₵{s.price.toFixed(2)}</p>
+                <Change stock={s} compact />
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
+  );
+}
+
+function SortHead({
+  label,
+  field,
+  active,
+  onSort,
+  align = "left",
+}: {
+  label: string;
+  field: keyof Stock;
+  active: boolean;
+  onSort: (f: keyof Stock) => void;
+  align?: "left" | "right";
+}) {
+  return (
+    <TableHead className={cn(align === "right" && "text-right")}>
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-semibold transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          active && "text-primary-ink"
+        )}>
+        {label}
+        <ChevronDown className="size-3.5" />
+      </button>
+    </TableHead>
   );
 }
 
 export function StockMarketPanel() {
   const [stocks, setStocks] = React.useState<Stock[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [sectorFilter, setSectorFilter] = React.useState("");
   const [refreshing, setRefreshing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [search, setSearch] = React.useState("");
+  const [sector, setSector] = React.useState("all");
+  const [sortField, setSortField] = React.useState<keyof Stock>("symbol");
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
 
   const fetchStocks = React.useCallback(async () => {
+    setRefreshing(true);
     try {
-      setRefreshing(true);
-      const response = await fetch(
-        "http://localhost:3000/api/v1/stock-market/search?limit=50"
-      );
-
+      const response = await fetch(`${API_BASE}/stock-market/search?limit=50`);
       if (!response.ok) {
-        throw new Error("Failed to fetch stock data");
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || "Failed to fetch stock data");
       }
-
       const data = await response.json();
-
-      // Transform the API response to match our interface
-      const transformedStocks: Stock[] =
-        data.data?.map((stock: any) => ({
-          id: stock.symbol,
-          symbol: stock.symbol,
-          name: stock.name,
-          price: stock.price,
-          change: stock.change,
-          changePercent: stock.changePercent,
-          volume: stock.volume,
-          marketCap: stock.marketCap,
-          sector: stock.sector,
-          status: stock.status || "ACTIVE",
-        })) || [];
-
-      setStocks(transformedStocks);
+      const list: ApiStock[] = Array.isArray(data?.data) ? data.data : [];
+      setStocks(
+        list.map((s) => ({
+          id: s.symbol,
+          symbol: s.symbol,
+          name: s.name ?? s.symbol,
+          price: num(s.price),
+          change: num(s.change),
+          changePercent: num(s.changePercent),
+          volume: num(s.volume),
+          marketCap: num(s.marketCap),
+          sector: s.sector || "Other",
+          status: s.status || "ACTIVE",
+        }))
+      );
       setError(null);
     } catch (err) {
       console.error("Error fetching stock data:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch stock data"
-      );
-
-      // Fallback to mock data for development
-      //   const mockStocks: Stock[] = [
-      //     {
-      //       id: 'GCB',
-      //       symbol: 'GCB',
-      //       name: 'GCB Bank Limited',
-      //       price: 4.25,
-      //       change: 0.15,
-      //       changePercent: 3.66,
-      //       volume: 125000,
-      //       marketCap: 2800000000,
-      //       sector: 'Banking',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'TOTAL',
-      //       symbol: 'TOTAL',
-      //       name: 'Total Petroleum Ghana Ltd',
-      //       price: 3.80,
-      //       change: -0.05,
-      //       changePercent: -1.30,
-      //       volume: 85000,
-      //       marketCap: 1200000000,
-      //       sector: 'Energy',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'MTN',
-      //       symbol: 'MTN',
-      //       name: 'MTN Ghana',
-      //       price: 0.95,
-      //       change: 0.02,
-      //       changePercent: 2.15,
-      //       volume: 245000,
-      //       marketCap: 3900000000,
-      //       sector: 'Telecommunications',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'AADS',
-      //       symbol: 'AADS',
-      //       name: 'Ayrton Drug Manufacturing Ltd',
-      //       price: 2.15,
-      //       change: 0.08,
-      //       changePercent: 3.86,
-      //       volume: 45000,
-      //       marketCap: 650000000,
-      //       sector: 'Healthcare',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'FML',
-      //       symbol: 'FML',
-      //       name: 'Fan Milk Ltd',
-      //       price: 5.60,
-      //       change: -0.10,
-      //       changePercent: -1.75,
-      //       volume: 68000,
-      //       marketCap: 890000000,
-      //       sector: 'Consumer Goods',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'EGL',
-      //       symbol: 'EGL',
-      //       name: 'Enterprise Group Limited',
-      //       price: 1.85,
-      //       change: 0.05,
-      //       changePercent: 2.78,
-      //       volume: 95000,
-      //       marketCap: 1450000000,
-      //       sector: 'Insurance',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'CAL',
-      //       symbol: 'CAL',
-      //       name: 'CAL Bank Limited',
-      //       price: 0.78,
-      //       change: -0.02,
-      //       changePercent: -2.50,
-      //       volume: 156000,
-      //       marketCap: 845000000,
-      //       sector: 'Banking',
-      //       status: 'ACTIVE'
-      //     },
-      //     {
-      //       id: 'GOIL',
-      //       symbol: 'GOIL',
-      //       name: 'Ghana Oil Company Ltd',
-      //       price: 2.45,
-      //       change: 0.12,
-      //       changePercent: 5.15,
-      //       volume: 78000,
-      //       marketCap: 1680000000,
-      //       sector: 'Energy',
-      //       status: 'ACTIVE'
-      //     }
-      //   ]
-      //   setStocks(mockStocks)
+      setError(err instanceof Error ? err.message : "Failed to fetch stock data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -542,110 +209,224 @@ export function StockMarketPanel() {
     fetchStocks();
   }, [fetchStocks]);
 
+  React.useEffect(() => setPage(1), [search, sector, perPage]);
+
+  const sectors = React.useMemo(
+    () => Array.from(new Set(stocks.map((s) => s.sector))).sort(),
+    [stocks]
+  );
+
+  const rows = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return stocks
+      .filter(
+        (s) =>
+          (!q || s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) &&
+          (sector === "all" || s.sector === sector)
+      )
+      .sort((a, b) => {
+        const x = a[sortField];
+        const y = b[sortField];
+        const cmp =
+          typeof x === "number" && typeof y === "number"
+            ? x - y
+            : String(x).localeCompare(String(y));
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+  }, [stocks, search, sector, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  React.useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+  const start = (page - 1) * perPage;
+  const pageRows = rows.slice(start, start + perPage);
+
+  const gainers = React.useMemo(
+    () => stocks.filter((s) => s.change > 0).sort((a, b) => b.changePercent - a.changePercent).slice(0, 3),
+    [stocks]
+  );
+  const losers = React.useMemo(
+    () => stocks.filter((s) => s.change < 0).sort((a, b) => a.changePercent - b.changePercent).slice(0, 3),
+    [stocks]
+  );
+  const upCount = stocks.filter((s) => s.change > 0).length;
+  const downCount = stocks.filter((s) => s.change < 0).length;
+  const totalVolume = stocks.reduce((sum, s) => sum + s.volume, 0);
+
+  const onSort = (field: keyof Stock) => {
+    if (field === sortField) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Ghana Stock Exchange
-          </CardTitle>
-          <CardDescription>
-            Loading real-time stock market data...
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center py-10">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Fetching stock data...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-3xl" />
+          ))}
+        </div>
+        <Skeleton className="h-96 rounded-[2rem]" />
+      </div>
     );
   }
 
-  const topGainers = stocks
-    .filter((stock) => stock.change > 0)
-    .sort((a, b) => b.changePercent - a.changePercent)
-    .slice(0, 10);
-
-  const topLosers = stocks
-    .filter((stock) => stock.change < 0)
-    .sort((a, b) => a.changePercent - b.changePercent)
-    .slice(0, 10);
+  if (error && stocks.length === 0) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Stock data is unavailable"
+        description={`${error.replace(/[.\s]+$/, "")}. Please try again in a few minutes.`}
+        className="py-16">
+        <Button variant="outline" onClick={fetchStocks} disabled={refreshing}>
+          <RefreshCw className={cn("size-4", refreshing && "animate-spin")} />
+          Try again
+        </Button>
+      </EmptyState>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Ghana Stock Exchange
-            </CardTitle>
-            <CardDescription>
-              Real-time stock market data from the Ghana Stock Exchange (GSE)
-              {error && (
-                <span className="block text-amber-600 dark:text-amber-400 text-sm mt-1">
-                  ⚠️ Using demo data - API connection failed
-                </span>
-              )}
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchStocks}
-            disabled={refreshing}>
-            <RefreshCw
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard value={String(stocks.length)} label="Listed stocks" icon={BarChart3} />
+        <StatCard value={`${upCount} up · ${downCount} down`} label="Today's movement" icon={Activity} />
+        <StatCard value={totalVolume.toLocaleString()} label="Shares traded" icon={TrendingUp} />
+      </div>
+
+      <motion.div
+        className="grid gap-4 md:grid-cols-2"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show">
+        <motion.div variants={fadeUp}>
+          <MoversCard title="Top gainers" icon={ArrowUpRight} stocks={gainers} tone="up" />
+        </motion.div>
+        <motion.div variants={fadeUp}>
+          <MoversCard title="Top losers" icon={ArrowDownRight} stocks={losers} tone="down" />
+        </motion.div>
+      </motion.div>
+
+      {error && stocks.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-3xl bg-destructive/10 p-4 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+          <p>
+            Couldn't refresh stock data ({error.replace(/[.\s]+$/, "")}). The
+            figures below may be out of date.
+          </p>
+        </div>
+      )}
+
+      <FeatureSurface
+        icon={Activity}
+        title="All listings"
+        description="Real-time data from the Ghana Stock Exchange (GSE).">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label="Search stocks"
+              className="h-12 pl-11"
+              placeholder="Search by symbol or name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+          <Select value={sector} onValueChange={setSector}>
+            <SelectTrigger className="h-12 w-full px-5 sm:w-56" aria-label="Sector">
+              <SelectValue placeholder="All sectors" />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectItem value="all">All sectors</SelectItem>
+              {sectors.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="lg" onClick={fetchStocks} disabled={refreshing}>
+            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} />
             Refresh
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Stocks</TabsTrigger>
-            <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
-            <TabsTrigger value="losers">Top Losers</TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="all" className="mt-6">
-            <StockTable
-              stocks={stocks}
-              searchTerm={searchTerm}
-              sectorFilter={sectorFilter}
-              onSearchChange={setSearchTerm}
-              onSectorChange={setSectorFilter}
-              showPagination={true}
-            />
-          </TabsContent>
+        <div className="overflow-hidden rounded-3xl border border-border/60">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <SortHead label="Stock" field="symbol" active={sortField === "symbol"} onSort={onSort} />
+                  <SortHead label="Price" field="price" active={sortField === "price"} onSort={onSort} align="right" />
+                  <SortHead label="Change" field="changePercent" active={sortField === "changePercent"} onSort={onSort} align="right" />
+                  <SortHead label="Volume" field="volume" active={sortField === "volume"} onSort={onSort} align="right" />
+                  <SortHead label="Market cap" field="marketCap" active={sortField === "marketCap"} onSort={onSort} align="right" />
+                  <SortHead label="Sector" field="sector" active={sortField === "sector"} onSort={onSort} />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageRows.length > 0 ? (
+                  pageRows.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <p className="font-semibold">{s.symbol}</p>
+                        <p className="max-w-[180px] truncate text-xs text-muted-foreground">{s.name}</p>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">₵{s.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right"><Change stock={s} /></TableCell>
+                      <TableCell className="text-right tabular-nums">{s.volume.toLocaleString()}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatMarketCap(s.marketCap)}</TableCell>
+                      <TableCell><Chip>{s.sector}</Chip></TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                      No stocks match your search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
 
-          <TabsContent value="gainers" className="mt-6">
-            <StockTable
-              stocks={topGainers}
-              searchTerm=""
-              sectorFilter=""
-              onSearchChange={() => {}}
-              onSectorChange={() => {}}
-              showPagination={false}
-            />
-          </TabsContent>
-
-          <TabsContent value="losers" className="mt-6">
-            <StockTable
-              stocks={topLosers}
-              searchTerm=""
-              sectorFilter=""
-              onSearchChange={() => {}}
-              onSectorChange={() => {}}
-              showPagination={false}
-            />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            Show
+            <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
+              <SelectTrigger className="w-auto" aria-label="Rows per page">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                {[10, 20, 50].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            per page · {rows.length} results
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" aria-label="Previous page" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="min-w-24 text-center text-sm font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <Button variant="outline" size="icon" aria-label="Next page" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </FeatureSurface>
+    </div>
   );
 }

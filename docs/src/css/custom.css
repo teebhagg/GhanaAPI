@@ -416,22 +416,16 @@ code {
   padding-right: 6.5rem;
 }
 
-/* Tables */
+/* Tables: scroll inside their own rounded container at every width */
 .theme-doc-markdown table {
-  display: table;
-  width: 100%;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--gh-border);
   border-radius: 1.25rem;
-  overflow: hidden;
-}
-
-@media (max-width: 996px) {
-  .theme-doc-markdown table {
-    display: block;
-    overflow-x: auto;
-  }
 }
 
 .theme-doc-markdown table th {

@@ -4,6 +4,8 @@ The Education API provides comprehensive information about educational instituti
 
 ## Overview
 
+For official SHS curriculum content, see the [Curriculum API](./curriculum).
+
 This API allows you to:
 
 - Search for schools by name, region, district, category, or grade

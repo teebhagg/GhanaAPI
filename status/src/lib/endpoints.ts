@@ -79,6 +79,21 @@ export const GHANA_API_ENDPOINTS: Array<Endpoint> = [
   //     endpoint: `${BASE_URL}/education`,
   //   },
   {
+    name: 'Curriculum Metadata',
+    description: 'List available Ghanaian curriculum datasets and sources.',
+    endpoint: `${BASE_URL}/education/curriculum/summary`,
+  },
+  {
+    name: 'General Science Curriculum',
+    description: 'Get SHS 1–3 General Science curriculum content.',
+    endpoint: `${BASE_URL}/education/curriculum?year=SHS%201&subject=General%20Science&limit=10`,
+  },
+  {
+    name: 'Curriculum Standards',
+    description: 'Get a General Science content standard by source ID.',
+    endpoint: `${BASE_URL}/education/curriculum/content-standards?year=SHS%201`,
+  },
+  {
     name: 'School Search',
     description: 'Search for educational institutions by various criteria.',
     endpoint: `${BASE_URL}/education/schools/search?name=University&region=Greater%20Accra`,

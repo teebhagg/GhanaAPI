@@ -1,0 +1,2776 @@
+{
+  "title": "Ghana Science Curriculum (Basic 7-10 and SHS 1-3)",
+  "country": "Ghana",
+  "publisher": "Ghana Education Service (GES) and National Council for Curriculum and Assessment (NaCCA), Ministry of Education",
+  "publication_date": "Basic 7-10 and SHS 1-3 source curricula",
+  "sources": [
+    {
+      "title": "Science Common Core Programme Curriculum (Basic 7-10)",
+      "publisher": "Ghana Education Service / NaCCA",
+      "publication_date": "February 2020",
+      "levels": [
+        "Basic 7",
+        "Basic 8",
+        "Basic 9",
+        "Basic 10"
+      ]
+    },
+    {
+      "title": "General Science Curriculum for Secondary Education (SHS 1-3)",
+      "publisher": "National Council for Curriculum and Assessment (NaCCA), Ministry of Education",
+      "publication_date": "September 2023",
+      "levels": [
+        "SHS 1",
+        "SHS 2",
+        "SHS 3"
+      ]
+    }
+  ],
+  "schema": {
+    "hierarchy": [
+      "level",
+      "subjects",
+      "subject",
+      "strands",
+      "substrands",
+      "content_standards",
+      "learning_outcomes",
+      "learning_indicators",
+      "pedagogical_exemplars",
+      "assessment",
+      "teaching_and_learning_resources",
+      "skills_competencies_values"
+    ]
+  },
+  "summary": {
+    "levels": [
+      "Basic 7",
+      "Basic 8",
+      "Basic 9",
+      "Basic 10",
+      "SHS 1",
+      "SHS 2",
+      "SHS 3"
+    ],
+    "content_standards": 103,
+    "learning_outcomes": 0,
+    "learning_indicators": 131,
+    "source_summaries": {
+      "basic_7_10": null,
+      "shs_1_3": {
+        "content_standards": 28,
+        "learning_indicators": 56,
+        "pdf_scope_and_sequence_reported_totals": {
+          "content_standards": 30,
+          "learning_outcomes": 31,
+          "learning_indicators": 61
+        }
+      }
+    }
+  },
+  "levels": [
+    {
+      "level": "Basic 7",
+      "subjects": [
+        {
+          "subject": "Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Diversity Of Matter",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Materials",
+                  "content_standards": [
+                    {
+                      "id": "B7.1.1.1",
+                      "description": "Recognize materials as important resources for providing human needs",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.1.1.1.1",
+                          "description": "Classify materials into liquids, solids and gas Common Core Science Standards: LEVEL                                  B7                            B8                            B9                           B10 STRAND                   SUB-STRANDS                   SUB-STRANDS                   SUB-STRANDS                   SUB-STRANDS DIVERSITY OF                1.   Materials                1.   Materials                1.   Materials                1.   Materials MATTER"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        21
+                      ]
+                    },
+                    {
+                      "id": "B7.1.1.2",
+                      "description": "Understand the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.1.1.2.1",
+                          "description": "Demonstrate the knowledge of the orderly Digital       Literacy    (DL), periodic     table    as   arrangement of metals, non-metals and noble gases in the Critical  Thinking    and different elements made    Periodic Table                                           Problem Solving (CP) up of metals and non- Exemplars metals and noble gases arranged in an order.        1. Name and write the chemical symbol of the first 20 elements DL: Ability to ascertain when"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        28
+                      ]
+                    },
+                    {
+                      "id": "B7.2.1.1",
+                      "description": "Recognize that",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.2.1.1.1",
+                          "description": "Know how water cycle occurs as a repeated                   Critical Thinking and Problem water    cycle  is   an pattern in nature.                                                     Solving (CP) Digital Literacy example of repeated                                                                            (DL),      Creativity     and patterns of change in                                                                          Innovation (CI) nature and understand Ex"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        31
+                      ]
+                    },
+                    {
+                      "id": "B7.4.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.1.1.1",
+                          "description": "Identify the various forms of energy and Digital Literacy (DL), Cultural understanding of forms of   show how they are related                           Identity and Global Citizenship energy and their daily                                                          (CG),    Communication     and application                                                                     Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        57
+                      ]
+                    },
+                    {
+                      "id": "B7.4.1.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.2.1.1",
+                          "description": "Explain how heat is transferred in various Digital      Literacy                     (DL), understanding of concept of   media                                                 Communication                              and heat transfer and its                                                               Collaboration (CC) application in life"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        59
+                      ]
+                    },
+                    {
+                      "id": "B7.4.1.3",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.1.3.1",
+                          "description": "Demonstrate how light travels in a straight       Digital       Literacy    (DL), understanding                  of line                                                     Communication               and characteristics of light, such as                                                          Collaboration     (CC), Critical travelling in a straight line,                                                             Thinking and Problem Solving reflection,   refraction     and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        61
+                      ]
+                    },
+                    {
+                      "id": "B7.5.1.1",
+                      "description": "Exhibit knowledge B7. 5.1.1.1 Apply information from research on          Critical     Thinking and and skill of scientific basis good management practices of waste to make the       Problem Solving (CP) for management practices environment clean                                         Communication         and of types of waste in the                                                           Collaboration (CC) environment                                                                        Digital Literacy (DL) Creativity and Innovation (CI) ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        79
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Cycles",
+              "substrands": [
+                {
+                  "number": 2,
+                  "name": "Life Cycle Of Organisms",
+                  "content_standards": [
+                    {
+                      "id": "B7.2.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.2.2.1.1",
+                          "description": "Describe the life cycle of the housefly.               Communication            & the skills of carrying out                                                                    Collaboration (CC), Digital activities to show the                                                                        Literacy (DL) stages of the life cycle of Exemplars housefly,effects of its activitieson humans and        1. Identify and describe the stages of the life cycle of the   DL:"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        33
+                      ]
+                    },
+                    {
+                      "id": "B7.3.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.3.2.1.1",
+                          "description": "identify the inner planets of the solar system Digital Literacy (DL), knowledge of the inner planets   and describe their properties                             Critical Thinking and of the solar system and                                                                    Problem Solving (CP), understand their movement in                                                               Communication         and the system"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        46
+                      ]
+                    },
+                    {
+                      "id": "B7.4.2.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.2.2.1",
+                          "description": "Demonstrate how to assemble basic electronic Digital    Literacy (DL), Demonstrate              components in an electronic circuit                     Creativity and Innovation knowledge of how to                                                              (CI) assemble and explain"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        63
+                      ]
+                    },
+                    {
+                      "id": "B7.5.2.1",
+                      "description": "Demonstrate B7. 5.2.1.1 Explain the relationship between food            Critical Thinking and Problem knowledge of          nutrients and common deficiency diseases and how            Solving (CP) common deficiency     they affect humans                                          Communicationand Collaboration diseases of humans,                                                               (CC) their causes,                                                                     Digital Literacy (DL) symptoms, effects and                                                             Creativity and Innovation (CI) prevention ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        80
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Forces And Energy",
+              "substrands": [
+                {
+                  "number": 4,
+                  "name": "Animal Production",
+                  "content_standards": [
+                    {
+                      "id": "B7.2.4.2",
+                      "description": "Show understanding of",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.2.4.2.1",
+                          "description": "Discuss and write the domestic and Digital                      Literacy    (DL), the usefulness of the different commercial uses of different types of animals.                Communication            and types of animals for domestic                                                                 Collaboration and commercial purposes Exemplars 1. Explain the concepts of domestic use and commercial DL:            Knowledge"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        40
+                      ]
+                    },
+                    {
+                      "id": "B7.3.4.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.3.4.1.1",
+                          "description": "Examine and discuss the differences among Digital Literacy (DL), understanding of the differences   the various farming systems.                         Critical Thinking and among the various farming                                                               Problem Solving (CP), systems; Land Rotation; Crop                                                            Communication         and Rotation; Mixed Cropping; Mixed                                                         Collaboratio"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        52
+                      ]
+                    },
+                    {
+                      "id": "B7.4.4.2",
+                      "description": "Recognize some",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.4.2.1",
+                          "description": "Identify simple machines                               Digital     Literacy        (DL), simple machines, and show                                                                 Communication                and understanding      of    their                                                            Collaboration (CC) efficiency in doing work"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        71
+                      ]
+                    },
+                    {
+                      "id": "B7.5.4.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.5.4.1.1",
+                          "description": "Search for information on ways sustainable Critical Thinking and understandingof            energy choices and scientific ideas are used to protect Problem Solving (CP) sustainable energy         the environment.                                        Communication and choices and their impact                                                           Collaboration (CC) on the environment                                                                 Digital Literacy (DL)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        82
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Systems",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": null,
+                  "content_standards": [
+                    {
+                      "id": "B7.3.1.1",
+                      "description": "Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.3.1.1.1",
+                          "description": "Explain the concept of food and the need Digital               Literacy        (DL), understanding    of    the for humans to eat                                            Critical      Thinking        and concept   of   food,   the                                                              Problem Solving (CP) processof digestion and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        42
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": 3,
+                  "name": "The Ecosystem",
+                  "content_standards": [
+                    {
+                      "id": "B7.3.3.1",
+                      "description": "Recognize      the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        49
+                      ]
+                    },
+                    {
+                      "id": "B7.4.3.1",
+                      "description": ".Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.4.3.1.1",
+                          "description": "Explain the principle underlying conservation and Digital                         Literacy     (DL), understanding of the conversion of energy                                                           Creativity and Innovation principle              of                                                                           (CI), Critical Thinking and conservation         and                                                                            Problem Solving (CP) conversion of energy"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        67
+                      ]
+                    },
+                    {
+                      "id": "B7.5.3.1",
+                      "description": "Realise how     B.7. 5.3.1.1 Discover and explain how careers in            Critical Thinking and Problem careers in science can   science can improve human conditions and relate             Solving (CP) improve life of humans   these careers to the work of great national and             Communication and and research about       international scientists and science educators              Collaboration (CC) Ghanaian and                                                                         Digital Literacy (DL) internationally                                                                      Creativity and Innovation (CI) recognized scientists    ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        81
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 5,
+              "name": "Humans And The Environment",
+              "substrands": [
+                {
+                  "number": 5,
+                  "name": "Understanding The Environment",
+                  "content_standards": [
+                    {
+                      "id": "B7.5.5.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B7.5.5.1.1",
+                          "description": "List and describe the different types of plants    Critical     Thinking and understanding         of    and animals that live in different land forms such as         Problem Solving (CP) different plants and        plateau plain, mountain valley and others(with emphasis       Communication         and animals      found     in   on land forms in Ghana)                                       Collaboration (CC) different land forms and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        83
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "Basic 8",
+      "subjects": [
+        {
+          "subject": "Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Diversity Of Matter",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Materials",
+                  "content_standards": [
+                    {
+                      "id": "B8.1.1.1",
+                      "description": ".",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.1.1.1.1",
+                          "description": "Identify types of mixtures by name and                         Critical   Thinking   and Demonstrate             characteristics                                                           Problem     solving (CP), knowledge of types of                                                                             Communication        and mixtures,         and                                                                             Collaboration (CC) understanding of the E"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        87
+                      ]
+                    },
+                    {
+                      "id": "B8.1.2.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.1.2.2.1",
+                          "description": "Describe atoms as composed of sub-             Critical Thinking and Problem Solving Demonstrate         atomic particles                                          (CP) understanding    of Communication and Collaboration (CC) atoms      and  the atomic structure of"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        89
+                      ]
+                    },
+                    {
+                      "id": "B8.2.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.2.1.1.1",
+                          "description": "Explain the process of carbon cycle.                 Critical Thinking and Problem understanding of the                                                                   Solving (CP) process of Carbon cycle Communication                   and as   an    example   of Collaboration (CC) repeated    pattern  of change in natur"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        94
+                      ]
+                    },
+                    {
+                      "id": "B8.4.1.1",
+                      "description": ".1Describe energy conversion                      Critical Thinking        and   Problem the skill to evaluate                                                          Solving (CP) the    conversion  of Communication and Collaboration energy from one form (CC) to another Digital Literacy (DL) Creativity and Innovation (CI)",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        111
+                      ]
+                    },
+                    {
+                      "id": "B8.4.1.2",
+                      "description": "Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.4.1.2.1",
+                          "description": "Describe renewable and non-renewable         Critical Thinking       and   Problem understanding of the forms of energy.                                         Solving (CP) sources of renewable Communication and Collaboration energy and how to (CC) manage these sources in    a    sustainable"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        114
+                      ]
+                    },
+                    {
+                      "id": "B8.4.1.3",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.4.1.3.1",
+                          "description": "Discuss the differences and the Critical Thinking                       and   Problem understanding of the relationship between heat and temperature in the Solving (CP) relationship between"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        115
+                      ]
+                    },
+                    {
+                      "id": "B8.5.1.1",
+                      "description": "Demonstrate knowledge of",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.5.1.1.1",
+                          "description": "Explain sustainable waste Critical Thinking and Problem waste management systems and management practices.                     Solving (CP) apply it in an environment Communication and Collaboration (CC) Creativity and Innovation (CI)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        122
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Cycles",
+              "substrands": [
+                {
+                  "number": 2,
+                  "name": "Living Cells",
+                  "content_standards": [
+                    {
+                      "id": "B8.1.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.1.2.1.1",
+                          "description": "Examine and describe the structure of Critical     Thinking and understanding of types prokaryotic and eukaryotic cells                  Problem Solving (CP) of    cells  and    their                                                Communication         and structure in relation to                                                 Collaboration (CC) different organisms                                                      Digital Literacy (DL)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        92
+                      ]
+                    },
+                    {
+                      "id": "B8.2.2.1",
+                      "description": "Demonstrate an",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.2.2.1.1",
+                          "description": "Describe the life cycle and economic Critical Thinking and activity to show the life cycle     importance of Anopheles mosquito.               Problem Solving (CP) of Anopheles mosquito and Communication           and understanding of how the Collaboration (CC) effects of the mosquito on humans can be managed"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        98
+                      ]
+                    },
+                    {
+                      "id": "B8.5.1.1",
+                      "description": "Demonstrate knowledge of",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.5.1.1.2",
+                          "description": ". Apply Knowledge of Critical Thinking and Problem waste management systems and waste management practices to Solving (CP) apply it in an environment        manage waste in a community Communication and Collaboration (CC) Creativity and Innovation (CI)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        123
+                      ]
+                    },
+                    {
+                      "id": "B8.5.2.1",
+                      "description": "Demonstrate B8. 5.2.1.1 Explain the symptoms, effects          Critical Thinking        and    Problem knowledge     of    common and prevention of common communicable              Solving (CP) communicable diseases, such diseases Communication and Collaboration as Hepatitis, of humans, (CC) causes, symptoms, effects and their prevention                                                          Creativity and Innovation (CI) Digital Literacy (DL) ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        124
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Forces And Energy",
+              "substrands": [
+                {
+                  "number": 4,
+                  "name": "Farming Systems",
+                  "content_standards": [
+                    {
+                      "id": "B8.3.3.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.3.3.1.1",
+                          "description": "Explore the feeding relationships within      Critical Thinking       and   Problem understanding      of  the an ecosystem                                            Solving (CP) interdependence         of Communication and Collaboration organisms in an ecosystem (CC) and their interaction"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        109
+                      ]
+                    },
+                    {
+                      "id": "B8.4.3.1",
+                      "description": "Evaluate the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.4.3.1.1",
+                          "description": ". Explain the importance of                  Critical Thinking and Problem Solving impact of conversion of conversion of energy and energy conservation         (CP) energy    and   energy in daily life Communication      and   Collaboration conservation on the (CC) environment Creativity and Innovation (CI) Digital Literacy (DL)"
+                        },
+                        {
+                          "id": "B8.4.4.1.1",
+                          "description": ". Explain Newton’s Second Law of motion and Critical              Thinking    and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        118
+                      ]
+                    },
+                    {
+                      "id": "B8.5.4.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.5.4.1.1",
+                          "description": "Explain the concept of climate change and Critical Thinking and Problem understanding     of  the its effect on the environment                        Solving (CP) effects of climate change Communication and Collaboration"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        126
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Systems",
+              "substrands": [
+                {
+                  "number": 3,
+                  "name": "Conversion And Conservation Of Energy",
+                  "content_standards": [
+                    {
+                      "id": "B8.4.2.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B8.4.2.2.1",
+                          "description": "Demonstrate the charging and                Critical Thinking        and    Problem understanding     of    the discharging action of a capacitor in a dc            Solving (CP) functions of capacitors in electronic circuit Communication and Collaboration relation to LEDs, Diodes (CC) and resistors in electronic circuits"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        117
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 5,
+              "name": "Humans And The Environment",
+              "substrands": [
+                {
+                  "number": 5,
+                  "name": "Agricultural Tools",
+                  "content_standards": [
+                    {
+                      "id": "B8.4.5.1",
+                      "description": ".1Show and discuss the use of basic and simple Critical Thinking and Problem knowledge and skills in the agricultural tools for basic on-farm activities.       Solving (CP) use of basic and simple Communication             and",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        120
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "Basic 9",
+      "subjects": [
+        {
+          "subject": "Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Diversity Of Matter",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Materials",
+                  "content_standards": [
+                    {
+                      "id": "B9.1.1.1",
+                      "description": "Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.1.1.1.1",
+                          "description": "Identify by name binary chemical compounds and Critical Thinking and understanding    of discuss their uses Problem Solving(CP) formation of binary chemical compounds                                                           Communication                      and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        131
+                      ]
+                    },
+                    {
+                      "id": "B9.1.1.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.1.1.2.1",
+                          "description": "Recognize that chemical bond results from the          DigitalLiteracy(DL),   Personal knowledge of atomic attraction between atoms in a compound                             Development and Leadership(PD), bonding     in   the                                                                   Communication               and formation of chemical                                                                  Collaboration(CC) compounds"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        134
+                      ]
+                    },
+                    {
+                      "id": "B9.3.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.3.1.1.1",
+                          "description": "Explain the concept of the circulatory system, Critical Thinking and understanding of the     state the function of each part of the system and health Problem Solving(CP) blood      circulatory   challenges associated with it system,         health                                                             Communication                                and problems associated"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        149
+                      ]
+                    },
+                    {
+                      "id": "B9.4.1.1",
+                      "description": "Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        155
+                      ]
+                    },
+                    {
+                      "id": "B9.4.1.2",
+                      "description": "Evaluate the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.4.1.2.1",
+                          "description": "Demonstrate that light changes path when it Creativity and Innovation (CI) application     of light travels from one medium to a different medium Digital Literacy (DL) energy.in life."
+                        },
+                        {
+                          "id": "B9.4.1.2.2",
+                          "description": "Describe how images are formed in cameras"
+                        },
+                        {
+                          "id": "B9.4.1.2.3",
+                          "description": "Describe the formation of shadows                      Communication and Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        156
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Cycles",
+              "substrands": [
+                {
+                  "number": 2,
+                  "name": "Living Cells",
+                  "content_standards": [
+                    {
+                      "id": "B9.1.2.1",
+                      "description": "Appreciate that",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.1.2.1.1",
+                          "description": "identify biological molecules and show atoms in Critical Thinking and different atoms in living the molecules Problem Solving(CP) molecules account for diverse organisms                                                                   Communication            and Collaboration(CC)     Digital"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        135
+                      ]
+                    },
+                    {
+                      "id": "B9.2.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.2.2.1.1",
+                          "description": "Describe the life cycle of grasshopper which               Critical Thinking and understanding of the life depicts incomplete metamorphosis Problem Solving(CP) cycle of grasshopper and assess how their activities                                                                   Communication             and affect humans                                                                                 Co"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        138
+                      ]
+                    },
+                    {
+                      "id": "B9.3.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.3.1.1.2",
+                          "description": "Explain the concept of respiration and show Communication and understanding of the         how respiratory system and the circulatory system Collaboration(CC), blood         circulatory    complement each other. Critical Thinking and system, health problems Exemplars : associated    with    the                                                           Problem Solving(CP) system       and       its relationship with the respiratory system in humans 1. Explain the concept of respiration                       CC: Identify and analyse different points of views of speaker 2. Explain how deoxygenated blood from circulation is CP : Create simple logic trees to think oxygenated through inhalation for respiration to take place. through problems STRAND 3:                  SYSTEMS SUB-STRAND 2:         THE SOLAR SYSTEM Content Standard            Indicators and Exemplars"
+                        },
+                        {
+                          "id": "B9.3.2.1.1",
+                          "description": "Understand the movement of non-planetary knowledge    of other bodies in the solar system. Communication                                     and non- planetary bodies Collaboration(CC),                             Digital such      as  comets, Literacy(DL) asteriods, an"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        150
+                      ]
+                    },
+                    {
+                      "id": "B9.4.1.2",
+                      "description": "Evaluate the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.4.1.2.4",
+                          "description": "Demonstrate the formation of an eclipse            Creativity and Innovation (CI) application     of light Digital Literacy (DL) energy.in life."
+                        },
+                        {
+                          "id": "B9.4.2.1.1",
+                          "description": "Demonstrate transformation of electrical Communication and Collaboration electrical circuits and     energy to other forms of energy in both series and (CC) illustrate how electrical   parallel circuits and perform simple calculations Critical Thinking and Problem energy is transformed       involving flow of current in circuits Solving"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        157
+                      ]
+                    },
+                    {
+                      "id": "B9.4.2.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.4.2.2.1",
+                          "description": "Describe Forward Bias and Reverse Bias and Communication and Collaboration understanding         of   explain the relationship among the components, such as: (CC) Forward and Reverse        LEDs, Diodes, Resistors and Capacitors, in an electronic Creativity and Innovation (CI) Bias and explain the       circuit. behaviour of LEDs, Diodes, Resistors and Capacitors in electronic"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        158
+                      ]
+                    },
+                    {
+                      "id": "B9.5.2.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.5.2.1.1",
+                          "description": "Explain the symptoms, effects and prevention of Communication                               and Demonstrate           common non- common communicable diseases and analyze Collaboration(CC),                           ,Critical"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        163
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Systems",
+              "substrands": [
+                {
+                  "number": 3,
+                  "name": "Crop Production",
+                  "content_standards": [
+                    {
+                      "id": "B9.2.2.1",
+                      "description": "Demonstrate          2. Generate activities to promote or reduce the effect of DL: Preparedness to make better understanding of the life           grasshoppers on humans.                                decision with information at hand cycle of grasshopper and DL: Knowledge and recognition of assess how their activities ethical use of information affect humans CP: Implement      strategies   with accuracy STRAND 2:                 CYCLES SUB-STRAND 3:         CROP PRODUCTION CONTENT                       INDICATORS AND EXEMPLARS                                           SUBJECT      SPECIFIC STANDARDS                                                                                        PRACTICES AND CORE COMPETENCIES B9.2.3.1Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.2.3.1.1",
+                          "description": "Observe and describe differences in maturities Critical Thinking and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        140
+                      ]
+                    },
+                    {
+                      "id": "B9.2.3.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.2.3.2.1",
+                          "description": "Observe and record the uses of different crops at Communication                      and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        141
+                      ]
+                    },
+                    {
+                      "id": "B9.4.3.1",
+                      "description": "Show",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.4.3.1.1",
+                          "description": ". Describe how energy can be converted Communication                 and    Collaboration understanding       of from one form to another and show how conservation (CC) conversion         and of energy occurs conservation of energy and their application to life"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        159
+                      ]
+                    },
+                    {
+                      "id": "B9.5.3.1",
+                      "description": "Analyze the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.5.3.1.1",
+                          "description": "Investigate the scientific concepts, principles and Communication                                 and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        164
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Forces And Energy",
+              "substrands": [
+                {
+                  "number": 4,
+                  "name": "Animal Production",
+                  "content_standards": [
+                    {
+                      "id": "B9.2.4.1",
+                      "description": ".1List the ingredients and the method of             Critical Thinking and understanding   of  the preparation of different feed for different domestic and Problem Solving(CP) preparation of feed for commercial animals. domestic and commercial                                                              Communication               and animals.                                                                             Collaboration(CC)        Digital Literacy(DL),Personal development                 and leadership(PD) ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        145
+                      ]
+                    },
+                    {
+                      "id": "B9.5.4.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.5.4.1.1",
+                          "description": "Examine various natural and human factors Communication                      and Demonstrate          that influence climate change and green economy in Collaboration(CC), ,Creativity and understanding     of their localities                                     Innovation(CI) Digital Literacy(DL), natural and human factors         that influence   climate change and green economy 1. Identify natural factors that influence climate change.   DL : Adhere to behavioural prot"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        166
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 5,
+              "name": "Humans And The Environment",
+              "substrands": [
+                {
+                  "number": 5,
+                  "name": "Agricultural Tools",
+                  "content_standards": [
+                    {
+                      "id": "B9.4.5.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.4.5.1.1",
+                          "description": "Identify materials used in making simple Creativity and Innovation (CI) knowledge and skills in         agricultural tools Communication and Collaboration making simple agricultural (CC) tools for on-farm activities Critical Thinking       and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        161
+                      ]
+                    },
+                    {
+                      "id": "B9.5.5.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B9.5.5.1.1",
+                          "description": "Show and list the uses of different plant            Communication and Collaboration(CC), Demonstrate           parts for agricultural and non-agricultural purposes.           ,Creativity and Innovation(CI) Digital knowledge and skills                                                                  Literacy(DL),Critical Thinking    and in the use of plant                                                                   Problem Solving(CP) roots, stems, leaves, Exemplars"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        167
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "Basic 10",
+      "subjects": [
+        {
+          "subject": "Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Diversity Of Matter",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Materials",
+                  "content_standards": [
+                    {
+                      "id": "B10.1.1.1",
+                      "description": "Prepare",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.1.1.1.1",
+                          "description": "demonstrate understanding of the preparation of Critical   Thinking   and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        169
+                      ]
+                    },
+                    {
+                      "id": "B10.1.1.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.1.1.2.1",
+                          "description": "Recognise that the arrangement of elements on            Critical Thinking and understanding that the the Periodic Table is related to their properties and                  Problem Solving (CP) arrangement            and reactivities.                                                      (CP),Creativity   and characteristics of metals,                                                                    Innovation(CI) non-metals and the noble gases in the periodic table are related to their reacti"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        171
+                      ]
+                    },
+                    {
+                      "id": "B10.2.1.1",
+                      "description": "Demonstrate the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.2.1.1.1",
+                          "description": "Design a research plan on phosphorus cycle and                    Critical Thinking and skill to organize and carry relate it to other cycles.                                                  Problem Solving (CP) out     a    research    on Exemplars : Phosphorus cycle and how it relates to other cycles     1. Describe a research plan including the stages, and retrieval of       CP: Ability to explain plans (water,      carbon    and         phosphorus from the phosphorus cycle                                 for attaining goals nitrogen)       in      the environment                    2. Explain differences and similarities among the phosphorus, water,     CP: Ability to combine carbon and nitrogen cycles.                                          Information and ideas from several sources to reach a conclusion"
+                        },
+                        {
+                          "id": "B10.2.1.1.2",
+                          "description": "Demonstrate activities involving the phosphorus Critical Thinking and cycle.                                                      Problem Solving (CP) Exemplars : 1. Discuss activities of phosphorus cycle in terms of :               CP:     Demonstrate     a a) Sources of phosphorus in nature                                 thorough understanding of"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        174
+                      ]
+                    },
+                    {
+                      "id": "B10.3.1.1",
+                      "description": "Evaluate the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.3.1.1.1",
+                          "description": "Explain      the   functions   of   each    part   of   the Critical Thinking and process of mammalian reproductive system                                                       Problem Solving (CP), reproductive system and                                                                        Creativity          and understand          how                                                                        Innovation (CI), Digital inheritance occurs                                                                             Literacy (DL) Exemplars : 1. Explain the term reproduction and state the functions of the parts CI: Exhibit strong memory, of the reproductive system.                                        intuitive   thinking; and respond appropriately 2. Identify the parts of the male and female reproductive system of DL: Ability to find and humans using charts and models.                                  consume digital content 3. Draw and label the male and female reproductive systems of CP:Implement            strategies humans..                                                   with accuracy DL: Evaluate the quality and validity of information"
+                        },
+                        {
+                          "id": "B10.3.1.1.2",
+                          "description": "Describe the main stages in the process of Critical Thinking and reproduction in humans                                 Problem Solving (CP), Digital Literacy (DL), Communication      and Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        183
+                      ]
+                    },
+                    {
+                      "id": "B10.4.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.4.1.1.1",
+                          "description": "Explain how to             calculate     energy Critical Thinking    and understanding and capability to consumed over a period of time                             Problem Solving (CP) do calculations involving energy and how to conduct energy audit"
+                        },
+                        {
+                          "id": "B10.4.1.1.2",
+                          "description": "Demonstrate     how    energy      audit   is conducted"
+                        },
+                        {
+                          "id": "B10.4.1.2.1",
+                          "description": ". Explain the importance of the quantity of Critical   Thinking and knowledge of interpreting heat heat energy consumed by different materials using Problem Solving (CP), equation and relating it to heat equation. (DL),Communication and everyday life. Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        188
+                      ]
+                    },
+                    {
+                      "id": "B10.4.1.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.4.1.2.1",
+                          "description": ". Explain the importance of the quantity of Critical   Thinking and knowledge of interpreting heat heat energy consumed by different materials using Problem Solving (CP), equation and relating it to heat equation. (DL),Communication and everyday life. Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        188
+                      ]
+                    },
+                    {
+                      "id": "B10.5.1.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.5.1.1.1",
+                          "description": "Describe innovative ways of waste management for              Critical Thinking and understanding    of   the sustainable development                                                   Problem Solving (CP), impact of waste on an                                                                               Creativity        and environment,    innovative                                                                          Innovation (CI)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        196
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Cycles",
+              "substrands": [
+                {
+                  "number": 2,
+                  "name": "Living Cells",
+                  "content_standards": [
+                    {
+                      "id": "B10.1.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.1.2.1.1",
+                          "description": "Discuss the concepts of specialised cells and how they             Communication and knowledge of specialist are formed in dicotyledonous plants and humans                                 Collaboration (CC), cells of dicotyledonous                                                                                Critical Thinking and plants and humans, their                                                                               Problem Solving (CP) formation and functions                                                                                (CP) for the existence of the"
+                        },
+                        {
+                          "id": "B10.1.2.1.2",
+                          "description": "Examine      the   functions    of   specialised    cells   in Digital Literacy (DL),"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        172
+                      ]
+                    },
+                    {
+                      "id": "B10.2.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.2.2.1.1",
+                          "description": "Describe the life cycle of a cockroach                            Creativity            and knowledge of the life cycle                                                                                Innovation (CI) of cockroach and the effect of its activities on humans Exemplars : 1. Describe the stages of the life cycle (E.g egg, nymph and adult) of a CI:      Recognise     and cockroach and its behaviours at each stage.                           generalise information and experience ; search for trends and patterns 2. Illustrate and describe the life cycle of a cockroach from the video   CI:      Recognise     and generalise information and experience ; search for trends and patterns"
+                        },
+                        {
+                          "id": "B10.2.2.1.2",
+                          "description": "Discuss the effect of the activities of cockroaches on Critical Thinking and humans                                                             Problem Solving (CP) (CP)Communication and Collaboration (CC)"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        176
+                      ]
+                    },
+                    {
+                      "id": "B10.3.1.2",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.3.1.2.1",
+                          "description": "Examine the functions of the various parts of the         Critical Thinking and understanding   of  the nervous system                                                        Problem Solving (CP), nervous system and its                                                                        Digital Literacy (DL), importance to humans.                                                                         Communication      and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        185
+                      ]
+                    },
+                    {
+                      "id": "B10.4.2.2",
+                      "description": "Evaluate the use",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.4.2.2.1",
+                          "description": "Demonstrate how to build electronic Critical Thinking and Problem of transistors in relation   circuits with transistors, LEDs, Diodes, Resistors and Solving (CP), Creativity and Light    Emitting   Diode    Capacitors and identify the           functions of the Innovation (CI) (LED), Diodes, Resistors     transistor in the electronic circuits Capacitors Transistors in electronic gadgets"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        190
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Forces And Energy",
+              "substrands": [
+                {
+                  "number": 4,
+                  "name": "Animal Production",
+                  "content_standards": [
+                    {
+                      "id": "B10.2.4.1",
+                      "description": ".1Describe and evaluate different types of materials               Critical Thinking and knowledge and skills in   based on affordability, suitability, availability, strength,                Problem Solving(CP) preparing housing for     transportability and durability used to construct housing for               Creativity        and commercial      animal    commercial animals.                                                         Innovation (CI) production. Exemplars 1. Research to compile a list of all materials that could be used to CP: Identify important and construct housing for named commercial animals.                   appropriate alternatives 2. Identify and match specific materials with in terms of affordability, CP Identify important and suitability, availability, strength, transportability and durability with appropriate alternatives specific housing for named commercial animals 3. Describe different types of materials and procedures used to CI:Ability to select the construct housing for named commercial animals               most effective creative tools for working and preparedness   to    give explanations",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.2.4.1.2",
+                          "description": "Show the construction of housing for commercial Critical Thinking and"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        180
+                      ]
+                    },
+                    {
+                      "id": "B10.5.4.1",
+                      "description": "Evaluate    the",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.5.4.1.1",
+                          "description": "Assess data on climate change and green economy Critical Thinking and effectiveness of initiatives actions/ activities globally including Ghana and other countries. Problem Solving (CP), that address the issue of                                                                      Digital Literacy (DL) climate change and green economy in Ghana and the world at large."
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        201
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Systems",
+              "substrands": [
+                {
+                  "number": 3,
+                  "name": "Conversion And Conservation Of Energy",
+                  "content_standards": [
+                    {
+                      "id": "B10.4.3.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.4.3.1.1",
+                          "description": ".Explain energy conversion and show how it              Critical   Thinking  and understanding of energy improves quality of life                                             Problem Solving (CP), conversion   and    energy                                                                   Creativity and Innovation conservation and show how                                                                    (CI), Communication and they can be used        to"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        191
+                      ]
+                    },
+                    {
+                      "id": "B10.5.3.1",
+                      "description": "Demonstrate B10 5.3.1.1 Explain the concept of industry and distinguish         Critical Thinking and understanding      of    the between modern and indigenous industries                          Problem Solving (CP), concept of industry, the                                                                       Creativity        and science underpinning the                                                                       Innovation (CI) processes of production in industries the technologies in indigenous industries and western industries ",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        199
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 5,
+              "name": "Humans And The Environment",
+              "substrands": [
+                {
+                  "number": 5,
+                  "name": "Agricultural Tools",
+                  "content_standards": [
+                    {
+                      "id": "B10.4.4.2",
+                      "description": "Exhibit knowledge",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.4.4.2.1",
+                          "description": "Develop a simple machine that can be Creativity and Innovation of designing appropriate used to solve problems in society                   (CI), simple machines that can be used to solve problems in society"
+                        },
+                        {
+                          "id": "B10.4.5.1.1",
+                          "description": "List and describe different types of motorized Critical Thinking and knowledge of the different agricultural tools.                                          Problem Solving (CP), types     of      motorized                                                             Creativity          and agricultural tools and their                                                            Innovation (CI), Digital uses for on-farm activities.                                                            Lit"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        194
+                      ]
+                    },
+                    {
+                      "id": "B10.5.5.1",
+                      "description": ".1Show and explain the uses of non-living things for            Critical Thinking and understanding of the uses agricultural purposes.                                                      Problem Solving (CP), of non-living things (rocks,                                                                          Creativity         and rivers, stones and soil) for                                                                          Innovation        (CI), agricultural purposes                                                                                 Communication      and Collaboration (CC) Exemplars 1. Make a list of non-living things found on the crops farm and animal CP: Ability to identify farm (stones, metals, water, rock/soil particles, plastic materials). important and appropriate criteria to evaluate each alternatives 2. Describe how various non-living things are used for agricultural CI:      Recognise     and purposes in the community and environment.                       generalise information and experience ; search for trends and patterns",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        202
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": null,
+                  "content_standards": [
+                    {
+                      "id": "B10.5.2.1",
+                      "description": "Demonstrate",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "B10.5.2.1.1",
+                          "description": "Explain the concepts of health and disease and show          Critical Thinking and understanding     of   the their relationship                                                      Problem Solving (CP), relationship of health and                                                                         Creativity        and disease,     concept    of                                                                         Innovation (CI) common disease in the environment and how to control it."
+                        },
+                        {
+                          "id": "B10.5.2.1.2",
+                          "description": "Explain the concept of common disease in an environment 1.    Conduct a survey about common diseases and analyze their CP: Identify important and findings to show what constitutes common disease in a appropriate alternatives community. 2.   Identify causes, symptoms and prevention of common diseases.   CP: Ability to select"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        198
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 6,
+              "name": "Soil As Component Of The Environment",
+              "substrands": [
+                {
+                  "number": 6,
+                  "name": "Soil As Component Of The Environment",
+                  "content_standards": [
+                    {
+                      "id": "B10.5.5.1",
+                      "description": ".2Observe and discuss the uses of non-living things for Critical Thinking and agricultural purposes in school garden and local communities     Problem Solving (CP), Creativity        and Innovation (CI) Exemplars 1. Prepare a list of non-living things and their use for agricultural CP: Ability to identify purposes in a tabular format.                                      important and appropriate criteria to evaluate each alternatives 2. Plan and demonstrate the use of different non-living things for CI: Ability to merge agricultural purposes in the field or school garden.            simple/ complex ideas to create novel situation or thing CLASS:     BASIC 10 (SHS 1) STRAND 5:  HUMANS AND THE ENVIRONMENT SUB-STRAND 6: SOIL AS COMPONENT OF THE ENVIRONMENT",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        203
+                      ]
+                    },
+                    {
+                      "id": "B10.5.6.1",
+                      "description": ".1Observe and describe different types of rocks as         Critical Thinking and different types of rocks as origin of soils.                                                     Problem Solving (CP) origin of different types of                                                                     (CP)Creativity    and soils.                                                                                           innovation Exemplars 1. Identify different labeled samples of rocks presented in the CP: Ability to select classroom/laboratory.                                        alternative(s)      that adequately meet selected criteria 2. Describe the visible characteristics of each rock.              CI:      Recognise     and generalise information and experience ; search for trends and patterns 3. Collect samples of rocks from around the community and label CP: Ability to identify them rock identification guide and compare them with the labeled important and appropriate laboratory samples in exemplar one (1).                          criteria to evaluate each alternatives 4. Research and report the stages of weathering of rocks to form CP: Identify important and soil.                                                         appropriate alternatives",
+                      "learning_outcomes": [],
+                      "learning_indicators": [],
+                      "pedagogical_exemplars": [],
+                      "assessment": [],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_pdf_pages": [
+                        204
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "SHS 1",
+      "subjects": [
+        {
+          "subject": "General Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Exploring Materials",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Science And Materials In Nature",
+                  "content_standards": [
+                    {
+                      "id": "1.1.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.1.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.1.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.1.1.LI.3",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.1.1.AS.1",
+                          "description": "Demonstrate knowledge Explain the characteristics of science in nature. Level 1 Recall and understanding of the Level 2 Skills of characteristics of science Collaborative Learning: conceptual and show how they are 1. Learners work in mixed-ability groups to discuss the various characteristics of understanding applied in everyday life. science using videos/charts/pictures and examples from their communities Level 3 Strategic and cultural backgrounds, supporting students to appreciate cultural reasoning diversity and the internet. Level 4 Extended critical 2. Learners reflect and cross-share their views of different situations in life where thinking and reasoning the characteristic of science is evident. While cross-sharing, learners must demonstrate tolerance for divergent views"
+                        },
+                        {
+                          "id": "1.1.1.AS.2",
+                          "description": "Design projects using the characteristics of science Level 1 Recall Level 2 Skills of Work individually and in mixed-ability groups to design various science conceptual characteristics-based projects using books, the internet and other sources and understanding demonstrate how the characteristics of science are used in the design. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "1.1.1.AS.3",
+                          "description": "Apply the characteristics of science where appropriate. Level 1 Recall Level 2 Skills of Learners work in mixed-ability groups, supervised by the teacher to ensure all conceptual learners participate in exploring instances from their immediate environment and understanding the internet (where possible) of the application of characteristics of science. Level 3 Strategic reasoning 5"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 29,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "1.1.1.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.1.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.1.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.1.1.AS.1",
+                          "description": "Know, understand, Classify different solids and their uses. Level 1 Recall and identify the roles Level 2 Skills of of solids in life. Talk for Learning: Through a whole class session, guide learners to use charts of the conceptual periodic table to review the grouping of elements into metals, semi-metals and non-metals. understanding Level 3 Strategic Activity-based Learning: reasoning  Using samples of metals, semi-metals and non-metallic materials, guide learners to identify Level 4 Extended and distinguish between their properties such as lustre, electrical and heat conductivity, critical thinking and density, malleability, ductility, tensile strength and sonority. reasoning  Guide learners to work in pairs to distinguish between: 1. metals and non-metals 2. semi-metals and non-metals 3. metals and semi-metals  Assist learners in undertaking a practical activity to demonstrate the corrosion of metals and explain how corrosion or rusting can be prevented. Individualised Learning: Work individually to create mind-maps that show the relationship between the characteristic properties of metals, semi-metals and non-metals and their respective uses and applications in daily life"
+                        },
+                        {
+                          "id": "1.1.1.AS.2",
+                          "description": "Apply the properties of solids to everyday use. Level 1 Recall Level 2 Skills of Learners research how the properties of different solids relate to their uses in life. Provide conceptual opportunities for students to evaluate various real-world scenarios and make decisions based understanding on the information at hand. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning 7"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 31,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Processes For Living",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Essentials For Survival",
+                  "content_standards": [
+                    {
+                      "id": "1.2.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.2.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.2.1.AS.1",
+                          "description": "Demonstrate Explain the concept of diffusion and its application in life. Level 1 Recall understanding and Level 2 Skills of appreciation and model 1. Using the guided learning approach, put learners in mixed-ability groups to design conceptual the movement of and model the osmosis process. understanding substances in biotic and NOTE: Ensure that learners remain attentive throughout the learning period. Level 3 Strategic abiotic media. 2. Learners in mixed-sex and mixed-ability groups present their work to the class. reasoning 3. Learners make presentations in a mixed-ability group to explain osmosis. Level 4 Extended critical Encourage females to play key roles in the presentation if possible. Learners thinking and reasoning should discuss the application of osmosis in everyday life"
+                        },
+                        {
+                          "id": "1.2.1.AS.2",
+                          "description": "Design, model and explain the osmosis process and indicate its application Level 1 Recall to everyday life. Level 2 Skills of conceptual  Group learners according to different abilities and mixed-sex where appropriate. understanding Use think-pair-share to discuss diffusion and its application. Level 3 Strategic  Demonstrate the diffusion process by using perfume/Potassium Permanganate reasoning crystals/volatile substances like camphor. Level 4 Extended critical thinking and reasoning NOTE: Check for learners who are allergic to strong scents. Ensure that there is no air blowing. Care must be taken when introducing potassium permanganate into water. Do not use 'spread perfume'. Teaching and  Cellophane or any suitable substance available.  Colour (washing blue) Learning Resources  Yam tissue, potato tissue or any suitable substance  Video Clips/2. Internet resources such as available. (https://www.youtube.com/watch?v=jhszFBtBPoI;  Table salt/sugar. https://www.youtube.com/watch?v=JnIkGtkO-Js)  Water  Liquid perfume in a container with a lid.  Bowl  Potassium Permanganate crystals,  Camphor 13"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 37,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "1.2.1.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.2.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.2.1.AS.1",
+                          "description": "Demonstrate knowledge Explain reproduction in plants and humans. Level 1 Recall and understanding of the Level 2 Skills of principles of Activity-based Learning conceptual reproduction and their  Embark on a nature walk around the school to observe different kinds of understanding application in addressing plants. Level 3 Strategic sexually related societal  Task learners to identify the parts of the various plants observed that are used reasoning problems. in reproduction. Level 4 Extended critical thinking and reasoning Project-based Learning: Place learners into groups to prepare and give presentations on:  Sexual reproduction in plants using resources such as flowers, fruits and seeds.  Asexual reproduction in plants using vegetative parts such as corm, rhizome, suckers, stem cuttings and bulbs.  Pollination and its role in sexual reproduction in plants. Activity–Based Learning  Using models, videos, pictures or charts of the female reproductive system, learners describe the structure and explain the function of the parts of the structure.  Allow learners to raise critical concerns for clarifications from experiences or misconceptions concerning the structure and function of the female reproductive system of mammals.  Be aware of stereotypes when using videos, pictures, models or charts. Learners describe the structure and explain the functions of the parts of the male reproductive system"
+                        },
+                        {
+                          "id": "1.2.1.AS.2",
+                          "description": "15 36 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 38,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Vigour Behind Life",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Powering The Future With Energy Forms",
+                  "content_standards": [
+                    {
+                      "id": "1.3.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.3.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.3.1.LI.2",
+                          "description": "1.x.3.1.AS.2 Design and build Solar panel using locally available materials. Level 1 Recall Level 2 Skills of 1. Learners watch videos/simulations or look at diagrams/drawings of how solar conceptual panels are made. understanding 2. Provide guidelines for learners to collect different materials from their Level 3 Strategic immediate environment (home and school) that can be used for building solar reasoning panels. Level 4 Extended 3. Using a Project-based approach, learners work in mixed-ability groups to critical thinking and design solar panels using the materials collected from the environment. reasoning 4. Provide opportunities for learners to reflect on their project through reporting, cross-sharing and think-pair-share on its usability and advantages. Teaching and  Prototypes of solar panels Learning Resources  Charts, pictures, and simulations of various forms of electricity generation. 3 What is diamond ranking strategy? (k12teacherstaffdevelopment.com) 20"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.3.1.AS.1",
+                          "description": "Demonstrate Describe the generation of electricity from solar cells/panels. Level 1 Recall understanding of forms Level 2 Skills of of energy, sources, their  Use a Talk for Learning approach to engage learners to revise various forms of conceptual generation and effects on electricity generation from the JHS curriculum (B7.4.2.1.1) and do group understanding the environment. presentations. Level 3 Strategic  Guide learners to use diamond nine strategy3 to brainstorm on the meaning, reasoning advantages, and disadvantages of solar energy to life and the environment. Level 4 Extended critical  Learners use concept maps/videos/pictures/charts/diagrams, and internet thinking and reasoning resources to describe electricity generation from solar panels to create awareness of the relationship between solar energy and the environment"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 43,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": "Forces Acting On Substances And Mechanisms",
+                  "content_standards": [
+                    {
+                      "id": "1.3.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.3.2.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.3.2.AS.1",
+                          "description": "Recognise the various Identify and explain concepts associated with forces. Level 1 Recall forms of forces and their Level 2 Skills of effects on motions.  Using a Talk for Learning Approach, place learners in mixed-ability/mixed-sex groups to conceptual discuss the concepts of distance, displacement, speed, velocity and acceleration with understanding contextual examples. Level 3 Strategic  Using the enquiry approach, guide learners to develop task sheets to explore real life reasoning applications of the concepts of speed, displacement, velocity, and acceleration while Level 4 Extended critical managing technical words and terminology. thinking and reasoning  Using the 3E approach4, guide learners to engage, explore and explain concepts such as forces, momentum and pressure.  Using differentiated learning and scaffolding, guide learners to explore the applications of the concepts of forces, Momentum and Pressure in real life. Teaching and  Stop clocks/watches.  Pendulum bob  Pendulum bob, Learning Resources  Charts, pictures and models.  Balls (Volley, foot, basket, etc.),  Balls (Volley, foot, basket, etc.),  Bicycle wheels and pendulum bobs.  Trolleys  Siphoning materials (tube,  PHET Simulations container). 4 3E Framework | 3E Education 24"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 47,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 3,
+                  "name": "Consumer Electronics",
+                  "content_standards": [
+                    {
+                      "id": "1.3.3.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.3.3.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.3.3.AS.1",
+                          "description": "Demonstrate knowledge Explain the uses of electronic components in household electronic devices and Level 1 Recall and recognition of amplifiers. Level 2 Skills of selected electronic conceptual components and their  Guide learners to revise the basic components of electronics from the JHS curriculum understanding uses in Household using Talk for Learning approaches and internet resources. Level 3 Strategic reasoning Electronic devices.  Demonstrate to learners how basic components of electronics are used in circuits and Level 4 Extended critical electronic devices using simulations, pictures, charts and realia. thinking and reasoning  In mixed-sex and differentiated groupings, learners design circuits involving transistors and switches and use them to build amplifiers.  Address stereotypes related to electronic components and household devices and encourage all learners to actively participate in learning activities. Teaching and  Capacitor, LED, transistors, resistors, diodes, switches Learning Resources  Pictures/charts/videos of simple amplifiers. 27 48 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 50,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Relationships With The Environment",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "The Human Body And Health",
+                  "content_standards": [
+                    {
+                      "id": "1.4.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.4.1.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.4.1.AS.1",
+                          "description": "Demonstrate Explore common risks and hazards in the environment and how to address them. Level 1 Recall understanding of Level 2 Skills of hazards in everyday life  Enumerate possible hazards and risks in the home and workplace using think-pair-share. conceptual and how to manage  Visit a local industry that is accessible, such as sawmills, palm kernel oil production, gari understanding them. processing, etc. and assess the possible risks and hazards associated with their activities. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning Teaching and  Pictures, charts, and videos on workplace and home hazards. Learning Resources  Camera, voice recording device, writing materials. 32"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 55,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "1.4.1.CS.3",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.4.1.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.4.1.AS.1",
+                          "description": "Exhibit understanding Analyse the attributes of drugs. Level 1 Recall of the concept of Level 2 Skills of drugs and reflect on  Put learners in mixed-ability groups to brainstorm and come out with the attributes of drugs. conceptual their effects on  Invite a resource person to talk to learners about drugs, their attributes and harmful effects. understanding humans as well as their  Learners use the internet, books, videos, and journals to search to consolidate what they Level 3 Strategic control. have learnt on the effects of drugs on humans and how to control the use of drugs. reasoning Level 4 Extended critical thinking and reasoning Teaching and  Computer with a modem, charts, videos, journals, and  Active Internet services. Learning Resources books showing people affected by drug abuse.  Computer and Mobile phones.  Resource person. 34"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 57,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": "Technology In Our Local Industries",
+                  "content_standards": [
+                    {
+                      "id": "1.4.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.4.2.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "1.4.2.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.4.2.AS.1",
+                          "description": "Demonstrate Experiment to produce different types of soap. Level 1 Recall understanding of the  Organise a visit for learners to a place where local soap is produced and observe the Level 2 Skills of process of local soap processes of production. Write a report on the processes involved. conceptual making and design  Putting learners in mixed-ability groups, let them search the internet, brainstorm/think- understanding methods of producing pair-share on the science in the process (Saponification) of local soap making. Level 3 Strategic soaps for different reasoning purposes for income Level 4 Extended critical generation. thinking and reasoning"
+                        },
+                        {
+                          "id": "1.4.2.AS.2",
+                          "description": "Explain the processes of producing different types of soap. Level 1 Recall Level 2 Skills of  Put learners into mixed-ability groups to conduct experiments to prepare a local soap. conceptual understanding They should vary the materials (reactants) to see the outcomes. Level 3 Strategic  Lead learners to visit a place in your community where local soap(s) is/are produced to reasoning observe and document the stages of production and the diversity in the soaps. Learners Level 4 Extended will then reflect and make presentations. critical thinking and  Allow learners, working in convenient groups, to use the internet, books, and journals to reasoning brainstorm and write a report on the science processes (saponification, etc.) in the stages of production of the local soap. Teaching and  Writing materials Learning Resources  Camera.  Voice recording device  Journal from a field trip  Internet sources (https://www.youtube.com/watch?v=1MtzyxQiqKo, https://www.youtube.com/watch?v=Kc7duzDEa6Y) 38"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 61,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "1.4.2.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "1.4.2.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "1.4.2.AS.1",
+                          "description": "Explore the production Investigate the production of an indigenous food to identify the science processes in Level 1 Recall of indigenous food (gari, the stages of production. Level 2 Skills of akyeke, yakeyake. conceptual kenkey [Ga or Fante],  Place learners into mixed-ability groups and let the learners design an activity to prepare a understanding aboloo, tubaani, named local food. Level 3 Strategic dawadawa, etc).  Lead learners to visit a place in your community where local food is produced to observe and reasoning document the stages of production and the diversity in the foods. Learners will then reflect Level 4 Extended critical and make presentations. thinking and reasoning  Allow learners, working in convenient groups, to use the internet, books, and journals to brainstorm and write a report on the science processes (fermentation, sun drying, etc.) in the stages of production of the local food. Teaching and  Voice recording device  Internet resources Learning Resources  Journal from a field trip (http://pubs.sciepub.com/jfs/5/3/3/index.html,  Internet sources http://pubs.sciepub.com/jfs/5/3/3/index.html) (https://www.youtube.com/watch?v=1MtzyxQiqKo,  Local food materials/ingredients https://www.youtube.com/watch?v=Kc7duzDEa6Y)  Checklist of science processes involved in processing  Potash (ash from burnt stalks, cocoa pods, plantain peels local food. etc.), vegetable oil, fire source, saucepan, beaker,  Writing materials weighing scale, common salt, water, and filter paper.  Camera  Camera and voice recording device.  Journal from field trip. 39 60 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 62,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "SHS 2",
+      "subjects": [
+        {
+          "subject": "General Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Exploring Materials",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Science And Materials In Nature",
+                  "content_standards": [
+                    {
+                      "id": "2.1.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.1.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.1.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.1.1.LI.3",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.1.1.AS.1",
+                          "description": "Demonstrate Differentiate among acids, bases and water. Level 1 Recall understanding of liquids Level 2 Skills of in the Lives of humans. Group/Collaborative Learning: Set up activities for different abilities and/or mix sex (where conceptual applicable) and supervise groups to perform experiments, observe and discuss the differences in understanding acids, bases/alkalis, salts and water according to how they observe the activities individually and in Level 3 Strategic groups. reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "2.1.1.AS.2",
+                          "description": "Apply the knowledge of acids and bases in analysing the formation of salts and their Level 1 Recall uses. Level 2 Skills of conceptual Collaborative Learning: understanding  Provide worksheets as guidelines for groups of learners and supervise them to explore the Level 3 Strategic mixing of acids and bases/alkalis to form salts. Let learners represent the combinations with reasoning equations and cross-share. Level 4 Extended  Using think-pair-share, learners discuss the uses of salts. Pay attention to less assertive and critical thinking and other learners who need additional support. reasoning"
+                        },
+                        {
+                          "id": "2.1.1.AS.3",
+                          "description": "Describe how to measure the concentration of solutions and how to use the pH scale Level 1 Recall to identify the concentration of acids and bases/alkalis. Level 2 Skills of conceptual Problem-Based Learning: In small mixed-ability groups, set up experiments for learners and understanding supervise groups while providing support for learners who need extra support to prepare Level 3 Strategic solutions of various concentrations and to identify acids, bases or alkalis using the pH scale. reasoning Level 4 Extended critical thinking and reasoning Teaching and  Acid (HCl or any suitable one)  measuring cylinders  mineral acids Learning Resources  weighing scale  pH scale 43 64 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 66,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Processes For Living",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Essentials For Survival",
+                  "content_standards": [
+                    {
+                      "id": "2.2.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.2.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.2.1.LI.3",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.2.1.AS.1",
+                          "description": "Demonstrate an Analyse the structure and function of the excretory organs in the human body. Level 1 Recall understanding of how Level 2 Skills of waste substances are Group work/collaborative Learning: Using models or videos, put learners in mixed-ability conceptual removed from the human groups and supervise groups to analyse the structure and function of excretory organs in the understanding body. human body system. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "2.2.1.AS.2",
+                          "description": "Describe the processes for the removal of waste from the human body. Level 1 Recall Level 2 Skills of conceptual Project-based Learning: understanding  In mixed-ability groups, do a mini-investigation on the processes of removal of waste Level 3 Strategic by the human excretory system using technological devices. reasoning  In mixed-ability/ mixed-sex groups, perform an activity to demonstrate the process for Level 4 Extended critical the removal of waste from the human body system. thinking and reasoning"
+                        },
+                        {
+                          "id": "2.2.1.AS.3",
+                          "description": "Evaluate disorders of the human excretory organ system. Level 1 Recall Level 2 Skills of conceptual Project-based Learning: understanding 1. In mixed-ability groups, do a mini-investigation on disorders of the human excretory Level 3 Strategic reasoning system using internet resources and library sources that should be available to learners Level 4 Extended in advance. critical thinking and 2. Learners do group critiquing of their investigations. reasoning Teaching and  Models or videos (see the link below)  Internet resources Learning Resources (https://www.kenhub.com/en/library/anatomy/human-body-  Journals systems)  Magazines  chart/picture, books  Books 47 68 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 70,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "2.2.1.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.2.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.2.1.LI.3",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.2.1.AS.1",
+                          "description": "Demonstrate knowledge Explain, with diagrams, the concept of the movement of air in humans and its Level 1 Recall and ability to carry out importance. Level 2 Skills of conceptual research on how air understanding moves in and out of Initiating Talk for Learning and Collaborative Learning: Level 3 Strategic humans.  With the aid of charts, models, pictures, etc., learners discuss and ascertain in groups reasoning of mixed-ability the movement of air in humans from the nostrils to the lungs. Level 4 Extended critical  Learners brainstorm on the importance of the movement of air in humans from the thinking and reasoning nostrils to the lungs"
+                        },
+                        {
+                          "id": "2.2.1.AS.2",
+                          "description": "Describe the structure of the lungs and investigate the products of aerobic Level 1 Recall respiration. Level 2 Skills of conceptual understanding Group work/collaborative Learning: Level 3 Strategic  With the aid of Models, videos, and charts, learners describe the structure of the reasoning human lungs in whole class discussion. Level 4 Extended critical  In differentiated learning groups, use think-pair-share to investigate the products of thinking and reasoning aerobic respiration, supported by models, books, pictures, videos and internet sources.  Learners reflect on the concepts of breathing and respiration and discuss the misconceptions between the two concepts"
+                        },
+                        {
+                          "id": "2.2.1.AS.3",
+                          "description": "Discuss disorders associated with the respiratory system. Level 1 Recall Level 2 Skills of conceptual Initiating Talk for Learning and Group work/collaborative Learning: understanding  Put learners in differentiated learning groups to review the structure of the lungs after Level 3 Strategic viewing videos/models or pictures of the human lungs with various disorders. reasoning  Through think-pair-share, learners assess the effects of smoking on the structure of the Level 4 Extended critical lungs aided by pictures/videos and models. thinking and reasoning Teaching and  Models or videos, pictures/charts/books and internet  Books Learning Resources resources showing aerobic respiration.  Journals  Models/pictures/charts or videos and internet resources 49"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 71,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Vigour Behind Life",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Powering The Future With Energy Forms",
+                  "content_standards": [
+                    {
+                      "id": "2.3.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.3.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.3.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.3.1.AS.1",
+                          "description": "Demonstrate Explain the concept of electrical energy and power. Level 1 Recall understanding of Level 2 Skills of electricity as a form of  Review previous knowledge of sources of electrical energy through collaborative learning conceptual energy. by using PHET simulations, pictures and videos. Ensure groups are manageable and understanding supervised appropriately. Level 3 Strategic  Put learners in mixed-ability groups to construct functional electric circuits and use them reasoning to calculate current, resistance and voltage while providing positive remarks to group Level 4 Extended work. critical thinking and  Demonstrate how meter reading is carried out and how to calculate energy consumed reasoning with meter reading and communicate their findings in groups.  Using inclusive and differentiated learning, the teacher demonstrates to learners how appliance troubleshooting at home or school is done and dispels misconceptions and stereotypes about males' and females’ abilities in handling electricity.  Learners research on how to conduct energy audits, energy savings plans, and safety devices used in electrical circuits.  Through experiments, lead learners to demonstrate the electrical conductivity of different liquids (distilled water, drinking water, lemon juice, sugar solution, coconut oil, vinegar, and other appropriate liquids)  Use models, pictures and charts to help learners make their own cells through project- based teaching.  Assist learners to explain the heating effect of electric currents using Talk for Learning approaches. NOTE: Learners should not taste the liquids during the activities"
+                        },
+                        {
+                          "id": "2.3.1.AS.2",
+                          "description": "Explain the principle of the transformer and its function. Level 1 Recall Level 2 Skills of Demonstrate the build-up and usage of step-up and step-down transformers using practical conceptual activities. understanding 53 72 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 74,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": "Forces Acting On Substances And Mechanisms",
+                  "content_standards": [
+                    {
+                      "id": "2.3.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.3.2.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.3.2.AS.1",
+                          "description": "Recognise the various Discuss the relationship between upthrust and the law of floatation. Level 1 Recall types of motions, their Level 2 Skills of conceptual applications and the  Using diamond nine, learners explain the concept of upthrust and the Law of understanding forms of forces which act Floatation. Level 3 Strategic on the body.  Using project-based approach, learners design and make prototype ships, canoes, and reasoning other objects which operate based on the Law of Floatation. Level 4 Extended critical thinking and reasoning that use the principle of flotation. Teaching and 1. Beakers, water, simulations, videos. Learning Resources 2. Measuring cylinders, beakers, water and irregular objects. 58"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 79,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 3,
+                  "name": "Consumer Electronics",
+                  "content_standards": [
+                    {
+                      "id": "2.3.3.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.3.3.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.3.3.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.3.3.AS.1",
+                          "description": "Demonstrate knowledge Explain the principle of 'doping' behaviour in relation to semiconductors. Level 1 Recall and recognition of Level 2 Skills of selected electronic  Engage learners through Talk For Learning strategies to classify solid materials into conceptual components and their conductors, insulators and semiconductors using simulations, charts and videos. While understanding uses in household managing the words/terms that look technical or may be perceived as ‘masculine’. Level 3 Strategic reasoning electronic devices.  Lead learners through demonstrations and group discussions using concept maps, Level 4 Extended critical practical activities and simulations to explain the concept of doping and its applications thinking and reasoning to the behaviour of P-N junction diode formation in consumer electronics"
+                        },
+                        {
+                          "id": "2.3.3.AS.2",
+                          "description": "Perform experiments using circuits containing LEDs and diodes to build phone Level 1 Recall chargers. Level 2 Skills of conceptual understanding Project-based Learning: Put learners in mixed-ability groups while paying close attention to Level 3 Strategic reasoning learners who need extra support for differentiated learning. Guide learners to build phone Level 4 Extended chargers using appropriate electronic components. critical thinking and reasoning NOTE: In addition to phone chargers, any appropriate electronic device can be built Teaching and  Simulations  Diodes  Breadboards Learning Resources  Charts of solid materials  Resistors  Plastic materials  videos  Capacitors  Tester  P-N junction diodes.  Connecting wires  Metal leads.  LEDs  Circuit board 61 80 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 82,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Relationships With The Environment",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "The Human Body And Health",
+                  "content_standards": [
+                    {
+                      "id": "2.4.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.4.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.4.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.4.1.AS.1",
+                          "description": "Demonstrate knowledge Examine the characteristics, causes, symptoms and preventions of pathogenic Level 1 Recall and understanding of diseases. Level 2 Skills of pathogenic diseases of conceptual understanding humans. Talk for Learning: Using mixed-ability groups while supervising groups to discuss symptoms Level 3 Strategic and prevention of pathogenic diseases. reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "2.4.1.AS.2",
+                          "description": "Examine specific pathogenic diseases within the community and describe their Level 1 Recall causes, symptoms and prevention. Level 2 Skills of conceptual understanding Problem-based Learning: Assign learners in groups or individually to identify a pathogenic Level 3 Strategic disease in the community, describe it and explain how it can be prevented. Encourage learners reasoning to identify the myths and misconceptions surrounding these diseases while helping them to Level 4 Extended appreciate the stereotypes associated with these infections. critical thinking and reasoning Teaching and  Charts of people showing symptoms of pathogenic diseases. Learning Resources  Wall charts showing causes, symptoms and prevention of pathogenic diseases. 64"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 85,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Relationships With The Environment",
+              "substrands": [
+                {
+                  "number": 2,
+                  "name": "Technology In Local Industries",
+                  "content_standards": [
+                    {
+                      "id": "2.4.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "2.4.2.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "2.4.2.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "2.4.2.AS.1",
+                          "description": "Explore the production Explain the science in the production of indigenous beverage. Level 1 Recall of indigenous Level 2 Skills of Beverages. Project-based Learning: conceptual  understanding Put learners in mixed-ability groups to visit a local industry where indigenous beverages are produced. Observe and document the processes involved in the production of indigenous Level 3 Strategic beer/gin. reasoning  In mixed groups, initiate a Talk For Learning approach to cross-share their presentations Level 4 Extended from the study trip to the local industry. critical thinking and reasoning"
+                        },
+                        {
+                          "id": "2.4.2.AS.2",
+                          "description": "Design an experiment to produce a local beverage. Level 1 Recall Level 2 Skills of Problem-based Learning: Guide learners to design a flow chart for the preparation of indigenous conceptual beverages and use it to prepare the beverages. understanding Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning Teaching and  Voice recording gadgets  Raw materials for beverage  Earthenware Learning Resources  Camera production (sugarcane, maize, millet,  energy source (Heat, electricity,  Writing materials etc.) solar)  Plastic  Glass 67 86 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 88,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": "SHS 3",
+      "subjects": [
+        {
+          "subject": "General Science",
+          "strands": [
+            {
+              "number": 1,
+              "name": "Exploring Materials",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Science And Materials In Nature",
+                  "content_standards": [
+                    {
+                      "id": "3.1.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.1.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.1.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.1.1.LI.3",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.1.1.AS.1",
+                          "description": "Explore the concept Identify air as a mixture and explain the uses of the components of air. Level 1 Recall of 'Air' as a mixture Level 2 Skills of of useful gases in Experiential Learning: conceptual nature and  Put learners in differentiated groups to explore, through laboratory activities, pictures, charts and understanding understand the videos from internet sources, air as a mixture, noting the various compositions of the gases, their Level 3 Strategic preparation of relative abundance and their uses in nature. reasoning oxygen and carbon  Engage learners to perform simple experiments to test for the various components of air. Level 4 Extended dioxide and their  Provide an enabling environment for all learners to take part in all the activities to ensure the critical thinking and uses in human life. success of the lesson. reasoning"
+                        },
+                        {
+                          "id": "3.1.1.AS.2",
+                          "description": "Prepare carbon dioxide and discuss its uses. Level 1 Recall Level 2 Skills of Inclusive and Differentiated Learning: Put learners in different ability groups, guide them through conceptual demonstration in a laboratory or classroom on how to prepare carbon dioxide gas, and discuss its understanding characteristics and uses and support learners who may react to the environment or materials (allergies). Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.1.1.AS.3",
+                          "description": "Prepare oxygen and discuss its uses. Level 1 Recall Level 2 Skills of Experiential Learning: Put learners in different ability groups, guide them through demonstrations in a conceptual laboratory or classroom on how to prepare oxygen gas and discuss its characteristics and uses and also understanding support learners who may react to the environment or materials (allergies). Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning 72"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 93,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 2,
+              "name": "Processes For Living",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Essentials For Survival",
+                  "content_standards": [
+                    {
+                      "id": "3.2.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.2.1.LI.2",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.2.1.LI.3",
+                          "description": "3.x.2.1.AS.3 Describe autonomic nervous system. Level 1 Recall Level 2 Skills of Group work/collaborative Learning: In their differentiated learning groups, learners match conceptual understanding the structure of neurons to their functions. Support groups to exchange and discuss their Level 3 Strategic matchings and describe the structure and functions of the neuron. Reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.2.1.LI.4",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.2.1.AS.1",
+                          "description": "Model and demonstrate Analyse the central nervous system. Level 1 Recall understanding of the Level 2 Skills of nervous system, its parts Experiential Learning: Put learners in mixed groups to role-play the parts and functions of conceptual understanding and uses. the central nervous system using models, videos and pictures. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.2.1.AS.2",
+                          "description": "Explain the peripheral nervous system. Level 1 Recall Level 2 Skills of Project-based Learning: Create different task groups and provide for groups the guidelines conceptual to work on the peripheral nervous system, such as examining the structure in relation to the understanding functions using various models, pictures, videos, etc. and write reports. Level 3 Strategic In the task groups, provide support to learners to reflect and present their reports. reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.2.1.AS.4",
+                          "description": "Discuss the generation and transmission of nerve impulses. Level 1 Recall Level 2 Skills of Problem-Based Learning and Initiating Talk for Learning: conceptual understanding"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 99,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "3.2.1.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.2.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.2.1.LI.2",
+                          "description": "3.x.2.1.AS.2 Demonstrate and explain the structure and function of the movement of muscle Level 1 Recall tissues. Level 2 Skills of conceptual Initiating Talk for Learning: Let learners think-pair-share using video, pictures, and understanding personal experience to describe how muscles bring about movement in humans. Discuss how Level 3 Strategic challenges arise for human movement and encourage learners to appreciate the diversity in reasoning limb. Level 4 Extended critical thinking and reasoning NB: Explain the sliding filament model of muscle. Teaching and Learning  Chart/picture/model of the general structure of the human skeleton Resources  Picture  videos 80"
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.2.1.AS.1",
+                          "description": "Develop an understanding Model and discuss the structure of the skeleton and muscles Level 1 Recall of the relationships Level 2 Skills of between bones, skeleton Collaborative Learning: conceptual understanding and muscles and the  Learners use think-pair-share in mixed-ability groups to model and describe the Level 3 Strategic principles underlying the structure and functions of the parts of the skeleton. reasoning movement of various parts  Learners work in mixed-ability groups to describe the general structure and functions Level 4 Extended of the human body. of human muscles and their attachment to skeletons human muscles' general structure critical thinking and and functions and share their ideas with peers using a model, picture or diagram. reasoning  Learners use think-pair-share in mixed-ability groups to model and describe the nature of the movement of muscles. Summarise the movement of muscles into categories"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 101,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 3,
+              "name": "Vigour Behind Life",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "Powering The Future With Energy Forms",
+                  "content_standards": [
+                    {
+                      "id": "3.3.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.3.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.3.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.3.1.AS.1",
+                          "description": "Demonstrate Explain the concept of light energy and its uses. Level 1 Recall understanding of light Level 2 Skills of energy, its sources and Group work: Guide learners to revise through brainstorming (review from B7.4.1.3 in JHS conceptual generation. curriculum) in differentiated learning groups, the concept of light energy and discuss the domestic understanding and industrial uses of light. Level 3 Strategic reasoning Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.3.1.AS.2",
+                          "description": "Explore lenses and mirrors in relation to light energy in life. Level 1 Recall Level 2 Skills of Project-based Learning: Let learners work in mixed-ability groups to discuss the types of mirrors conceptual and lenses using projects developed from mirrors and lenses. understanding Level 3 Strategic Diamond Nine: Let learners work according to different ability groups or pairs to discuss: reasoning 1. Snell's law Level 4 Extended 2. Total internal reflection critical thinking and 3. Refractive index reasoning 4. Differences between lasers and fibre optics 82"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 103,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": "Forces Acting On Substances And Mechanisms",
+                  "content_standards": [
+                    {
+                      "id": "3.3.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.3.2.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.3.2.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.3.2.AS.1",
+                          "description": "Recognise the various Identify different types of forces and their daily applications. Level 1 Recall forms of forces and Level 2 Skills of their effects on motion. Collaborative Learning: conceptual  Use concept maps to explain different types of forces. understanding  Using 3E learning model, let learners engage, explore and explain the applications of forces. Level 3 Strategic NB: Emphasise frictional forces, factors influencing fluid friction and increase or decrease of reasoning friction. Level 4 Extended  Engage learners to discuss frictional force its effects and how to reduce it. critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.3.2.AS.2",
+                          "description": "Examine the differences between elastic and inelastic collisions of moving objects. Level 1 Recall Level 2 Skills of Inquiry-based Teaching: conceptual  Let learners explore the differences between elastic and inelastic collisions and collision of understanding moving objects. Level 3 Strategic  Learners discuss measures of avoiding collision with moving objects in their mixed-ability reasoning groups. Level 4 Extended critical thinking and reasoning Teaching and  Charts, pictures, videos, simulations and realia of simple machines. Learning Resources  Simulations/videos, and pictures. 86"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 107,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 3,
+                  "name": "Consumer Electronics",
+                  "content_standards": [
+                    {
+                      "id": "3.3.3.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.3.3.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.3.3.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.3.3.AS.1",
+                          "description": "Demonstrate knowledge Discuss consumer electronic devices and their components. Level 1 Recall and recognition of Level 2 Skills of selected electronic Experiential Learning: Using inclusive and differentiated learning, engage learners to observe conceptual components and their pictures, videos and drawings of consumer electronics devices and discuss their components. understanding uses in household Level 3 Strategic reasoning electronic devices. Level 4 Extended critical thinking and reasoning"
+                        },
+                        {
+                          "id": "3.3.3.AS.2",
+                          "description": "Explore Consumer Electronic careers. Level 1 Recall Level 2 Skills of conceptual Inquiry-based Teaching: understanding  Let learners explore and explain career opportunities available in the field of consumer Level 3 Strategic electronics. reasoning  Assist learners to work in mixed-ability groups to use concept maps to illustrate the Level 4 Extended critical importance of consumer electronics and present their findings in class. thinking and reasoning  Address common misconceptions about electronic components and household appliances. Teaching and  Mobile phones,  videos and charts of consumer electronics devices and Learning Resources  Laptops how they work in relation to electronic circuits.  Television  Resource person 88"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 109,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": 4,
+              "name": "Relationships With The Environment",
+              "substrands": [
+                {
+                  "number": 1,
+                  "name": "The Human Body And Health",
+                  "content_standards": [
+                    {
+                      "id": "3.4.1.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.4.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.4.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.4.1.AS.1",
+                          "description": "Apply knowledge of human Discuss heredity using traits observed in humans. Level 1 Recall reproduction to Level 2 Skills of understand heredity. Collaborative Learning: conceptual 1. Put learners in mixed-ability groups to review reproduction in humans (from year 2). understanding  Allow learners to discuss, through a whole class session, traits and features that Level 3 Strategic reasoning make humans, plants, and animals look similar or different. Level 4 Extended critical  Using think-pair-share and guide learners to describe features of hereditary in thinking and reasoning humans with the aid of pictures, videos and models"
+                        },
+                        {
+                          "id": "3.4.1.AS.2",
+                          "description": "Discuss hereditary diseases in humans. Level 1 Recall Level 2 Skills of conceptual Talk for Learning and Exploratory Approach: understanding  Using Think-Pair-Share, discuss hereditary traits. Level 3 Strategic  Explore hereditary diseases/disorders: sickle cell, haemophilia, diabetes, cleft lip and reasoning palate. Level 4 Extended critical thinking and reasoning Note: Ensure that the language of teaching and interaction is devoid of stereotypes. Encourage learners to share experiences. Teaching and Learning  Pictures and wall charts. Resources  Models and videos  Computer with modem 93 112 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 114,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    },
+                    {
+                      "id": "3.4.1.CS.2",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.4.1.LI.1",
+                          "description": ""
+                        },
+                        {
+                          "id": "3.4.1.LI.2",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.4.1.AS.1",
+                          "description": "Explore and model sex Draw Mendelian crossings to explain sex determination in humans. Level 1 Recall determination in humans Level 2 Skills of conceptual Diamond 9 approach: understanding  Using the Diamond 9 Approach, allow learners to discuss their understanding of Level 3 Strategic Mendelian crossing to show sex determination. reasoning  Get learners to compare individual drawings with drawings on pictures, videos or Level 4 Extended critical charts and critique themselves. thinking and reasoning  Using videos and pictures, put learners into groups to discuss and draw some Mendelian crossings and explain how this show exemplifies sex determination"
+                        },
+                        {
+                          "id": "3.4.1.AS.2",
+                          "description": "Explore selected traits in humans using applications of Mendelian crossing. Level 1 Recall Level 2 Skills of conceptual Talk for Learning: In mixed-ability groups, learners select genes represented by letters of understanding the alphabet and use them to draw Mendelian crossings for the following traits: height, skin Level 3 Strategic colour, baldness, etc. reasoning Level 4 Extended critical thinking and reasoning Teaching and Learning  Wall charts Resources  Books  Pictures and videos on Mendelian crossing. 94"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 115,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "name": "Technology In Local Industries",
+                  "content_standards": [
+                    {
+                      "id": "3.4.2.CS.1",
+                      "description": "",
+                      "learning_outcomes": [],
+                      "learning_indicators": [
+                        {
+                          "id": "3.4.2.LI.1",
+                          "description": ""
+                        }
+                      ],
+                      "pedagogical_exemplars": [],
+                      "assessment": [
+                        {
+                          "id": "3.4.2.AS.1",
+                          "description": "Demonstrate knowledge Analyse the scientific processes involved in indigenous texture production. Level 1 Recall of the scientific processes Level 2 Skills of conceptual involved in gari understanding production. Level 3 Strategic Experiential Learning: reasoning  Visit a gari processing site in your locality to get first-hand information on how gari is Level 4 Extended critical produced. thinking and reasoning  Put learners in mixed-sex or mixed-ability groups to discuss their findings from the field trip and write reports. Provide opportunities for learners to actively listen to others' views.  Using diamond 9 discussion, learners enumerate the economic importance of gari and present ideas in class for discussion. Teaching and  Camera  Notebooks/pads. Learning Resources  Voice recording device  Charts and pictures of people at a gari processing site  Pen 97 116 |"
+                        }
+                      ],
+                      "teaching_and_learning_resources": [],
+                      "skills_competencies_values": [],
+                      "source_page": 118,
+                      "extraction_note": "Not separately captured in the first extraction; retained as an empty array for later enrichment."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

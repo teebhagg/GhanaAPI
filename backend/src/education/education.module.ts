@@ -5,6 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { EducationController } from './education.controller';
 import { EducationService } from './education.service';
 import { SchoolDataProviderService } from './services/school-data-provider.service';
+import { CurriculumController } from './curriculum.controller';
+import { CurriculumService } from './curriculum.service';
 
 @Module({
   imports: [
@@ -18,8 +20,8 @@ import { SchoolDataProviderService } from './services/school-data-provider.servi
       max: 100, // maximum number of items in cache
     }),
   ],
-  controllers: [EducationController],
-  providers: [EducationService, SchoolDataProviderService],
-  exports: [EducationService, SchoolDataProviderService],
+  controllers: [EducationController, CurriculumController],
+  providers: [EducationService, SchoolDataProviderService, CurriculumService],
+  exports: [EducationService, SchoolDataProviderService, CurriculumService],
 })
 export class EducationModule {}

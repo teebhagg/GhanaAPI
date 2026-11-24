@@ -34,6 +34,7 @@ async function bootstrap() {
     .addTag('Addresses', 'Digital address and location services')
     .addTag('Banking & ATM Locator', 'Bank and ATM location services')
     .addTag('Education', 'Educational institutions data and services')
+    .addTag('Curriculum', 'Official Ghanaian school curriculum data')
     .addTag('Exchange Rates', 'Currency exchange rate services')
     .addTag('Locations', 'Location services')
     .addTag('Stock Market Data', 'Ghana Stock Exchange data and analytics')

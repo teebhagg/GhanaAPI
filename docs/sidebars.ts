@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
         "api/banking",
         "api/crypto",
         "api/education",
+        "api/curriculum",
         "api/exchange-rates",
         "api/locations",
         "api/stock-market",
